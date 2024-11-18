@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card"
 import { EyeIcon, EyeOffIcon } from 'lucide-react'
-import Link from 'next/link'
+import { Link } from "react-router-dom";
 // import { Progress } from "@/components/ui/progress" // Removed Progress import
 import { cn } from "@/lib/utils"
 
@@ -127,7 +127,7 @@ export default function RegisterForm() {
           </Button>
           <div className="text-sm text-center">
             已有账号？ 
-            <Link href="/login" className="text-blue-600 hover:underline ml-1">
+            <Link to="/login" className="text-blue-600 hover:underline ml-1">
               登录
             </Link>
           </div>

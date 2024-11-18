@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { EyeIcon, EyeOffIcon } from 'lucide-react'
-import Link from 'next/link'
+import { Link } from "react-router-dom";
 
 export default function LoginForm() {
   const [showPassword, setShowPassword] = useState(false)
@@ -51,10 +51,10 @@ export default function LoginForm() {
         <CardFooter className="flex flex-col space-y-4">
           <Button className="w-full">登录</Button>
           <div className="flex justify-between w-full text-sm">
-            <Link href="/register" className="text-blue-600 hover:underline">
+            <Link to="/register" className="text-blue-600 hover:underline">
               注册新账号
             </Link>
-            <Link href="/forgot-password" className="text-blue-600 hover:underline">
+            <Link to="/forgot-password" className="text-blue-600 hover:underline">
               忘记密码？
             </Link>
           </div>

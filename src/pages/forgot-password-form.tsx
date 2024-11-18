@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { EyeIcon, EyeOffIcon } from 'lucide-react'
-import Link from 'next/link'
+import { Link } from "react-router-dom";
 
 export default function ForgotPasswordForm() {
   const [showPassword, setShowPassword] = useState(false)
@@ -50,7 +50,7 @@ export default function ForgotPasswordForm() {
           <Button className="w-full">重置密码</Button>
           <div className="text-sm text-center">
             记起密码了？
-            <Link href="/login" className="text-blue-600 hover:underline ml-1">
+            <Link to="/" className="text-blue-600 hover:underline ml-1">
               返回登录
             </Link>
           </div>
