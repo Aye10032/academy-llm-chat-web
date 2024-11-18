@@ -3,6 +3,7 @@ import './App.css'
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import RegisterForm from './pages/register-form';
 import ForgotPasswordForm from './pages/forgot-password-form';
+import TestPage from "@/pages/test.tsx";
 
 function App() {
   const router = createBrowserRouter([
@@ -17,7 +18,11 @@ function App() {
     {
       path: "/forgot-password",
       element: <ForgotPasswordForm />,
-    }
+    },
+    {
+      path: "/test",
+      element:  <TestPage />,
+    },
   ]);
   return (
     <>

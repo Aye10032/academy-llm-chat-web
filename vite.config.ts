@@ -10,4 +10,12 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  server: {
+    proxy: {
+      // 字符串简写写法：
+      // http://localhost:5173/foo
+      // -> http://localhost:4567/foo
+      '/api': 'http://localhost:8000',
+    },
+  },
 })
