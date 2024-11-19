@@ -29,7 +29,7 @@ export default function LoginForm() {
             formData.append('username', email)
             formData.append('password', password)
 
-            const response = await axiosInstance.post('/token', formData.toString(), {
+            const response = await axiosInstance.post('/auth/token', formData.toString(), {
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
                 },
@@ -82,7 +82,7 @@ export default function LoginForm() {
                                 <button
                                     type="button"
                                     onClick={togglePasswordVisibility}
-                                    className="absolute right-3 top-1/2 transform -translate-y-1/2"
+                                    className="absolute right-3 top-1/2 transform -translate-y-1/2 p-2"
                                 >
                                     {showPassword ? (
                                         <EyeOffIcon className="h-4 w-4 text-gray-500"/>

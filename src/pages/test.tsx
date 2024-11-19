@@ -19,7 +19,7 @@ export default function TestPage() {
     const fetchUserInfo = async () => {
       try {
         // 这里需要后端提供一个获取用户信息的接口
-        const response = await axiosInstance.get('/user/me')
+        const response = await axiosInstance.get('/auth/user/me')
         setUserInfo(response.data)
       } catch (err) {
         setError('获取用户信息失败')

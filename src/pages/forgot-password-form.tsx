@@ -35,7 +35,7 @@ export default function ForgotPasswordForm() {
               <button
                 type="button"
                 onClick={togglePasswordVisibility}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2"
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 p-2"
               >
                 {showPassword ? (
                   <EyeOffIcon className="h-4 w-4 text-gray-500" />

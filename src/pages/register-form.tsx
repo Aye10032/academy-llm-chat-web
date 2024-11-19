@@ -72,7 +72,7 @@ export default function RegisterForm() {
               <button
                 type="button"
                 onClick={togglePasswordVisibility}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2"
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 p-2"
               >
                 {showPassword ? (
                   <EyeOffIcon className="h-4 w-4 text-gray-500" />
@@ -107,7 +107,7 @@ export default function RegisterForm() {
               <button
                 type="button"
                 onClick={toggleConfirmPasswordVisibility}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2"
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 p-2"
               >
                 {showConfirmPassword ? (
                   <EyeOffIcon className="h-4 w-4 text-gray-500" />
@@ -127,7 +127,7 @@ export default function RegisterForm() {
           </Button>
           <div className="text-sm text-center">
             已有账号？ 
-            <Link to="/login" className="text-blue-600 hover:underline ml-1">
+            <Link to="/" className="text-blue-600 hover:underline ml-1">
               登录
             </Link>
           </div>
