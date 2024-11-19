@@ -5,6 +5,8 @@ import {Label} from "@/components/ui/label"
 import {Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle} from "@/components/ui/card"
 import {EyeIcon, EyeOffIcon} from 'lucide-react'
 import {Link, useNavigate} from "react-router-dom";
+import { useAuth } from '@/utils/auth'
+import axiosInstance from '@/utils/axios'
 
 export default function LoginForm() {
     const [showPassword, setShowPassword] = useState(false)
@@ -12,6 +14,7 @@ export default function LoginForm() {
     const [password, setPassword] = useState('')
     const [error, setError] = useState('')
     const navigate = useNavigate()
+    const { setToken } = useAuth()
 
     const togglePasswordVisibility = () => {
         setShowPassword(!showPassword)
@@ -22,26 +25,23 @@ export default function LoginForm() {
         setError('')
 
         try {
-            const response = await fetch('/api/login', {
-                method: 'POST',
+            const formData = new URLSearchParams()
+            formData.append('username', email)
+            formData.append('password', password)
+
+            const response = await axiosInstance.post('/token', formData.toString(), {
                 headers: {
-                    'Content-Type': 'application/json',
+                    'Content-Type': 'application/x-www-form-urlencoded',
                 },
-                body: JSON.stringify({email, password}),
             })
 
-            const data = await response.json()
-
-            if (response.ok) {
-                // 登录成功，保存token并跳转
-                localStorage.setItem('token', data.token)
+            if (response.status === 200) {
+                setToken(response.data.access_token)
                 navigate('/test')
-            } else {
-                // 登录失败，显示错误信息
-                setError(data.detail || '登录失败，请检查邮箱和密码')
             }
-        } catch (err) {
-            setError('网络错误，请稍后重试')
+        } catch (err: any) {
+            setError(err.response?.data?.detail || '网络错误，请稍后重试')
+            console.error('Login error:', err)
         }
     }
 
