@@ -4,9 +4,19 @@ import {Input} from "@/components/ui/input"
 import {Label} from "@/components/ui/label"
 import {Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle} from "@/components/ui/card"
 import {EyeIcon, EyeOffIcon} from 'lucide-react'
-import {Link, useNavigate} from "react-router-dom";
-import { useAuth } from '@/utils/auth'
-import axiosInstance from '@/utils/axios'
+import {Link, useNavigate} from "react-router-dom"
+import {useAuth} from '@/utils/auth'
+import {useApiMutation} from '@/hooks/useApi'
+
+interface LoginRequest {
+    username: string
+    password: string
+}
+
+interface LoginResponse {
+    access_token: string
+    token_type: string
+}
 
 export default function LoginForm() {
     const [showPassword, setShowPassword] = useState(false)
@@ -14,7 +24,22 @@ export default function LoginForm() {
     const [password, setPassword] = useState('')
     const [error, setError] = useState('')
     const navigate = useNavigate()
-    const { setToken } = useAuth()
+    const {setToken} = useAuth()
+
+    const loginMutation = useApiMutation<LoginResponse, LoginRequest>(
+        '/auth/token',
+        'POST',
+        {
+            onSuccess: (data) => {
+                setToken(data.access_token)
+                navigate('/test')
+            },
+            onError: (err: Error) => {
+                setError(err.message || '网络错误，请稍后重试')
+                console.error('Login error:', err)
+            }
+        }
+    )
 
     const togglePasswordVisibility = () => {
         setShowPassword(!showPassword)
@@ -25,23 +50,12 @@ export default function LoginForm() {
         setError('')
 
         try {
-            const formData = new URLSearchParams()
-            formData.append('username', email)
-            formData.append('password', password)
-
-            const response = await axiosInstance.post('/auth/token', formData.toString(), {
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
+            await loginMutation.mutateAsync({
+                username: email,
+                password: password
             })
-
-            if (response.status === 200) {
-                setToken(response.data.access_token)
-                navigate('/test')
-            }
-        } catch (err: any) {
-            setError(err.response?.data?.detail || '网络错误，请稍后重试')
-            console.error('Login error:', err)
+        } catch (err) {
+            // 错误处理已经在 mutation 的 onError 中完成
         }
     }
 

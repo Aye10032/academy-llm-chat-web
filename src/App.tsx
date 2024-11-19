@@ -6,6 +6,7 @@ import RegisterForm from './pages/register-form'
 import ForgotPasswordForm from './pages/forgot-password-form'
 import TestPage from "@/pages/test"
 import { useAuth, isTokenExpired } from '@/utils/auth'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
 // 受保护的路由组件
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -23,6 +24,15 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
     return <>{children}</>
 }
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      staleTime: 5 * 60 * 1000, // 5 minutes
+    },
+  },
+})
 
 function App() {
     const router = createBrowserRouter([
@@ -44,7 +54,11 @@ function App() {
         },
     ])
 
-    return <RouterProvider router={router} />
+    return (
+        <QueryClientProvider client={queryClient}>
+            <RouterProvider router={router} />
+        </QueryClientProvider>
+    )
 }
 
 export default App
