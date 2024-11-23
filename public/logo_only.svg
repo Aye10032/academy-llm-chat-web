@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="uuid-29bece72-d465-465b-9115-0b67a947f57e" data-name="图层 2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 133.65 115.74">
+  <defs>
+    <style>
+      .uuid-5bbc7651-c149-4115-9970-b854b4f57fc2, .uuid-a58353cc-d13b-441d-bdf8-ec9e616e7626 {
+        stroke-width: 0px;
+      }
+
+      .uuid-a58353cc-d13b-441d-bdf8-ec9e616e7626 {
+        fill: #f76b0a;
+      }
+    </style>
+  </defs>
+  <g id="uuid-693a7e3f-8b61-41b2-84b1-3d4709e91e2c" data-name="图层 3">
+    <polygon class="uuid-5bbc7651-c149-4115-9970-b854b4f57fc2" points="133.65 115.74 110.92 115.74 66.89 39.49 22.87 115.74 0 115.74 66.83 0 133.65 115.74"/>
+  </g>
+  <g id="uuid-48903eea-d73e-445f-b1f4-21e728197f52" data-name="图层 2">
+    <polygon class="uuid-a58353cc-d13b-441d-bdf8-ec9e616e7626" points="98.31 115.74 35.48 115.74 66.89 61.33 98.31 115.74"/>
+  </g>
+</svg>

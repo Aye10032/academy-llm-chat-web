@@ -1,22 +1,20 @@
 import React, {useState} from 'react'
-import {Button} from "@/components/ui/button"
-import {Input} from "@/components/ui/input"
-import {Label} from "@/components/ui/label"
-import {Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle} from "@/components/ui/card"
+import {Button} from "@/components/ui/button.tsx"
+import {Input} from "@/components/ui/input.tsx"
+import {Label} from "@/components/ui/label.tsx"
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle
+} from "@/components/ui/card.tsx"
 import {EyeIcon, EyeOffIcon} from 'lucide-react'
 import {Link, useNavigate} from "react-router-dom"
-import {useAuth} from '@/utils/auth'
-import {useApiMutation} from '@/hooks/useApi'
+import {useAuth} from '@/utils/auth.ts'
+import {useApiMutation} from '@/hooks/useApi.ts'
+import {LoginRequest, LoginResponse} from "@/utils/self_type.ts";
 
-interface LoginRequest {
-    username: string
-    password: string
-}
-
-interface LoginResponse {
-    access_token: string
-    token_type: string
-}
 
 export default function LoginForm() {
     const [showPassword, setShowPassword] = useState(false)
@@ -32,7 +30,7 @@ export default function LoginForm() {
         {
             onSuccess: (data) => {
                 setToken(data.access_token)
-                navigate('/test')
+                navigate('/')
             },
             onError: (err: Error) => {
                 setError(err.message || '网络错误，请稍后重试')
@@ -60,19 +58,18 @@ export default function LoginForm() {
     }
 
     return (
-        <div className="flex items-center justify-center min-h-screen bg-gray-100">
-            <Card className="w-full max-w-md">
+        <Card className="mx-auto w-96">
+            <form onSubmit={handleSubmit}>
                 <CardHeader>
-                    <CardTitle className="text-2xl font-bold text-center">登录</CardTitle>
-                    <CardDescription className="text-center">请输入您的账号信息</CardDescription>
+                    <CardTitle className="text-2xl">登录</CardTitle>
+                    <CardDescription>
+                        输入邮箱密码以登录
+                    </CardDescription>
                 </CardHeader>
-                <form onSubmit={handleSubmit}>
-                    <CardContent className="space-y-4">
-                        {error && (
-                            <div className="text-red-500 text-sm text-center">{error}</div>
-                        )}
-                        <div className="space-y-2">
-                            <Label htmlFor="email">电子邮箱</Label>
+                <CardContent>
+                    <div className="grid gap-4">
+                        <div className="grid gap-2">
+                            <Label className="text-left font-semibold" htmlFor="email">邮箱</Label>
                             <Input
                                 id="email"
                                 type="email"
@@ -82,13 +79,17 @@ export default function LoginForm() {
                                 onChange={(e) => setEmail(e.target.value)}
                             />
                         </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="password">密码</Label>
+                        <div className="grid gap-2">
+                            <div className="flex items-center">
+                                <Label className="font-semibold" htmlFor="password">密码</Label>
+                                <Link to="/forgot-password" className="ml-auto inline-block text-sm underline">
+                                    忘记密码？
+                                </Link>
+                            </div>
                             <div className="relative">
                                 <Input
                                     id="password"
                                     type={showPassword ? "text" : "password"}
-                                    placeholder="输入您的密码"
                                     required
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
@@ -106,20 +107,22 @@ export default function LoginForm() {
                                 </button>
                             </div>
                         </div>
-                    </CardContent>
-                    <CardFooter className="flex flex-col space-y-4">
-                        <Button type="submit" className="w-full">登录</Button>
-                        <div className="flex justify-between w-full text-sm">
-                            <Link to="/register" className="text-blue-600 hover:underline">
-                                注册新账号
-                            </Link>
-                            <Link to="/forgot-password" className="text-blue-600 hover:underline">
-                                忘记密码？
+
+                        <Button type="submit" className="mt-2">
+                            登录
+                        </Button>
+                        <div className="text-center text-sm">
+                            没有账户？{" "}
+                            <Link to="/register" className="underline">
+                                注册
                             </Link>
                         </div>
-                    </CardFooter>
-                </form>
-            </Card>
-        </div>
+                        {error && (
+                            <div className="text-red-500 text-sm text-center">{error}</div>
+                        )}
+                    </div>
+                </CardContent>
+            </form>
+        </Card>
     )
 }
