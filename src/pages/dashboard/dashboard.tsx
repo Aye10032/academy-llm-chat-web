@@ -13,8 +13,34 @@ import {
     SidebarProvider,
     SidebarTrigger,
 } from "@/components/ui/sidebar"
+import {useAuth} from "@/utils/auth.ts";
+import {useQuery} from "@tanstack/react-query";
+import {UserProfile} from "@/utils/self_type.ts";
+import {authApi} from "@/utils/api.ts";
 
-export function Page() {
+export function MainPage() {
+    const {user} = useAuth()
+
+    // 使用 React Query 和 authApi.getCurrentUser
+    const {
+        data: userInfo,
+        isLoading,
+        error
+    } = useQuery<UserProfile>({
+        queryKey: ['user'],
+        queryFn: authApi.getCurrentUser,
+        initialData: user || undefined,
+        enabled: !!useAuth.getState().token
+    })
+
+    if (isLoading) {
+        return <div>加载中...</div>
+    }
+
+    if (error || !userInfo) {
+        return <div>加载失败</div>
+    }
+
     return (
         <SidebarProvider>
             <AppSidebar/>
