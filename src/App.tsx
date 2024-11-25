@@ -7,6 +7,7 @@ import {LoginPage} from "@/pages/login/login-page.tsx";
 import {RegisterPage} from "@/pages/login/register-page.tsx";
 import {ForgotPswPage} from "@/pages/login/forgot-psw-page.tsx";
 import TestPage from "@/pages/test.tsx";
+import {Page} from "@/pages/dashboard/dashboard.tsx";
 
 // 受保护的路由组件
 const ProtectedRoute = ({children}: { children: React.ReactNode }) => {
@@ -65,7 +66,7 @@ function App() {
         },
         {
             path: "/",
-            element: <ProtectedRoute><TestPage/></ProtectedRoute>,
+            element: <ProtectedRoute><Page/></ProtectedRoute>,
         },
         {
             path: "*",
