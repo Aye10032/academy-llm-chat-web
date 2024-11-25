@@ -1,25 +1,40 @@
 import React, {useEffect} from 'react'
 import './App.css'
 import {createBrowserRouter, RouterProvider, Navigate} from 'react-router-dom'
-import Dashboard from './pages/dashboard'
 import {useAuth, isTokenExpired} from '@/utils/auth'
 import {QueryClient, QueryClientProvider} from '@tanstack/react-query'
 import {LoginPage} from "@/pages/login/login-page.tsx";
 import {RegisterPage} from "@/pages/login/register-page.tsx";
 import {ForgotPswPage} from "@/pages/login/forgot-psw-page.tsx";
+import TestPage from "@/pages/test.tsx";
 
 // 受保护的路由组件
 const ProtectedRoute = ({children}: { children: React.ReactNode }) => {
-    const {token, logout} = useAuth()
+    const {token, isAuthenticated, logout} = useAuth()
 
     useEffect(() => {
+        // 检查 token 是否过期
         if (token && isTokenExpired(token)) {
             logout()
+            return
         }
     }, [token, logout])
 
-    if (!token) {
+    // 如果没有认证，重定向到登录页
+    if (!isAuthenticated) {
         return <Navigate to="/login" replace/>
+    }
+
+    return <>{children}</>
+}
+
+// 公开路由组件
+const PublicRoute = ({children}: { children: React.ReactNode }) => {
+    const {isAuthenticated} = useAuth()
+
+    // 如果已经认证，重定向到首页
+    if (isAuthenticated) {
+        return <Navigate to="/" replace/>
     }
 
     return <>{children}</>
@@ -38,19 +53,23 @@ function App() {
     const router = createBrowserRouter([
         {
             path: "/login",
-            element: <LoginPage/>,
+            element: <PublicRoute><LoginPage/></PublicRoute>,
         },
         {
             path: "/register",
-            element: <RegisterPage/>,
+            element: <PublicRoute><RegisterPage/></PublicRoute>,
         },
         {
             path: "/forgot-password",
-            element: <ForgotPswPage/>,
+            element: <PublicRoute><ForgotPswPage/></PublicRoute>,
         },
         {
             path: "/",
-            element: <ProtectedRoute><Dashboard/></ProtectedRoute>,
+            element: <ProtectedRoute><TestPage/></ProtectedRoute>,
+        },
+        {
+            path: "*",
+            element: <Navigate to="/" replace/>,
         }
     ])
 

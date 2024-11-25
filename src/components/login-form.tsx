@@ -12,7 +12,7 @@ import {
 import {EyeIcon, EyeOffIcon} from 'lucide-react'
 import {Link, useNavigate} from "react-router-dom"
 import {useAuth} from '@/utils/auth.ts'
-import {authApi} from '@/hooks/useApi.ts'
+import {authApi} from "@/utils/api.ts";
 
 export default function LoginForm() {
     const [showPassword, setShowPassword] = useState(false)
@@ -31,7 +31,6 @@ export default function LoginForm() {
         setError('')
 
         try {
-            // 使用新的 authApi.login 获取 token
             const tokenResponse = await authApi.login({
                 username: email,
                 password: password
