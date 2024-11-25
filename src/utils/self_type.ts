@@ -1,20 +1,22 @@
-export interface LoginRequest {
+export interface LoginCredentials {
     username: string
     password: string
 }
 
-export interface LoginResponse {
+export interface TokenResponse {
     access_token: string
     token_type: string
 }
 
-export interface UserInfo {
+export interface UserProfile {
     email: string
-    nick_name: string
+    username: string
+    is_active: boolean
+    role: number
 }
 
 export interface SidebarProps {
-    user: UserInfo
+    user: UserProfile
     onNavigate: (page: string) => void
     onLogout: () => void
 }

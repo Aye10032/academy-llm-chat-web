@@ -1,15 +1,18 @@
 import { create } from 'zustand'
+import { UserProfile } from './self_type'
 
 interface AuthState {
     token: string | null
+    user: UserProfile | null
     isAuthenticated: boolean
     setToken: (token: string | null) => void
+    setUser: (user: UserProfile | null) => void
     logout: () => void
 }
 
-// 创建认证状态管理
 export const useAuth = create<AuthState>((set) => ({
     token: localStorage.getItem('token'),
+    user: JSON.parse(localStorage.getItem('user') || 'null'),
     isAuthenticated: !!localStorage.getItem('token'),
     setToken: (token: string | null) => {
         if (token) {
@@ -20,9 +23,19 @@ export const useAuth = create<AuthState>((set) => ({
             set({ token: null, isAuthenticated: false })
         }
     },
+    setUser: (user: UserProfile | null) => {
+        if (user) {
+            localStorage.setItem('user', JSON.stringify(user))
+            set({ user })
+        } else {
+            localStorage.removeItem('user')
+            set({ user: null })
+        }
+    },
     logout: () => {
         localStorage.removeItem('token')
-        set({ token: null, isAuthenticated: false })
+        localStorage.removeItem('user')
+        set({ token: null, user: null, isAuthenticated: false })
     }
 }))
 

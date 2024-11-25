@@ -12,9 +12,7 @@ import {
 import {EyeIcon, EyeOffIcon} from 'lucide-react'
 import {Link, useNavigate} from "react-router-dom"
 import {useAuth} from '@/utils/auth.ts'
-import {useApiMutation} from '@/hooks/useApi.ts'
-import {LoginRequest, LoginResponse} from "@/utils/self_type.ts";
-
+import {authApi} from '@/hooks/useApi.ts'
 
 export default function LoginForm() {
     const [showPassword, setShowPassword] = useState(false)
@@ -22,22 +20,7 @@ export default function LoginForm() {
     const [password, setPassword] = useState('')
     const [error, setError] = useState('')
     const navigate = useNavigate()
-    const {setToken} = useAuth()
-
-    const loginMutation = useApiMutation<LoginResponse, LoginRequest>(
-        '/auth/token',
-        'POST',
-        {
-            onSuccess: (data) => {
-                setToken(data.access_token)
-                navigate('/')
-            },
-            onError: (err: Error) => {
-                setError(err.message || '网络错误，请稍后重试')
-                console.error('Login error:', err)
-            }
-        }
-    )
+    const {setToken, setUser} = useAuth()
 
     const togglePasswordVisibility = () => {
         setShowPassword(!showPassword)
@@ -48,12 +31,21 @@ export default function LoginForm() {
         setError('')
 
         try {
-            await loginMutation.mutateAsync({
+            // 使用新的 authApi.login 获取 token
+            const tokenResponse = await authApi.login({
                 username: email,
                 password: password
             })
+            setToken(tokenResponse.access_token)
+
+            // 获取用户信息
+            const userProfile = await authApi.getCurrentUser()
+            setUser(userProfile)
+
+            navigate('/')
         } catch (err) {
-            // 错误处理已经在 mutation 的 onError 中完成
+            setError(err instanceof Error ? err.message : '网络错误，请稍后重试')
+            console.error('Login error:', err)
         }
     }
 
