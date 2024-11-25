@@ -17,9 +17,11 @@ import {useAuth} from "@/utils/auth.ts";
 import {useQuery} from "@tanstack/react-query";
 import {UserProfile} from "@/utils/self_type.ts";
 import {authApi} from "@/utils/api.ts";
+import {useNavigate} from "react-router-dom";
 
 export function MainPage() {
-    const {user} = useAuth()
+    const {user, logout} = useAuth()
+    const navigate = useNavigate()
 
     // 使用 React Query 和 authApi.getCurrentUser
     const {
@@ -33,6 +35,11 @@ export function MainPage() {
         enabled: !!useAuth.getState().token
     })
 
+    const handleLogout = () => {
+        logout()
+        navigate('/login')
+    }
+
     if (isLoading) {
         return <div>加载中...</div>
     }
@@ -43,7 +50,7 @@ export function MainPage() {
 
     return (
         <SidebarProvider>
-            <AppSidebar/>
+            <AppSidebar user={userInfo} handleLogout={handleLogout}/>
             <SidebarInset>
                 <header
                     className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">

@@ -2,168 +2,74 @@
 
 import * as React from "react"
 import {
-    AudioWaveform,
-    BookOpen,
-    Bot,
-    Command,
-    Frame,
-    GalleryVerticalEnd,
-    Map,
-    PieChart,
-    Settings2,
-    SquareTerminal,
+    MessageCircleMore,
+    PenLine
 } from "lucide-react"
 
-import { NavMain } from "@/components/nav-main"
-import { NavUser } from "@/components/nav-user"
+import {NavUser} from "@/components/nav-user"
 import {
     Sidebar,
     SidebarContent,
-    SidebarFooter,
-    SidebarHeader,
+    SidebarFooter, SidebarGroup,
+    SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem,
 } from "@/components/ui/sidebar"
+import {UserProfile} from "@/utils/self_type.ts";
+import llmLogo from "@/assets/llm-logo1.svg"
+import logoOnly from "@/assets/logo_only.svg"
 
-// This is sample data.
-const data = {
-    user: {
-        name: "shadcn",
-        email: "m@example.com",
-        avatar: "/avatars/shadcn.jpg",
-    },
-    teams: [
-        {
-            name: "Acme Inc",
-            logo: GalleryVerticalEnd,
-            plan: "Enterprise",
-        },
-        {
-            name: "Acme Corp.",
-            logo: AudioWaveform,
-            plan: "Startup",
-        },
-        {
-            name: "Evil Corp.",
-            logo: Command,
-            plan: "Free",
-        },
-    ],
-    navMain: [
-        {
-            title: "Playground",
-            url: "#",
-            icon: SquareTerminal,
-            isActive: true,
-            items: [
-                {
-                    title: "History",
-                    url: "#",
-                },
-                {
-                    title: "Starred",
-                    url: "#",
-                },
-                {
-                    title: "Settings",
-                    url: "#",
-                },
-            ],
-        },
-        {
-            title: "Models",
-            url: "#",
-            icon: Bot,
-            items: [
-                {
-                    title: "Genesis",
-                    url: "#",
-                },
-                {
-                    title: "Explorer",
-                    url: "#",
-                },
-                {
-                    title: "Quantum",
-                    url: "#",
-                },
-            ],
-        },
-        {
-            title: "Documentation",
-            url: "#",
-            icon: BookOpen,
-            items: [
-                {
-                    title: "Introduction",
-                    url: "#",
-                },
-                {
-                    title: "Get Started",
-                    url: "#",
-                },
-                {
-                    title: "Tutorials",
-                    url: "#",
-                },
-                {
-                    title: "Changelog",
-                    url: "#",
-                },
-            ],
-        },
-        {
-            title: "Settings",
-            url: "#",
-            icon: Settings2,
-            items: [
-                {
-                    title: "General",
-                    url: "#",
-                },
-                {
-                    title: "Team",
-                    url: "#",
-                },
-                {
-                    title: "Billing",
-                    url: "#",
-                },
-                {
-                    title: "Limits",
-                    url: "#",
-                },
-            ],
-        },
-    ],
-    projects: [
-        {
-            name: "Design Engineering",
-            url: "#",
-            icon: Frame,
-        },
-        {
-            name: "Sales & Marketing",
-            url: "#",
-            icon: PieChart,
-        },
-        {
-            name: "Travel",
-            url: "#",
-            icon: Map,
-        },
-    ],
+interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
+    user: UserProfile;
+    handleLogout: () => void;
 }
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+export function AppSidebar({user, handleLogout, ...props}: AppSidebarProps) {
     return (
         <Sidebar collapsible="icon" {...props}>
             <SidebarHeader>
-                Academic LLM chat
+                <div className="relative w-full">
+                    <div className="h-full w-full transition-opacity duration-300 ease-in-out group-data-[collapsible=icon]:opacity-0">
+                        <img
+                            src={llmLogo}
+                            alt="Academic LLM Chat Logo"
+                            className="h-full w-full object-contain px-2"
+                        />
+                    </div>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="p-1.5 rounded-md transition-colors duration-300 group-data-[collapsible=icon]:bg-gray-100">
+                            <img
+                                src={logoOnly}
+                                alt="Academic LLM Chat Icon"
+                                className="h-8 w-8 opacity-0 transition-opacity duration-300 ease-in-out group-data-[collapsible=icon]:opacity-100"
+                            />
+                        </div>
+                    </div>
+                </div>
+                <SidebarGroup>
+                    <SidebarMenu className="gap-2">
+                        <SidebarMenuItem key="rag-qa">
+                            <SidebarMenuButton asChild className="text-gray-950">
+                                <a href="#">
+                                    <MessageCircleMore/>
+                                    <span>知识库对话</span>
+                                </a>
+                            </SidebarMenuButton>
+                        </SidebarMenuItem>
+                        <SidebarMenuItem key="write">
+                            <SidebarMenuButton asChild className="text-gray-950">
+                                <a href="#">
+                                    <PenLine/>
+                                    <span>写作助手</span>
+                                </a>
+                            </SidebarMenuButton>
+                        </SidebarMenuItem>
+                    </SidebarMenu>
+                </SidebarGroup>
             </SidebarHeader>
             <SidebarContent>
-                <NavMain items={data.navMain} />
+                {/*TODO*/}
             </SidebarContent>
             <SidebarFooter>
-                <NavUser user={data.user} />
+                <NavUser user={user} handleLogout={handleLogout}/>
             </SidebarFooter>
         </Sidebar>
     )

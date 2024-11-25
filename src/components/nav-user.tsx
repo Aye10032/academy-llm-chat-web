@@ -27,23 +27,15 @@ import {
     SidebarMenuButton,
     SidebarMenuItem, useSidebar,
 } from "@/components/ui/sidebar"
-import { useAuth } from '@/utils/auth'
-import { useNavigate } from 'react-router-dom'
+import {UserProfile} from "@/utils/self_type.ts";
 
-export function NavUser() {
+interface NavUserProps {
+    user: UserProfile;
+    handleLogout: () => void;
+}
+
+export function NavUser({user, handleLogout}: NavUserProps) {
     const {isMobile} = useSidebar()
-
-    const { user, logout } = useAuth()
-    const navigate = useNavigate()
-    
-    const handleLogout = () => {
-        logout()
-        navigate('/login')
-    }
-
-    if (!user) {
-        return null
-    }
 
     return (
         <SidebarMenu>
@@ -54,9 +46,9 @@ export function NavUser() {
                             size="lg"
                             className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
                         >
-                            <Avatar className="h-8 w-8 rounded-lg">
-                                <AvatarFallback className="rounded-lg">
-                                    {user.username.slice(0, 2).toUpperCase()}
+                            <Avatar className="h-8 w-8 rounded-lg bg-orange-100">
+                                <AvatarFallback className="rounded-lg text-orange-500 bg-orange-100">
+                                    {user.username.slice(0, 1).toUpperCase()}
                                 </AvatarFallback>
                             </Avatar>
                             <div className="grid flex-1 text-left text-sm leading-tight">
@@ -74,8 +66,8 @@ export function NavUser() {
                     >
                         <DropdownMenuLabel className="p-0 font-normal">
                             <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
-                                <Avatar className="h-8 w-8 rounded-lg">
-                                    <AvatarFallback className="rounded-lg">
+                                <Avatar className="h-8 w-8 rounded-lg bg-orange-100">
+                                    <AvatarFallback className="rounded-lg text-orange-500 bg-orange-100">
                                         {user.username.slice(0, 2).toUpperCase()}
                                     </AvatarFallback>
                                 </Avatar>
