@@ -18,6 +18,7 @@ import {useQuery} from "@tanstack/react-query";
 import {UserProfile} from "@/utils/self_type.ts";
 import {authApi} from "@/utils/api.ts";
 import {useNavigate} from "react-router-dom";
+import React from "react";
 
 export function MainPage() {
     const {user, logout} = useAuth()
@@ -49,7 +50,13 @@ export function MainPage() {
     }
 
     return (
-        <SidebarProvider>
+        <SidebarProvider
+            style={
+                {
+                    "--sidebar-width": "350px",
+                } as React.CSSProperties
+            }
+        >
             <AppSidebar user={userInfo} handleLogout={handleLogout}/>
             <SidebarInset>
                 <header

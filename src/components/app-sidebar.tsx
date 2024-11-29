@@ -2,20 +2,20 @@
 
 import * as React from "react"
 import {
-    MessageCircleMore,
-    PenLine
+    Command,
+    MessageCircleMoreIcon,
+    PenLineIcon
 } from "lucide-react"
 
 import {NavUser} from "@/components/nav-user"
 import {
     Sidebar,
     SidebarContent,
-    SidebarFooter, SidebarGroup,
-    SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem,
+    SidebarFooter, SidebarGroup, SidebarGroupContent,
+    SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar,
 } from "@/components/ui/sidebar"
 import {UserProfile} from "@/utils/self_type.ts";
 import llmLogo from "@/assets/llm-logo1.svg"
-import logoOnly from "@/assets/logo_only.svg"
 
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
     user: UserProfile;
@@ -23,10 +23,84 @@ interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
 }
 
 export function AppSidebar({user, handleLogout, ...props}: AppSidebarProps) {
+    // Note: I'm using state to show active item.
+    // IRL you should use the url/router.
+    const {setOpen} = useSidebar()
+
     return (
-        <Sidebar collapsible="icon" {...props}>
-            <SidebarHeader>
-                <div className="relative w-full">
+        <Sidebar
+            collapsible="icon"
+            className="overflow-hidden [&>[data-sidebar=sidebar]]:flex-row"
+            {...props}
+        >
+
+            {/* This is the first sidebar */}
+            {/* We disable collapsible and adjust width to icon. */}
+            {/* This will make the sidebar appear as icons. */}
+            <Sidebar
+                collapsible="none"
+                className="!w-[calc(var(--sidebar-width-icon)_+_1px)] border-r"
+            >
+                <SidebarHeader>
+                    <SidebarMenu>
+                        <SidebarMenuItem>
+                            <SidebarMenuButton size="lg" asChild className="md:h-8 md:p-0">
+                                <a href="#">
+                                    <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
+                                        <Command className="size-4" />
+                                    </div>
+                                </a>
+                            </SidebarMenuButton>
+                        </SidebarMenuItem>
+                    </SidebarMenu>
+                </SidebarHeader>
+                <SidebarContent>
+                    <SidebarGroup>
+                        <SidebarGroupContent className="px-1.5 md:px-0">
+                            <SidebarMenu>
+                                <SidebarMenuItem key="rag-qa">
+                                    <SidebarMenuButton
+                                        tooltip={{
+                                            children: "知识库对话",
+                                            hidden: false,
+                                        }}
+                                        onClick={() => {
+                                            setOpen(true)
+                                        }}
+                                        className="px-2.5 md:px-2"
+                                    >
+                                        <MessageCircleMoreIcon/>
+                                        <span>知识库对话</span>
+                                    </SidebarMenuButton>
+                                </SidebarMenuItem>
+                                <SidebarMenuItem key="write">
+                                    <SidebarMenuButton
+                                        tooltip={{
+                                            children: "写作助手",
+                                            hidden: false,
+                                        }}
+                                        onClick={() => {
+                                            setOpen(true)
+                                        }}
+                                        className="px-2.5 md:px-2"
+                                    >
+                                        <PenLineIcon/>
+                                        <span>写作助手</span>
+                                    </SidebarMenuButton>
+                                </SidebarMenuItem>
+                            </SidebarMenu>
+                        </SidebarGroupContent>
+                    </SidebarGroup>
+                </SidebarContent>
+                <SidebarFooter>
+                    <NavUser user={user} handleLogout={handleLogout}/>
+                </SidebarFooter>
+            </Sidebar>
+
+            {/* This is the second sidebar */}
+            {/* We disable collapsible and let it fill remaining space */}
+            <Sidebar collapsible="none" className="hidden flex-1 md:flex">
+                <SidebarHeader className="border-b p-4">
                     <div className="h-full w-full transition-opacity duration-300 ease-in-out group-data-[collapsible=icon]:opacity-0">
                         <img
                             src={llmLogo}
@@ -34,43 +108,13 @@ export function AppSidebar({user, handleLogout, ...props}: AppSidebarProps) {
                             className="h-full w-full object-contain px-2"
                         />
                     </div>
-                    <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="p-1.5 rounded-md transition-colors duration-300 group-data-[collapsible=icon]:bg-gray-100">
-                            <img
-                                src={logoOnly}
-                                alt="Academic LLM Chat Icon"
-                                className="h-8 w-8 opacity-0 transition-opacity duration-300 ease-in-out group-data-[collapsible=icon]:opacity-100"
-                            />
-                        </div>
-                    </div>
-                </div>
-                <SidebarGroup>
-                    <SidebarMenu className="gap-2">
-                        <SidebarMenuItem key="rag-qa">
-                            <SidebarMenuButton asChild className="text-gray-950">
-                                <a href="#">
-                                    <MessageCircleMore/>
-                                    <span>知识库对话</span>
-                                </a>
-                            </SidebarMenuButton>
-                        </SidebarMenuItem>
-                        <SidebarMenuItem key="write">
-                            <SidebarMenuButton asChild className="text-gray-950">
-                                <a href="#">
-                                    <PenLine/>
-                                    <span>写作助手</span>
-                                </a>
-                            </SidebarMenuButton>
-                        </SidebarMenuItem>
-                    </SidebarMenu>
-                </SidebarGroup>
-            </SidebarHeader>
-            <SidebarContent>
-                {/*TODO*/}
-            </SidebarContent>
-            <SidebarFooter>
-                <NavUser user={user} handleLogout={handleLogout}/>
-            </SidebarFooter>
+                </SidebarHeader>
+                <SidebarContent>
+                    <SidebarGroup className="px-0">
+
+                    </SidebarGroup>
+                </SidebarContent>
+            </Sidebar>
         </Sidebar>
     )
 }

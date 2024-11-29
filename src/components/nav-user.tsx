@@ -3,7 +3,6 @@
 import {
     BadgeCheck,
     Bell,
-    ChevronsUpDown,
     CreditCard,
     LogOut,
     Sparkles,
@@ -44,18 +43,13 @@ export function NavUser({user, handleLogout}: NavUserProps) {
                     <DropdownMenuTrigger asChild>
                         <SidebarMenuButton
                             size="lg"
-                            className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+                            className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground md:h-8 md:p-0"
                         >
                             <Avatar className="h-8 w-8 rounded-lg bg-orange-100">
                                 <AvatarFallback className="rounded-lg text-orange-500 bg-orange-100">
                                     {user.username.slice(0, 1).toUpperCase()}
                                 </AvatarFallback>
                             </Avatar>
-                            <div className="grid flex-1 text-left text-sm leading-tight">
-                                <span className="truncate font-semibold">{user.username}</span>
-                                <span className="truncate text-xs">{user.email}</span>
-                            </div>
-                            <ChevronsUpDown className="ml-auto size-4"/>
                         </SidebarMenuButton>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent
@@ -68,7 +62,7 @@ export function NavUser({user, handleLogout}: NavUserProps) {
                             <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                                 <Avatar className="h-8 w-8 rounded-lg bg-orange-100">
                                     <AvatarFallback className="rounded-lg text-orange-500 bg-orange-100">
-                                        {user.username.slice(0, 2).toUpperCase()}
+                                        {user.username.slice(0, 1).toUpperCase()}
                                     </AvatarFallback>
                                 </Avatar>
                                 <div className="grid flex-1 text-left text-sm leading-tight">
