@@ -16,13 +16,25 @@ import {
 } from "@/components/ui/sidebar"
 import {UserProfile} from "@/utils/self_type.ts";
 import llmLogo from "@/assets/llm-logo1.svg"
+import {ChatSidebar} from "@/components/chat-sidebar.tsx";
+import {WriteSidebar} from "@/components/write-sidebar.tsx";
 
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
     user: UserProfile;
     handleLogout: () => void;
+    activePage: 'chat' | 'write';
+    setActivePage: React.Dispatch<React.SetStateAction<'chat' | 'write'>>
 }
 
-export function AppSidebar({user, handleLogout, ...props}: AppSidebarProps) {
+export function AppSidebar(
+    {
+        user,
+        handleLogout,
+        activePage,
+        setActivePage,
+        ...props
+    }: AppSidebarProps
+) {
     // Note: I'm using state to show active item.
     // IRL you should use the url/router.
     const {setOpen} = useSidebar()
@@ -46,8 +58,9 @@ export function AppSidebar({user, handleLogout, ...props}: AppSidebarProps) {
                         <SidebarMenuItem>
                             <SidebarMenuButton size="lg" asChild className="md:h-8 md:p-0">
                                 <a href="#">
-                                    <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                                        <Command className="size-4" />
+                                    <div
+                                        className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
+                                        <Command className="size-4"/>
                                     </div>
                                 </a>
                             </SidebarMenuButton>
@@ -65,11 +78,13 @@ export function AppSidebar({user, handleLogout, ...props}: AppSidebarProps) {
                                             hidden: false,
                                         }}
                                         onClick={() => {
+                                            setActivePage('chat')
                                             setOpen(true)
                                         }}
+                                        isActive={activePage === 'chat'}
                                         className="px-2.5 md:px-2"
                                     >
-                                        <MessageCircleMoreIcon/>
+                                        <MessageCircleMoreIcon />
                                         <span>知识库对话</span>
                                     </SidebarMenuButton>
                                 </SidebarMenuItem>
@@ -80,11 +95,13 @@ export function AppSidebar({user, handleLogout, ...props}: AppSidebarProps) {
                                             hidden: false,
                                         }}
                                         onClick={() => {
+                                            setActivePage('write')
                                             setOpen(true)
                                         }}
+                                        isActive={activePage === 'write'}
                                         className="px-2.5 md:px-2"
                                     >
-                                        <PenLineIcon/>
+                                        <PenLineIcon />
                                         <span>写作助手</span>
                                     </SidebarMenuButton>
                                 </SidebarMenuItem>
@@ -109,11 +126,11 @@ export function AppSidebar({user, handleLogout, ...props}: AppSidebarProps) {
                         />
                     </div>
                 </SidebarHeader>
-                <SidebarContent>
-                    <SidebarGroup className="px-0">
-
-                    </SidebarGroup>
-                </SidebarContent>
+                {activePage === 'chat' ? (
+                    <ChatSidebar />
+                ) : (
+                    <WriteSidebar />
+                )}
             </Sidebar>
         </Sidebar>
     )
