@@ -1,5 +1,7 @@
 import {useQuery, useMutation, UseQueryOptions, UseMutationOptions} from '@tanstack/react-query'
 import {apiClient} from '@/utils/api'
+import {useAuth} from "@/utils/auth";
+import {API_BASE_URL} from "@/utils/api";
 
 // 用于 GET 请求的 hook
 export function useApiQuery<T>(
@@ -14,7 +16,44 @@ export function useApiQuery<T>(
     })
 }
 
-// 用于 POST/PUT/DELETE 等修改操作的 hook
+// 用于流式响应的 hook
+export function useStreamingMutation<TVariables>(
+    endpoint: string,
+    options?: Omit<UseMutationOptions<ReadableStream | null, Error, TVariables>, 'mutationFn'>
+) {
+    return useMutation<ReadableStream | null, Error, TVariables>({
+        mutationFn: async (variables) => {
+            const token = useAuth.getState().token;
+            
+            if (!token) {
+                throw new Error('No authentication token');
+            }
+
+            const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(variables)
+            });
+
+            if (!response.ok) {
+                if (response.status === 401) {
+                    useAuth.getState().logout();
+                    window.location.href = '/';
+                }
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.detail || 'Network response was not ok');
+            }
+
+            return response.body;
+        },
+        ...options,
+    })
+}
+
+// 用于普通 POST/PUT/DELETE 请求的 hook
 export function useApiMutation<TData, TVariables>(
     endpoint: string,
     method: string,

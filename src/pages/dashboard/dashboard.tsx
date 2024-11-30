@@ -57,7 +57,11 @@ export function MainPage() {
                 setActivePage={setActivePage}
             />
             <SidebarInset>
-                {activePage === 'chat' ? <ChatPage/> : <WritePage/>}
+                {activePage === 'chat' ? (
+                    <ChatPage user={userInfo} />
+                ) : (
+                    <WritePage />
+                )}
             </SidebarInset>
         </SidebarProvider>
     )

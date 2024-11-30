@@ -1,13 +1,13 @@
 import {LoginCredentials, TokenResponse, UserProfile} from './self_type'
 import {isTokenExpired, useAuth} from "@/utils/auth.ts";
 
-const API_BASE_URL = '/api/v1'
+export const API_BASE_URL = '/api/v1'
 
 interface FetchOptions extends RequestInit {
     timeout?: number
 }
 
-async function fetchWithTimeout(url: string, options: FetchOptions = {}) {
+export async function fetchWithTimeout(url: string, options: FetchOptions = {}) {
     const {timeout = 10000, ...fetchOptions} = options
 
     const controller = new AbortController()
@@ -85,4 +85,4 @@ export const authApi = {
     getCurrentUser: async (): Promise<UserProfile> => {
         return apiClient<UserProfile>('/auth/me/')
     }
-} 
+}
