@@ -13,6 +13,7 @@ import {ScrollArea} from "@/components/ui/scroll-area";
 import {Input} from "@/components/ui/input.tsx";
 import {Button} from "@/components/ui/button.tsx";
 import {Avatar, AvatarFallback} from "@/components/ui/avatar.tsx";
+import ReactMarkdown from 'react-markdown'
 import React, {useState, useRef, useEffect} from "react";
 import {useStreamingMutation} from "@/hooks/useApi";
 import {UserProfile} from "@/utils/self_type";
@@ -115,25 +116,34 @@ export function ChatPage({ user }: ChatPageProps) {
             <main className="flex-1 overflow-auto p-4">
                 <Card className="w-full max-w-2xl mx-auto mt-8">
                     <CardHeader>
-                        <CardTitle>欢迎, {user.username}</CardTitle>
+                        <CardTitle>AI Chat</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <ScrollArea ref={scrollAreaRef} className="h-[600px] pr-4">
-                            {messages.map((message) => (
-                                <div key={message.id} 
-                                     className={`flex gap-3 mb-4 ${message.role === 'assistant' ? 'bg-muted/50 p-4 rounded-lg' : ''}`}>
-                                    <Avatar>
+                        <ScrollArea className="h-[600px] pr-4">
+                            {messages.map((message, index) => (
+                                <div
+                                    key={index}
+                                    className={`mb-4 flex items-start gap-2 ${
+                                        message.role === 'user' ? 'flex-row-reverse' : 'flex-row'
+                                    }`}
+                                >
+                                    <Avatar className={`flex-shrink-0 ${
+                                        message.role === 'user' ? 'ml-2' : 'mr-2'
+                                    }`}>
                                         <AvatarFallback>
                                             {message.role === 'user' ? 'U' : 'AI'}
                                         </AvatarFallback>
                                     </Avatar>
-                                    <div className="grid gap-1">
-                                        <p className="font-medium">
-                                            {message.role === 'user' ? '你' : 'AI'}
-                                        </p>
-                                        <p className="text-sm whitespace-pre-wrap">
+                                    <div
+                                        className={`inline-block p-3 rounded-lg max-w-[80%] ${
+                                            message.role === 'user'
+                                                ? 'bg-blue-500 text-white rounded-tr-none'
+                                                : 'bg-white text-black rounded-tl-none'
+                                        }`}
+                                    >
+                                        <ReactMarkdown className="prose-sm break-words">
                                             {message.content}
-                                        </p>
+                                        </ReactMarkdown>
                                     </div>
                                 </div>
                             ))}
