@@ -13,10 +13,16 @@ import {ScrollArea} from "@/components/ui/scroll-area";
 import {Input} from "@/components/ui/input.tsx";
 import {Button} from "@/components/ui/button.tsx";
 import {Avatar, AvatarFallback} from "@/components/ui/avatar.tsx";
-import ReactMarkdown from 'react-markdown'
+import ReactMarkdown from 'react-markdown';
+// @ts-expect-error no need any more
+import {Prism as SyntaxHighlighter} from 'react-syntax-highlighter';
+// @ts-expect-error no need any more
+import {tomorrow} from 'react-syntax-highlighter/dist/esm/styles/prism';
 import React, {useState, useRef, useEffect} from "react";
-import {useStreamingMutation} from "@/hooks/useApi";
-import {UserProfile} from "@/utils/self_type";
+import {useStreamingMutation, useApiQuery} from "@/hooks/useApi";
+import {UserProfile, KnowledgeBase} from "@/utils/self_type";
+import {DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger} from "@/components/ui/dropdown-menu.tsx";
+import {ChevronDownIcon} from "lucide-react";
 
 interface ChatPageProps {
     user: UserProfile;
@@ -28,13 +34,21 @@ interface Message {
     content: string;
 }
 
-export function ChatPage({ user }: ChatPageProps) {
+
+export function ChatPage({user}: ChatPageProps) {
     const [messages, setMessages] = useState<Message[]>([]);
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const scrollAreaRef = useRef<HTMLDivElement>(null);
 
-    const chatMutation = useStreamingMutation<{message: string}>('/chat/question');
+    const chatMutation = useStreamingMutation<{ message: string }>('/chat/question');
+
+    const { data: knowledgeBases, isLoading: knowledgeBasesLoading } = useApiQuery<KnowledgeBase[]>(
+        ['knowledgeBases'],
+        '/rag/knowledge_bases/'
+    );
+
+    const [selectedKb, setSelectedKb] = useState<KnowledgeBase | null>(null);
 
     const scrollToBottom = () => {
         if (scrollAreaRef.current) {
@@ -65,7 +79,7 @@ export function ChatPage({ user }: ChatPageProps) {
         setIsLoading(true);
 
         try {
-            const stream = await chatMutation.mutateAsync({ message: userMessage.content });
+            const stream = await chatMutation.mutateAsync({message: userMessage.content});
             if (!stream) throw new Error('No stream available');
 
             const reader = stream.getReader();
@@ -96,6 +110,7 @@ export function ChatPage({ user }: ChatPageProps) {
         }
     };
 
+
     return (
         <div className="flex flex-col h-full">
             <header className="sticky top-0 flex shrink-0 items-center gap-2 border-b bg-background p-4">
@@ -104,11 +119,32 @@ export function ChatPage({ user }: ChatPageProps) {
                 <Breadcrumb>
                     <BreadcrumbList>
                         <BreadcrumbItem>
-                            <BreadcrumbLink href="#">主页</BreadcrumbLink>
+                            <BreadcrumbLink href="/">主页</BreadcrumbLink>
                         </BreadcrumbItem>
                         <BreadcrumbSeparator/>
                         <BreadcrumbItem>
                             <BreadcrumbPage>知识库对话</BreadcrumbPage>
+                        </BreadcrumbItem>
+                        <BreadcrumbSeparator/>
+                        <BreadcrumbItem>
+                            <DropdownMenu>
+                                <DropdownMenuTrigger className="flex items-center gap-1">
+                                    {selectedKb ? selectedKb.table_title : '选择知识库'}
+                                    <ChevronDownIcon/>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="start">
+                                    {knowledgeBasesLoading ? (
+                                        <DropdownMenuItem disabled>加载中...</DropdownMenuItem>
+                                    ) : knowledgeBases?.map((kb) => (
+                                        <DropdownMenuItem 
+                                            key={kb.table_name}
+                                            onClick={() => setSelectedKb(kb)}
+                                        >
+                                            {kb.table_title}
+                                        </DropdownMenuItem>
+                                    ))}
+                                </DropdownMenuContent>
+                            </DropdownMenu>
                         </BreadcrumbItem>
                     </BreadcrumbList>
                 </Breadcrumb>
@@ -119,11 +155,11 @@ export function ChatPage({ user }: ChatPageProps) {
                         <CardTitle>AI Chat</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <ScrollArea className="h-[600px] pr-4">
+                        <ScrollArea className="h-[600px] p-4">
                             {messages.map((message, index) => (
                                 <div
                                     key={index}
-                                    className={`mb-4 flex items-start gap-2 ${
+                                    className={`mb-6 flex items-start gap-3 ${
                                         message.role === 'user' ? 'flex-row-reverse' : 'flex-row'
                                     }`}
                                 >
@@ -141,7 +177,28 @@ export function ChatPage({ user }: ChatPageProps) {
                                                 : 'bg-white text-black rounded-tl-none'
                                         }`}
                                     >
-                                        <ReactMarkdown className="prose-sm break-words">
+                                        <ReactMarkdown
+                                            className="prose prose-sm max-w-none"
+                                            components={{
+                                                code({inline, className, children, ...props}) {
+                                                    const match = /language-(\w+)/.exec(className || '');
+                                                    return !inline && match ? (
+                                                        <SyntaxHighlighter
+                                                            style={tomorrow}
+                                                            language={match[1]}
+                                                            PreTag="div"
+                                                            {...props}
+                                                        >
+                                                            {String(children).replace(/\n$/, '')}
+                                                        </SyntaxHighlighter>
+                                                    ) : (
+                                                        <code className={className} {...props}>
+                                                            {children}
+                                                        </code>
+                                                    )
+                                                }
+                                            }}
+                                        >
                                             {message.content}
                                         </ReactMarkdown>
                                     </div>

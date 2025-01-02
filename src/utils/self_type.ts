@@ -20,3 +20,12 @@ export interface SidebarProps {
     onNavigate: (page: string) => void
     onLogout: () => void
 }
+
+export interface KnowledgeBase {
+    table_name: string;
+    table_title: string;
+    description: string;
+    create_time: string;
+    last_update: string;
+    is_active: boolean;
+}
