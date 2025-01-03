@@ -1,117 +1,133 @@
+import {format, isToday, isAfter, subDays} from "date-fns"
+import { zhCN } from "date-fns/locale"
 import {
     SidebarContent,
     SidebarGroup,
     SidebarGroupContent,
+    SidebarGroupLabel,
+    SidebarMenu,
+    SidebarMenuItem,
+    SidebarMenuButton,
 } from "@/components/ui/sidebar"
+import {useState} from "react";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {Button} from "@/components/ui/button"
+import {MoreHorizontal} from "lucide-react";
 
 const data = {
-    mails: [
+    chats: [
         {
-            name: "William Smith",
-            email: "williamsmith@example.com",
-            subject: "Meeting Tomorrow",
-            date: "09:34 AM",
-            teaser:
-                "Hi team, just a reminder about our meeting tomorrow at 10 AM.\nPlease come prepared with your project updates.",
+            conclude: "API 参数解码分析",
+            session_id: "1",
+            date: "2025-01-03 18:20:25.743633",
         },
         {
-            name: "Alice Smith",
-            email: "alicesmith@example.com",
-            subject: "Re: Project Update",
-            date: "Yesterday",
-            teaser:
-                "Thanks for the update. The progress looks great so far.\nLet's schedule a call to discuss the next steps.",
+            conclude: "Minipage 宽度可选参数",
+            session_id: "2",
+            date: "2025-01-02 18:20:25.743633",
         },
         {
-            name: "Bob Johnson",
-            email: "bobjohnson@example.com",
-            subject: "Weekend Plans",
-            date: "2 days ago",
-            teaser:
-                "Hey everyone! I'm thinking of organizing a team outing this weekend.\nWould you be interested in a hiking trip or a beach day?",
+            conclude: "系统发音树解析",
+            session_id: "3",
+            date: "2024-12-15 18:20:25.743633",
         },
         {
-            name: "Emily Davis",
-            email: "emilydavis@example.com",
-            subject: "Re: Question about Budget",
-            date: "2 days ago",
-            teaser:
-                "I've reviewed the budget numbers you sent over.\nCan we set up a quick call to discuss some potential adjustments?",
-        },
-        {
-            name: "Michael Wilson",
-            email: "michaelwilson@example.com",
-            subject: "Important Announcement",
-            date: "1 week ago",
-            teaser:
-                "Please join us for an all-hands meeting this Friday at 3 PM.\nWe have some exciting news to share about the company's future.",
-        },
-        {
-            name: "Sarah Brown",
-            email: "sarahbrown@example.com",
-            subject: "Re: Feedback on Proposal",
-            date: "1 week ago",
-            teaser:
-                "Thank you for sending over the proposal. I've reviewed it and have some thoughts.\nCould we schedule a meeting to discuss my feedback in detail?",
-        },
-        {
-            name: "David Lee",
-            email: "davidlee@example.com",
-            subject: "New Project Idea",
-            date: "1 week ago",
-            teaser:
-                "I've been brainstorming and came up with an interesting project concept.\nDo you have time this week to discuss its potential impact and feasibility?",
-        },
-        {
-            name: "Olivia Wilson",
-            email: "oliviawilson@example.com",
-            subject: "Vacation Plans",
-            date: "1 week ago",
-            teaser:
-                "Just a heads up that I'll be taking a two-week vacation next month.\nI'll make sure all my projects are up to date before I leave.",
-        },
-        {
-            name: "James Martin",
-            email: "jamesmartin@example.com",
-            subject: "Re: Conference Registration",
-            date: "1 week ago",
-            teaser:
-                "I've completed the registration for the upcoming tech conference.\nLet me know if you need any additional information from my end.",
-        },
-        {
-            name: "Sophia White",
-            email: "sophiawhite@example.com",
-            subject: "Team Dinner",
-            date: "1 week ago",
-            teaser:
-                "To celebrate our recent project success, I'd like to organize a team dinner.\nAre you available next Friday evening? Please let me know your preferences.",
-        },
-    ],
+            conclude: "Shutil 文件复制函数区别",
+            session_id: "4",
+            date: "2024-12-15 18:20:25.743633",
+        }
+    ]
 }
 
+function groupChatsByPeriod(chats: typeof data.chats) {
+    const now = new Date()
+    const sevenDaysAgo = subDays(now, 7)
+    const thirtyDaysAgo = subDays(now, 30)
+
+    return chats.reduce((groups, chat) => {
+        const chatDate = new Date(chat.date)
+
+        if (isToday(chatDate)) {
+            if (!groups["今天"]) groups["今天"] = []
+            groups["今天"].push(chat)
+        } else if (isAfter(chatDate, sevenDaysAgo)) {
+            if (!groups["近7天"]) groups["近7天"] = []
+            groups["近7天"].push(chat)
+        } else if (isAfter(chatDate, thirtyDaysAgo)) {
+            if (!groups["近30天"]) groups["近30天"] = []
+            groups["近30天"].push(chat)
+        } else {
+            if (!groups["更早"]) groups["更早"] = []
+            groups["更早"].push(chat)
+        }
+
+        return groups
+    }, {} as Record<string, typeof data.chats>)
+}
+
+
 export function ChatSidebar() {
+    const groupedChats = groupChatsByPeriod(data.chats)
+    const [hoveredChat, setHoveredChat] = useState<string | null>(null)
+
     return (
-        <SidebarContent>
-            <SidebarGroup className="px-0">
-                <SidebarGroupContent>
-                    {data.mails.map((mail) => (
-                        <a
-                            href="#"
-                            key={mail.email}
-                            className="flex flex-col items-start gap-2 whitespace-nowrap border-b p-4 text-sm leading-tight last:border-b-0 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-                        >
-                            <div className="flex w-full items-center gap-2">
-                                <span>{mail.name}</span>{" "}
-                                <span className="ml-auto text-xs">{mail.date}</span>
-                            </div>
-                            <span className="font-medium">{mail.subject}</span>
-                            <span className="line-clamp-2 w-[260px] whitespace-break-spaces text-xs">
-                {mail.teaser}
-                </span>
-                        </a>
-                    ))}
-                </SidebarGroupContent>
-            </SidebarGroup>
+        <SidebarContent className="px-1 py-2">
+            {Object.entries(groupedChats).map(([period, chats]) => (
+                <SidebarGroup key={period}>
+                    <SidebarGroupLabel className="px-2 py-1 text-xs font-medium text-muted-foreground">
+                        {period}
+                    </SidebarGroupLabel>
+                    <SidebarGroupContent>
+                        <SidebarMenu>
+                            {chats.map((chat) => (
+                                <SidebarMenuItem
+                                    key={chat.session_id}
+                                    onMouseEnter={() => setHoveredChat(chat.session_id)}
+                                    onMouseLeave={() => setHoveredChat(null)}
+                                >
+                                    <SidebarMenuButton
+                                        asChild
+                                        className="h-auto py-3 px-2 text-sm font-medium w-full text-left"
+                                    >
+                                        <div className="flex items-center justify-between">
+                                            <a href="#" className="flex flex-col items-start gap-1 flex-grow min-w-0">
+                                                <span className="truncate w-full pr-4">{chat.conclude}</span>
+                                                <span className="text-[10px] text-muted-foreground">
+                              {format(new Date(chat.date), "MM月dd日 HH:mm", {
+                                  locale: zhCN,
+                              })}
+                            </span>
+                                            </a>
+                                            {hoveredChat === chat.session_id && (
+                                                <DropdownMenu>
+                                                    <DropdownMenuTrigger asChild>
+                                                        <Button
+                                                            variant="ghost"
+                                                            className="h-8 w-8 p-0"
+                                                        >
+                                                            <MoreHorizontal className="h-4 w-4"/>
+                                                            <span className="sr-only">打开菜单</span>
+                                                        </Button>
+                                                    </DropdownMenuTrigger>
+                                                    <DropdownMenuContent align="end">
+                                                        <DropdownMenuItem>重命名</DropdownMenuItem>
+                                                        <DropdownMenuItem>删除</DropdownMenuItem>
+                                                    </DropdownMenuContent>
+                                                </DropdownMenu>
+                                            )}
+                                        </div>
+                                    </SidebarMenuButton>
+                                </SidebarMenuItem>
+                            ))}
+                        </SidebarMenu>
+                    </SidebarGroupContent>
+                </SidebarGroup>
+            ))}
         </SidebarContent>
     )
 }
