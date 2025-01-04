@@ -1,49 +1,28 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 835.05 458.48">
-  <defs>
-    <style>
-      .uuid-516c4dab-aa6d-4bb5-9459-4565a95293e6, .uuid-812e0518-1daa-4004-877e-e601d12864a8 {
-        stroke-width: 0px;
-      }
-
-      .uuid-73dcf534-425e-466e-ac07-100de9c613bc {
-        font-family: STXihei, STXihei;
-        font-size: 120px;
-      }
-
-      .uuid-73dcf534-425e-466e-ac07-100de9c613bc, .uuid-d4f63abd-ae6f-4e02-9bdf-31b8163027bb {
-        fill: #231815;
-      }
-
-      .uuid-1c96ce50-fa49-46d6-919d-0b9d847146fc {
-        fill: none;
-        stroke: #231815;
-        stroke-miterlimit: 10;
-        stroke-width: 3px;
-      }
-
-      .uuid-d4f63abd-ae6f-4e02-9bdf-31b8163027bb {
-        font-family: ArialMT, Arial;
-        font-size: 35px;
-      }
-
-      .uuid-812e0518-1daa-4004-877e-e601d12864a8 {
-        fill: #f76b0a;
-      }
-    </style>
-  </defs>
-  <g id="uuid-601c3fcf-065b-4c84-8d1e-7a24fdb5fa4d" data-name="图层 3">
-    <polygon class="uuid-516c4dab-aa6d-4bb5-9459-4565a95293e6" points="224.41 248.6 201.68 248.6 157.65 172.35 113.63 248.6 90.76 248.6 157.59 132.86 224.41 248.6"/>
-  </g>
-  <g id="uuid-e7dbe594-a1bc-43fc-82d9-d69f559742a7" data-name="图层 2">
-    <polygon class="uuid-812e0518-1daa-4004-877e-e601d12864a8" points="189.07 248.61 126.23 248.61 157.65 194.2 189.07 248.61"/>
-  </g>
-  <g id="uuid-f6d3ebd0-a144-4a4c-85f0-67f5a3f74b2c" data-name="图层 6">
-    <text class="uuid-73dcf534-425e-466e-ac07-100de9c613bc" transform="translate(224.41 237.65)"><tspan x="0" y="0">cademic</tspan></text>
-    <text class="uuid-d4f63abd-ae6f-4e02-9bdf-31b8163027bb" transform="translate(338.74 297.63)"><tspan x="0" y="0">LLM Chat</tspan></text>
-  </g>
-  <g id="uuid-2e8344a4-725c-4c67-8677-c9f0b6be09f8" data-name="图层 5">
-    <line class="uuid-1c96ce50-fa49-46d6-919d-0b9d847146fc" x1="108.97" y1="284.37" x2="327.01" y2="284.37"/>
-    <line class="uuid-1c96ce50-fa49-46d6-919d-0b9d847146fc" x1="520.29" y1="284.37" x2="738.33" y2="284.37"/>
-  </g>
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 28.0.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+<svg version="1.1" id="图层_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 667.6 176.1" style="enable-background:new 0 0 667.6 176.1;" xml:space="preserve">
+<style type="text/css">
+	.st0{fill:#F76B0A;}
+	.st1{fill:#231815;}
+	.st2{font-family:'STXihei';}
+	.st3{font-size:120px;}
+	.st4{font-family:'ArialMT';}
+	.st5{font-size:35px;}
+	.st6{fill:none;stroke:#231815;stroke-width:3;stroke-miterlimit:10;}
+</style>
+<g id="uuid-601c3fcf-065b-4c84-8d1e-7a24fdb5fa4d">
+	<polygon points="133.6,115.7 110.9,115.7 66.9,39.5 22.9,115.7 0,115.7 66.8,0 	"/>
+</g>
+<g id="uuid-e7dbe594-a1bc-43fc-82d9-d69f559742a7">
+	<polygon class="st0" points="98.3,115.8 35.5,115.8 66.9,61.3 	"/>
+</g>
+<g id="uuid-f6d3ebd0-a144-4a4c-85f0-67f5a3f74b2c">
+	<text transform="matrix(1 0 0 1 133.65 104.79)" class="st1 st2 st3">cademic</text>
+	<text transform="matrix(1 0 0 1 247.98 164.77)" class="st1 st4 st5">LLM Chat</text>
+</g>
+<g id="uuid-2e8344a4-725c-4c67-8677-c9f0b6be09f8">
+	<line class="st6" x1="18.2" y1="151.5" x2="236.2" y2="151.5"/>
+	<line class="st6" x1="429.5" y1="151.5" x2="647.6" y2="151.5"/>
+</g>
 </svg>
