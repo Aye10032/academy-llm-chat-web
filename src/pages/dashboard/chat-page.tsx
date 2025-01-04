@@ -8,11 +8,16 @@ import {
 } from "@/components/ui/breadcrumb"
 import {SidebarTrigger} from "@/components/ui/sidebar.tsx";
 import {Separator} from "@/components/ui/separator.tsx";
-import {Card, CardContent, CardFooter, CardHeader, CardTitle} from "@/components/ui/card.tsx";
 import {ScrollArea} from "@/components/ui/scroll-area";
 import {Input} from "@/components/ui/input.tsx";
 import {Button} from "@/components/ui/button.tsx";
 import {Avatar, AvatarFallback} from "@/components/ui/avatar.tsx";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger
+} from "@/components/ui/dropdown-menu.tsx";
 import ReactMarkdown from 'react-markdown';
 // @ts-expect-error no need any more
 import {Prism as SyntaxHighlighter} from 'react-syntax-highlighter';
@@ -20,18 +25,11 @@ import {Prism as SyntaxHighlighter} from 'react-syntax-highlighter';
 import {tomorrow} from 'react-syntax-highlighter/dist/esm/styles/prism';
 import React, {useState, useRef, useEffect} from "react";
 import {useStreamingMutation, useApiQuery} from "@/hooks/useApi";
-import {UserProfile, KnowledgeBase} from "@/utils/self_type";
-import {DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger} from "@/components/ui/dropdown-menu.tsx";
-import {ChevronDownIcon} from "lucide-react";
+import {UserProfile, KnowledgeBase, Message} from "@/utils/self_type";
+import {ChevronDownIcon, Mic} from "lucide-react";
 
 interface ChatPageProps {
     user: UserProfile;
-}
-
-interface Message {
-    id: string;
-    role: 'user' | 'assistant';
-    content: string;
 }
 
 
@@ -41,11 +39,15 @@ export function ChatPage({user}: ChatPageProps) {
     const [isLoading, setIsLoading] = useState(false);
     const scrollAreaRef = useRef<HTMLDivElement>(null);
 
-    const chatMutation = useStreamingMutation<{ message: string }>('/chat/question');
+    const chatMutation = useStreamingMutation<{
+        message: string,
+        knowledge_base_name: string,
+        history: string
+    }>('/rag/chat');
 
-    const { data: knowledgeBases, isLoading: knowledgeBasesLoading } = useApiQuery<KnowledgeBase[]>(
+    const {data: knowledgeBases, isLoading: knowledgeBasesLoading} = useApiQuery<KnowledgeBase[]>(
         ['knowledgeBases'],
-        '/rag/knowledge_bases/'
+        '/rag/knowledge_bases'
     );
 
     const [selectedKb, setSelectedKb] = useState<KnowledgeBase | null>(null);
@@ -79,7 +81,11 @@ export function ChatPage({user}: ChatPageProps) {
         setIsLoading(true);
 
         try {
-            const stream = await chatMutation.mutateAsync({message: userMessage.content});
+            const stream = await chatMutation.mutateAsync({
+                message: userMessage.content,
+                knowledge_base_name: selectedKb ? selectedKb.table_title : '',
+                history: user.last_chat
+            });
             if (!stream) throw new Error('No stream available');
 
             const reader = stream.getReader();
@@ -112,7 +118,7 @@ export function ChatPage({user}: ChatPageProps) {
 
 
     return (
-        <div className="flex flex-col h-full">
+        <div className="flex flex-col h-screen bg-white">
             <header className="sticky top-0 flex shrink-0 items-center gap-2 border-b bg-background p-4">
                 <SidebarTrigger className="-ml-1"/>
                 <Separator orientation="vertical" className="mr-2 h-4"/>
@@ -136,7 +142,7 @@ export function ChatPage({user}: ChatPageProps) {
                                     {knowledgeBasesLoading ? (
                                         <DropdownMenuItem disabled>加载中...</DropdownMenuItem>
                                     ) : knowledgeBases?.map((kb) => (
-                                        <DropdownMenuItem 
+                                        <DropdownMenuItem
                                             key={kb.table_name}
                                             onClick={() => setSelectedKb(kb)}
                                         >
@@ -149,78 +155,86 @@ export function ChatPage({user}: ChatPageProps) {
                     </BreadcrumbList>
                 </Breadcrumb>
             </header>
-            <main className="flex-1 overflow-auto p-4">
-                <Card className="w-full max-w-2xl mx-auto mt-8">
-                    <CardHeader>
-                        <CardTitle>AI Chat</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <ScrollArea className="h-[600px] p-4">
-                            {messages.map((message, index) => (
+            <main className="flex-1 overflow-hidden container max-w-3xl mx-auto px-4">
+                <ScrollArea className="h-full pt-8 pb-24">
+                    <div className="space-y-6">
+                        {messages.map((message, index) => (
+                            <div
+                                key={index}
+                                className={`flex items-start gap-3 ${
+                                    message.role === 'user' ? 'flex-row-reverse' : 'flex-row'
+                                }`}
+                            >
+                                <Avatar className={`flex-shrink-0 ${
+                                    message.role === 'user' ? 'ml-2' : 'mr-2'
+                                }`}>
+                                    <AvatarFallback>
+                                        {message.role === 'user' ? 'U' : 'AI'}
+                                    </AvatarFallback>
+                                </Avatar>
                                 <div
-                                    key={index}
-                                    className={`mb-6 flex items-start gap-3 ${
-                                        message.role === 'user' ? 'flex-row-reverse' : 'flex-row'
+                                    className={`inline-block p-3 rounded-lg max-w-[80%] ${
+                                        message.role === 'user'
+                                            ? 'bg-blue-500 text-white rounded-tr-none'
+                                            : 'text-black rounded-tl-none'
                                     }`}
                                 >
-                                    <Avatar className={`flex-shrink-0 ${
-                                        message.role === 'user' ? 'ml-2' : 'mr-2'
-                                    }`}>
-                                        <AvatarFallback>
-                                            {message.role === 'user' ? 'U' : 'AI'}
-                                        </AvatarFallback>
-                                    </Avatar>
-                                    <div
-                                        className={`inline-block p-3 rounded-lg max-w-[80%] ${
-                                            message.role === 'user'
-                                                ? 'bg-blue-500 text-white rounded-tr-none'
-                                                : 'bg-white text-black rounded-tl-none'
-                                        }`}
+                                    <ReactMarkdown
+                                        className="prose prose-sm max-w-none dark:prose-invert"
+                                        components={{
+                                            code({className, children, ...props}) {
+                                                const match = /language-(\w+)/.exec(className || '');
+                                                return match ? (
+                                                    <SyntaxHighlighter
+                                                        style={tomorrow}
+                                                        language={match[1]}
+                                                        PreTag="div"
+                                                        {...props}
+                                                    >
+                                                        {String(children).replace(/\n$/, '')}
+                                                    </SyntaxHighlighter>
+                                                ) : (
+                                                    <code className={className} {...props}>
+                                                        {children}
+                                                    </code>
+                                                )
+                                            }
+                                        }}
                                     >
-                                        <ReactMarkdown
-                                            className="prose prose-sm max-w-none"
-                                            components={{
-                                                code({inline, className, children, ...props}) {
-                                                    const match = /language-(\w+)/.exec(className || '');
-                                                    return !inline && match ? (
-                                                        <SyntaxHighlighter
-                                                            style={tomorrow}
-                                                            language={match[1]}
-                                                            PreTag="div"
-                                                            {...props}
-                                                        >
-                                                            {String(children).replace(/\n$/, '')}
-                                                        </SyntaxHighlighter>
-                                                    ) : (
-                                                        <code className={className} {...props}>
-                                                            {children}
-                                                        </code>
-                                                    )
-                                                }
-                                            }}
-                                        >
-                                            {message.content}
-                                        </ReactMarkdown>
-                                    </div>
+                                        {message.content}
+                                    </ReactMarkdown>
                                 </div>
-                            ))}
-                        </ScrollArea>
-                    </CardContent>
-                    <CardFooter>
-                        <form onSubmit={handleSubmit} className="flex w-full gap-2">
+                            </div>
+                        ))}
+                    </div>
+                </ScrollArea>
+            </main>
+
+            {/* Fixed input area */}
+            <div className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-sm border-t">
+                <div className="container max-w-3xl mx-auto px-4 py-4">
+                    <form onSubmit={handleSubmit} className="flex gap-2">
+                        <div className="relative flex-1">
                             <Input
-                                placeholder="输入你的问题..."
+                                className="w-full pl-4 pr-10 py-3 rounded-full border-gray-200"
+                                placeholder="问一问 AI..."
                                 value={input}
                                 onChange={handleInputChange}
                                 disabled={isLoading}
                             />
-                            <Button type="submit" disabled={isLoading}>
-                                {isLoading ? "发送中..." : "发送"}
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                className="absolute right-2 top-1/2 -translate-y-1/2"
+                            >
+                                <Mic className="h-5 w-5 text-gray-400"/>
+                                <span className="sr-only">语音输入</span>
                             </Button>
-                        </form>
-                    </CardFooter>
-                </Card>
-            </main>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
     )
 }

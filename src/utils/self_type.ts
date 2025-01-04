@@ -1,3 +1,6 @@
+import * as React from "react";
+import {Sidebar} from "@/components/ui/sidebar.tsx";
+
 export interface LoginCredentials {
     username: string
     password: string
@@ -9,16 +12,19 @@ export interface TokenResponse {
 }
 
 export interface UserProfile {
-    email: string
-    username: string
-    is_active: boolean
-    role: number
+    email: string,
+    username: string,
+    is_active: boolean,
+    role: number,
+    last_chat: string,
+    last_project: string
 }
 
-export interface SidebarProps {
-    user: UserProfile
-    onNavigate: (page: string) => void
-    onLogout: () => void
+export interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
+    user: UserProfile;
+    handleLogout: () => void;
+    activePage: 'chat' | 'write';
+    setActivePage: React.Dispatch<React.SetStateAction<'chat' | 'write'>>
 }
 
 export interface KnowledgeBase {
@@ -28,4 +34,10 @@ export interface KnowledgeBase {
     create_time: string;
     last_update: string;
     is_active: boolean;
+}
+
+export interface Message {
+    id: string;
+    role: 'user' | 'assistant';
+    content: string;
 }

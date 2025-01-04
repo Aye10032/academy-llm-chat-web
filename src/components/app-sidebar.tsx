@@ -1,6 +1,5 @@
 "use client"
 
-import * as React from "react"
 import {
     Command,
     MessageCircleMoreIcon,
@@ -14,17 +13,10 @@ import {
     SidebarFooter, SidebarGroup, SidebarGroupContent,
     SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar,
 } from "@/components/ui/sidebar"
-import {UserProfile} from "@/utils/self_type.ts";
+import {AppSidebarProps} from "@/utils/self_type.ts";
 import llmLogo from "@/assets/llm-logo1.svg"
 import {ChatSidebar} from "@/components/chat-sidebar.tsx";
 import {WriteSidebar} from "@/components/write-sidebar.tsx";
-
-interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
-    user: UserProfile;
-    handleLogout: () => void;
-    activePage: 'chat' | 'write';
-    setActivePage: React.Dispatch<React.SetStateAction<'chat' | 'write'>>
-}
 
 export function AppSidebar(
     {
@@ -84,7 +76,7 @@ export function AppSidebar(
                                         isActive={activePage === 'chat'}
                                         className="px-2.5 md:px-2"
                                     >
-                                        <MessageCircleMoreIcon />
+                                        <MessageCircleMoreIcon/>
                                         <span>知识库对话</span>
                                     </SidebarMenuButton>
                                 </SidebarMenuItem>
@@ -101,7 +93,7 @@ export function AppSidebar(
                                         isActive={activePage === 'write'}
                                         className="px-2.5 md:px-2"
                                     >
-                                        <PenLineIcon />
+                                        <PenLineIcon/>
                                         <span>写作助手</span>
                                     </SidebarMenuButton>
                                 </SidebarMenuItem>
@@ -122,14 +114,14 @@ export function AppSidebar(
                         <img
                             src={llmLogo}
                             alt="Academic LLM Chat Logo"
-                            className="h-full w-full object-contain px-2"
+                            className="h-full w-full object-contain px-2 py-3"
                         />
                     </div>
                 </SidebarHeader>
                 {activePage === 'chat' ? (
-                    <ChatSidebar />
+                    <ChatSidebar/>
                 ) : (
-                    <WriteSidebar />
+                    <WriteSidebar/>
                 )}
             </Sidebar>
         </Sidebar>
