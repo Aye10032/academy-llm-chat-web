@@ -8,7 +8,6 @@ import {
 } from "@/components/ui/breadcrumb"
 import {SidebarTrigger} from "@/components/ui/sidebar.tsx";
 import {Separator} from "@/components/ui/separator.tsx";
-import {ScrollArea} from "@/components/ui/scroll-area";
 import {Input} from "@/components/ui/input.tsx";
 import {Button} from "@/components/ui/button.tsx";
 import {Avatar, AvatarFallback} from "@/components/ui/avatar.tsx";
@@ -89,6 +88,9 @@ export function ChatPage({user}: ChatPageProps) {
             if (!stream) throw new Error('No stream available');
 
             const reader = stream.getReader();
+            const decoder = new TextDecoder();
+            let aiMessageContent = '';
+            
             const aiMessage: Message = {
                 id: (Date.now() + 1).toString(),
                 role: 'assistant',
@@ -100,11 +102,13 @@ export function ChatPage({user}: ChatPageProps) {
                 const {done, value} = await reader.read();
                 if (done) break;
 
-                const text = new TextDecoder().decode(value);
+                const text = decoder.decode(value);
+                aiMessageContent += text;
+                
                 setMessages(prev => {
                     const newMessages = [...prev];
                     const lastMessage = newMessages[newMessages.length - 1];
-                    lastMessage.content += text;
+                    lastMessage.content = aiMessageContent;
                     return newMessages;
                 });
             }
@@ -155,9 +159,17 @@ export function ChatPage({user}: ChatPageProps) {
                     </BreadcrumbList>
                 </Breadcrumb>
             </header>
-            <main className="flex-1 overflow-hidden container max-w-3xl mx-auto px-4">
-                <ScrollArea className="h-full pt-8 pb-24">
-                    <div className="space-y-6">
+            {/* Main chat area with full-width scroll */}
+            <div
+                className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:w-2
+          [&::-webkit-scrollbar-track]:bg-transparent
+          [&::-webkit-scrollbar-thumb]:bg-gray-200
+          [&::-webkit-scrollbar-thumb]:rounded-full
+          hover:[&::-webkit-scrollbar-thumb]:bg-gray-300"
+            >
+                {/* Centered content container */}
+                <div className="max-w-3xl mx-auto px-4">
+                    <div className="space-y-6 py-8">
                         {messages.map((message, index) => (
                             <div
                                 key={index}
@@ -176,7 +188,7 @@ export function ChatPage({user}: ChatPageProps) {
                                     className={`inline-block p-3 rounded-lg max-w-[80%] ${
                                         message.role === 'user'
                                             ? 'bg-blue-500 text-white rounded-tr-none'
-                                            : 'text-black rounded-tl-none'
+                                            : 'bg-gray-100 text-black rounded-tl-none'
                                     }`}
                                 >
                                     <ReactMarkdown
@@ -207,12 +219,12 @@ export function ChatPage({user}: ChatPageProps) {
                             </div>
                         ))}
                     </div>
-                </ScrollArea>
-            </main>
+                </div>
+            </div>
 
             {/* Fixed input area */}
-            <div className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-sm border-t">
-                <div className="container max-w-3xl mx-auto px-4 py-4">
+            <div className="sticky bottom-0 left-0 right-0 bg-white/80 backdrop-blur-sm border-t">
+                <div className="max-w-3xl mx-auto px-4 py-4">
                     <form onSubmit={handleSubmit} className="flex gap-2">
                         <div className="relative flex-1">
                             <Input
