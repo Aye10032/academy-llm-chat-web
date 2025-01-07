@@ -9,7 +9,7 @@ import {UserProfile} from "@/utils/self_type.ts";
 import {authApi} from "@/utils/api.ts";
 import {useNavigate} from "react-router-dom";
 import React from "react";
-import {ChatPage} from "@/pages/dashboard/chat-page.tsx";
+import {ChatPage} from "@/pages/dashboard/chat/chat-page.tsx";
 import {WritePage} from "@/pages/dashboard/write-page.tsx";
 
 export function MainPage() {

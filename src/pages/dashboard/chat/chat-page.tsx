@@ -5,7 +5,7 @@ import {
     BreadcrumbList,
     BreadcrumbPage,
     BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb"
+} from "@/components/ui/breadcrumb.tsx"
 import {SidebarTrigger} from "@/components/ui/sidebar.tsx";
 import {Separator} from "@/components/ui/separator.tsx";
 import {Input} from "@/components/ui/input.tsx";
@@ -23,8 +23,8 @@ import {Prism as SyntaxHighlighter} from 'react-syntax-highlighter';
 // @ts-expect-error no need any more
 import {tomorrow} from 'react-syntax-highlighter/dist/esm/styles/prism';
 import React, {useState, useRef, useEffect} from "react";
-import {useStreamingMutation, useApiQuery} from "@/hooks/useApi";
-import {UserProfile, KnowledgeBase, Message} from "@/utils/self_type";
+import {useStreamingMutation, useApiQuery} from "@/hooks/useApi.ts";
+import {UserProfile, KnowledgeBase, Message} from "@/utils/self_type.ts";
 import {ChevronDownIcon, Mic} from "lucide-react";
 
 interface ChatPageProps {

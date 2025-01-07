@@ -1,4 +1,4 @@
-import {KnowledgeBase, LoginCredentials, TokenResponse, UserProfile} from './self_type'
+import {LoginCredentials, TokenResponse, UserProfile} from './self_type'
 import {isTokenExpired, useAuth} from "@/utils/auth.ts";
 
 export const API_BASE_URL = '/api/v1'
@@ -85,8 +85,4 @@ export const authApi = {
     getCurrentUser: async (): Promise<UserProfile> => {
         return apiClient<UserProfile>('/auth/me/')
     }
-}
-
-export const ragApi = {
-    getKnowledgeBases: () => apiClient<KnowledgeBase[]>('/rag/knowledge_bases/'),
 }
