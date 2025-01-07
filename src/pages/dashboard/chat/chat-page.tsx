@@ -29,10 +29,11 @@ import {ChevronDownIcon, Mic} from "lucide-react";
 
 interface ChatPageProps {
     user: UserProfile;
+    onKnowledgeBaseSelect?: (kb: KnowledgeBase | null) => void;
 }
 
 
-export function ChatPage({user}: ChatPageProps) {
+export function ChatPage({user, onKnowledgeBaseSelect}: ChatPageProps) {
     const [messages, setMessages] = useState<Message[]>([]);
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -120,6 +121,10 @@ export function ChatPage({user}: ChatPageProps) {
         }
     };
 
+    const handleKnowledgeBaseSelect = (kb: KnowledgeBase) => {
+        setSelectedKb(kb);
+        onKnowledgeBaseSelect?.(kb);
+    };
 
     return (
         <div className="flex flex-col h-screen bg-white">
@@ -148,7 +153,7 @@ export function ChatPage({user}: ChatPageProps) {
                                     ) : knowledgeBases?.map((kb) => (
                                         <DropdownMenuItem
                                             key={kb.table_name}
-                                            onClick={() => setSelectedKb(kb)}
+                                            onClick={() => handleKnowledgeBaseSelect(kb)}
                                         >
                                             {kb.table_title}
                                         </DropdownMenuItem>
@@ -159,15 +164,14 @@ export function ChatPage({user}: ChatPageProps) {
                     </BreadcrumbList>
                 </Breadcrumb>
             </header>
+
             {/* Main chat area with full-width scroll */}
-            <div
-                className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:w-2
-          [&::-webkit-scrollbar-track]:bg-transparent
-          [&::-webkit-scrollbar-thumb]:bg-gray-200
-          [&::-webkit-scrollbar-thumb]:rounded-full
-          hover:[&::-webkit-scrollbar-thumb]:bg-gray-300"
+            <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:w-2
+                [&::-webkit-scrollbar-track]:bg-transparent
+                [&::-webkit-scrollbar-thumb]:bg-gray-200
+                [&::-webkit-scrollbar-thumb]:rounded-full
+                hover:[&::-webkit-scrollbar-thumb]:bg-gray-300"
             >
-                {/* Centered content container */}
                 <div className="max-w-3xl mx-auto px-4">
                     <div className="space-y-6 py-8">
                         {messages.map((message, index) => (

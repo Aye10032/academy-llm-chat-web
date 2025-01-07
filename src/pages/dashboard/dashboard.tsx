@@ -16,6 +16,7 @@ export function MainPage() {
     const {user, logout} = useAuth()
     const navigate = useNavigate()
     const [activePage, setActivePage] = React.useState<'chat' | 'write'>('chat')
+    const [selectedKbName, setSelectedKbName] = React.useState<string>()
 
     // 使用 React Query 和 authApi.getCurrentUser
     const {
@@ -55,10 +56,14 @@ export function MainPage() {
                 handleLogout={handleLogout}
                 activePage={activePage}
                 setActivePage={setActivePage}
+                selectedKbName={selectedKbName}
             />
             <SidebarInset>
                 {activePage === 'chat' ? (
-                    <ChatPage user={userInfo} />
+                    <ChatPage 
+                        user={userInfo} 
+                        onKnowledgeBaseSelect={(kb) => setSelectedKbName(kb?.table_name)}
+                    />
                 ) : (
                     <WritePage />
                 )}

@@ -18,15 +18,7 @@ import llmLogo from "@/assets/llm-logo1.svg"
 import {ChatSidebar} from "@/components/chat-sidebar.tsx";
 import {WriteSidebar} from "@/components/write-sidebar.tsx";
 
-export function AppSidebar(
-    {
-        user,
-        handleLogout,
-        activePage,
-        setActivePage,
-        ...props
-    }: AppSidebarProps
-) {
+export function AppSidebar({user, handleLogout, activePage, setActivePage, selectedKbName}: AppSidebarProps) {
     // Note: I'm using state to show active item.
     // IRL you should use the url/router.
     const {setOpen} = useSidebar()
@@ -35,7 +27,6 @@ export function AppSidebar(
         <Sidebar
             collapsible="icon"
             className="overflow-hidden [&>[data-sidebar=sidebar]]:flex-row"
-            {...props}
         >
 
             {/* This is the first sidebar */}
@@ -119,7 +110,7 @@ export function AppSidebar(
                     </div>
                 </SidebarHeader>
                 {activePage === 'chat' ? (
-                    <ChatSidebar/>
+                    <ChatSidebar selectedKbName={selectedKbName} />
                 ) : (
                     <WriteSidebar/>
                 )}
