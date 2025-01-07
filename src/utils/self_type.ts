@@ -26,6 +26,8 @@ export interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
     activePage: 'chat' | 'write';
     setActivePage: React.Dispatch<React.SetStateAction<'chat' | 'write'>>;
     selectedKbName?: string;
+    selectedChatHistory?: string;
+    onChatSelect?: (chatHistory: string) => void;
 }
 
 export interface KnowledgeBase {

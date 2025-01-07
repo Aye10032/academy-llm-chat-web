@@ -49,10 +49,12 @@ function groupChatsByPeriod(chats: ChatSession[]) {
 }
 
 interface ChatSidebarProps {
-  selectedKbName?: string;
+    selectedKbName?: string;
+    onChatSelect?: (chatHistory: string) => void;
+    selectedChatHistory?: string;
 }
 
-export function ChatSidebar({ selectedKbName }: ChatSidebarProps) {
+export function ChatSidebar({ selectedKbName, onChatSelect, selectedChatHistory }: ChatSidebarProps) {
     const [hoveredChat, setHoveredChat] = useState<string | null>(null);
     const [openMenuId, setOpenMenuId] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
@@ -81,6 +83,15 @@ export function ChatSidebar({ selectedKbName }: ChatSidebarProps) {
         e.stopPropagation()
         setOpenMenuId(prevId => prevId === chatId ? null : chatId)
     }
+
+    const handleChatClick = (chat: ChatSession) => {
+        if (onChatSelect) {
+            onChatSelect(chat.chat_history);
+            // 可以在这里添加选中状态的视觉反馈
+            setHoveredChat(null); // 清除悬停状态
+            setOpenMenuId(null);  // 关闭下拉菜单
+        }
+    };
 
     // 如果没有选择知识库，显示占位内容
     if (!selectedKbName) {
@@ -161,6 +172,8 @@ export function ChatSidebar({ selectedKbName }: ChatSidebarProps) {
                                     key={chat.chat_history}
                                     onMouseEnter={() => setHoveredChat(chat.chat_history)}
                                     onMouseLeave={() => setHoveredChat(null)}
+                                    onClick={() => handleChatClick(chat)}
+                                    className={chat.chat_history === selectedChatHistory ? 'bg-accent' : ''}
                                 >
                                     <SidebarMenuButton asChild className="h-auto py-3 px-2 text-sm font-medium w-full text-left">
                                         <div className="flex items-center justify-between">

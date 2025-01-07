@@ -18,7 +18,15 @@ import llmLogo from "@/assets/llm-logo1.svg"
 import {ChatSidebar} from "@/components/chat-sidebar.tsx";
 import {WriteSidebar} from "@/components/write-sidebar.tsx";
 
-export function AppSidebar({user, handleLogout, activePage, setActivePage, selectedKbName}: AppSidebarProps) {
+export function AppSidebar({
+    user, 
+    handleLogout, 
+    activePage, 
+    setActivePage, 
+    selectedKbName,
+    selectedChatHistory,
+    onChatSelect
+}: AppSidebarProps) {
     // Note: I'm using state to show active item.
     // IRL you should use the url/router.
     const {setOpen} = useSidebar()
@@ -110,7 +118,11 @@ export function AppSidebar({user, handleLogout, activePage, setActivePage, selec
                     </div>
                 </SidebarHeader>
                 {activePage === 'chat' ? (
-                    <ChatSidebar selectedKbName={selectedKbName} />
+                    <ChatSidebar 
+                        selectedKbName={selectedKbName} 
+                        onChatSelect={onChatSelect}
+                        selectedChatHistory={selectedChatHistory}
+                    />
                 ) : (
                     <WriteSidebar/>
                 )}

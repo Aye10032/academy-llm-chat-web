@@ -17,6 +17,7 @@ export function MainPage() {
     const navigate = useNavigate()
     const [activePage, setActivePage] = React.useState<'chat' | 'write'>('chat')
     const [selectedKbName, setSelectedKbName] = React.useState<string>()
+    const [selectedChatHistory, setSelectedChatHistory] = React.useState<string>();
 
     // 使用 React Query 和 authApi.getCurrentUser
     const {
@@ -34,6 +35,11 @@ export function MainPage() {
         logout()
         navigate('/login')
     }
+
+    // 处理选择对话的回调
+    const handleChatSelect = (chatHistory: string) => {
+        setSelectedChatHistory(chatHistory);
+    };
 
     if (isLoading) {
         return <div>加载中...</div>
@@ -57,12 +63,15 @@ export function MainPage() {
                 activePage={activePage}
                 setActivePage={setActivePage}
                 selectedKbName={selectedKbName}
+                selectedChatHistory={selectedChatHistory}
+                onChatSelect={handleChatSelect}
             />
             <SidebarInset>
                 {activePage === 'chat' ? (
                     <ChatPage 
                         user={userInfo} 
                         onKnowledgeBaseSelect={(kb) => setSelectedKbName(kb?.table_name)}
+                        selectedChatHistory={selectedChatHistory}
                     />
                 ) : (
                     <WritePage />

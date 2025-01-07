@@ -30,41 +30,57 @@ import {ChevronDownIcon, Mic} from "lucide-react";
 interface ChatPageProps {
     user: UserProfile;
     onKnowledgeBaseSelect?: (kb: KnowledgeBase | null) => void;
+    selectedChatHistory?: string;
 }
 
 
-export function ChatPage({user, onKnowledgeBaseSelect}: ChatPageProps) {
+export function ChatPage({user, onKnowledgeBaseSelect, selectedChatHistory}: ChatPageProps) {
     const [messages, setMessages] = useState<Message[]>([]);
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
-    const scrollAreaRef = useRef<HTMLDivElement>(null);
+    const chatContainerRef = useRef<HTMLDivElement>(null);
+    const [selectedKb, setSelectedKb] = useState<KnowledgeBase | null>(null);
 
-    const chatMutation = useStreamingMutation<{
-        message: string,
-        knowledge_base_name: string,
-        history: string
-    }>('/rag/chat');
-
+    // 获取知识库列表
     const {data: knowledgeBases, isLoading: knowledgeBasesLoading} = useApiQuery<KnowledgeBase[]>(
         ['knowledgeBases'],
         '/rag/knowledge_bases'
     );
 
-    const [selectedKb, setSelectedKb] = useState<KnowledgeBase | null>(null);
-
-    const scrollToBottom = () => {
-        if (scrollAreaRef.current) {
-            scrollAreaRef.current.scrollTop = scrollAreaRef.current.scrollHeight;
+    // 获取历史对话
+    const { data: chatHistoryData, isLoading: chatHistoryLoading } = useApiQuery<Message[]>(
+        ['chatHistory', selectedChatHistory],
+        `/rag/chat/${selectedChatHistory}`,
+        {
+            enabled: !!selectedChatHistory,
         }
-    };
+    );
 
+    // 当历史对话数据加载完成时更新消息列表
     useEffect(() => {
-        scrollToBottom();
-    }, [messages]);
+        if (chatHistoryData) {
+            const formattedMessages = chatHistoryData.map((msg, index) => ({
+                id: index.toString(),
+                type: msg.type,
+                content: msg.content
+            }));
+            setMessages(formattedMessages);
+        }
+    }, [chatHistoryData]);
 
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setInput(e.target.value);
-    };
+    // 当选择新的对话时，清空当前消息
+    useEffect(() => {
+        if (selectedChatHistory) {
+            setMessages([]); // 在新数据加载前清空
+        }
+    }, [selectedChatHistory]);
+
+    // 发送新消息的mutation
+    const chatMutation = useStreamingMutation<{
+        message: string,
+        knowledge_base_name: string,
+        history: string
+    }>('/rag/chat');
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -83,11 +99,12 @@ export function ChatPage({user, onKnowledgeBaseSelect}: ChatPageProps) {
         try {
             const stream = await chatMutation.mutateAsync({
                 message: userMessage.content,
-                knowledge_base_name: selectedKb ? selectedKb.table_title : '',
-                history: user.last_chat
+                knowledge_base_name: selectedKb ? selectedKb.table_name : '',
+                history: selectedChatHistory || user.last_chat // 使用选中的对话历史或默认值
             });
+            
             if (!stream) throw new Error('No stream available');
-
+            
             const reader = stream.getReader();
             const decoder = new TextDecoder();
             let aiMessageContent = '';
@@ -121,9 +138,28 @@ export function ChatPage({user, onKnowledgeBaseSelect}: ChatPageProps) {
         }
     };
 
+    // 当选择知识库时
     const handleKnowledgeBaseSelect = (kb: KnowledgeBase) => {
         setSelectedKb(kb);
         onKnowledgeBaseSelect?.(kb);
+    };
+
+    const scrollToBottom = () => {
+        if (chatContainerRef.current) {
+            const scrollContainer = chatContainerRef.current;
+            scrollContainer.scrollTo({
+                top: scrollContainer.scrollHeight,
+                behavior: 'smooth'
+            });
+        }
+    };
+
+    useEffect(() => {
+        scrollToBottom();
+    }, [messages]);
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setInput(e.target.value);
     };
 
     return (
@@ -166,11 +202,13 @@ export function ChatPage({user, onKnowledgeBaseSelect}: ChatPageProps) {
             </header>
 
             {/* Main chat area with full-width scroll */}
-            <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:w-2
-                [&::-webkit-scrollbar-track]:bg-transparent
-                [&::-webkit-scrollbar-thumb]:bg-gray-200
-                [&::-webkit-scrollbar-thumb]:rounded-full
-                hover:[&::-webkit-scrollbar-thumb]:bg-gray-300"
+            <div 
+                ref={chatContainerRef}
+                className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:w-2
+                    [&::-webkit-scrollbar-track]:bg-transparent
+                    [&::-webkit-scrollbar-thumb]:bg-gray-200
+                    [&::-webkit-scrollbar-thumb]:rounded-full
+                    hover:[&::-webkit-scrollbar-thumb]:bg-gray-300"
             >
                 <div className="max-w-3xl mx-auto px-4">
                     <div className="space-y-6 py-8">
@@ -251,6 +289,13 @@ export function ChatPage({user, onKnowledgeBaseSelect}: ChatPageProps) {
                     </form>
                 </div>
             </div>
+
+            {/* 可以添加加载状态显示 */}
+            {chatHistoryLoading && (
+                <div className="flex-1 flex items-center justify-center">
+                    加载对话历史中...
+                </div>
+            )}
         </div>
     )
 }
