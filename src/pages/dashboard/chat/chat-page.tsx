@@ -72,7 +72,7 @@ export function ChatPage({user, onKnowledgeBaseSelect}: ChatPageProps) {
 
         const userMessage: Message = {
             id: Date.now().toString(),
-            role: 'user',
+            type: 'human',
             content: input.trim()
         };
 
@@ -94,7 +94,7 @@ export function ChatPage({user, onKnowledgeBaseSelect}: ChatPageProps) {
             
             const aiMessage: Message = {
                 id: (Date.now() + 1).toString(),
-                role: 'assistant',
+                type: 'ai',
                 content: ''
             };
             setMessages(prev => [...prev, aiMessage]);
@@ -178,19 +178,19 @@ export function ChatPage({user, onKnowledgeBaseSelect}: ChatPageProps) {
                             <div
                                 key={index}
                                 className={`flex items-start gap-3 ${
-                                    message.role === 'user' ? 'flex-row-reverse' : 'flex-row'
+                                    message.type === 'human' ? 'flex-row-reverse' : 'flex-row'
                                 }`}
                             >
                                 <Avatar className={`flex-shrink-0 ${
-                                    message.role === 'user' ? 'ml-2' : 'mr-2'
+                                    message.type === 'human' ? 'ml-2' : 'mr-2'
                                 }`}>
                                     <AvatarFallback>
-                                        {message.role === 'user' ? 'U' : 'AI'}
+                                        {message.type === 'human' ? 'U' : 'AI'}
                                     </AvatarFallback>
                                 </Avatar>
                                 <div
                                     className={`inline-block p-3 rounded-lg max-w-[80%] ${
-                                        message.role === 'user'
+                                        message.type === 'human'
                                             ? 'bg-blue-500 text-white rounded-tr-none'
                                             : 'bg-gray-100 text-black rounded-tl-none'
                                     }`}

@@ -39,7 +39,7 @@ export interface KnowledgeBase {
 
 export interface Message {
     id: string;
-    role: 'user' | 'assistant';
+    type: 'human' | 'ai';
     content: string;
 }
 
