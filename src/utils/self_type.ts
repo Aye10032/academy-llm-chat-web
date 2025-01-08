@@ -46,14 +46,16 @@ export interface Message {
 }
 
 export interface Document {
-    title: string
-    author: string
-    year: number
-    source: string
-    source_type: 1 | 2
-    score: number
-    refer_sentence: string[]
-    page_content: string
+    content: string;
+    metadata: {
+        title?: string;
+        author?: string;
+        year?: number;
+        source: string;
+        source_type: number;
+        score: number;
+        refer_sentence: string[];
+    };
 }
 
 export interface ChatSession {

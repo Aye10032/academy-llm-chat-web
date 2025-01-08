@@ -23,11 +23,12 @@ import {Prism as SyntaxHighlighter} from 'react-syntax-highlighter';
 // @ts-expect-error no need any more
 import {tomorrow} from 'react-syntax-highlighter/dist/esm/styles/prism';
 import React, {useState, useRef, useEffect} from "react";
-import {useStreamingMutation, useApiQuery} from "@/hooks/useApi.ts";
+import {useApiQuery, useSseQuery} from "@/hooks/useApi.ts";
 import {UserProfile, KnowledgeBase, Message, Document} from "@/utils/self_type.ts";
 import {ChevronDownIcon, Mic} from "lucide-react";
 import MathJax from "@/components/math-block.tsx";
 import {DocumentSidebar} from "@/components/chat/document-sidebar.tsx";
+import remarkGfm from 'remark-gfm'
 
 interface ChatPageProps {
     user: UserProfile;
@@ -42,6 +43,9 @@ export function ChatPage({user, onKnowledgeBaseSelect, selectedChatHistory}: Cha
     const [isLoading, setIsLoading] = useState(false);
     const chatContainerRef = useRef<HTMLDivElement>(null);
     const [selectedKb, setSelectedKb] = useState<KnowledgeBase | null>(null);
+    const [status, setStatus] = useState<string>('');
+    const [documents, setDocuments] = useState<Document[]>([]);
+    const [isGenerating, setIsGenerating] = useState(false);
 
     // 获取知识库列表
     const {data: knowledgeBases, isLoading: knowledgeBasesLoading} = useApiQuery<KnowledgeBase[]>(
@@ -50,7 +54,7 @@ export function ChatPage({user, onKnowledgeBaseSelect, selectedChatHistory}: Cha
     );
 
     // 获取历史对话
-    const {data: chatHistoryData, isLoading: chatHistoryLoading} = useApiQuery<Message[]>(
+    const {data: chatHistoryData} = useApiQuery<Message[]>(
         ['chatHistory', selectedChatHistory],
         `/rag/chat/${selectedChatHistory}`,
         {
@@ -77,8 +81,8 @@ export function ChatPage({user, onKnowledgeBaseSelect, selectedChatHistory}: Cha
         }
     }, [selectedChatHistory]);
 
-    // 发送新消息的mutation
-    const chatMutation = useStreamingMutation<{
+    // 使用新的 SSE mutation
+    const chatMutation = useSseQuery<{
         message: string,
         knowledge_base_name: string,
         history: string
@@ -97,46 +101,111 @@ export function ChatPage({user, onKnowledgeBaseSelect, selectedChatHistory}: Cha
         setMessages(prev => [...prev, userMessage]);
         setInput('');
         setIsLoading(true);
+        setStatus('');
+        setDocuments([]);
+        setIsGenerating(false);
 
         try {
-            const stream = await chatMutation.mutateAsync({
+            const response = await chatMutation.mutateAsync({
                 message: userMessage.content,
-                knowledge_base_name: selectedKb ? selectedKb.table_name : '',
-                history: selectedChatHistory || user.last_chat // 使用选中的对话历史或默认值
+                knowledge_base_name: selectedKb?.table_name || '',
+                history: selectedChatHistory || user.last_chat
             });
 
-            if (!stream) throw new Error('No stream available');
-
-            const reader = stream.getReader();
-            const decoder = new TextDecoder();
+            const reader = response.body?.getReader();
+            if (!reader) throw new Error('No reader available');
+            
             let aiMessageContent = '';
+            let aiMessageCreated = false;
+            let buffer = ''; // 添加缓冲区处理不完整的消息
 
-            const aiMessage: Message = {
-                id: (Date.now() + 1).toString(),
-                type: 'ai',
-                content: ''
+            const processSSEMessage = (message: string) => {
+                const lines = message.split('\n');
+                let event = '';
+                let data = '';
+
+                for (const line of lines) {
+                    if (line.startsWith('event:')) {
+                        event = line.slice(6).trim();
+                    } else if (line.startsWith('data:')) {
+                        data = line.slice(5).trim();
+                    }
+                }
+
+                if (event && data) {
+                    try {
+                        const parsedData = JSON.parse(data);
+                        switch (event) {
+                            case 'status':
+                                setStatus(parsedData);
+                                if (parsedData === '正在生成回答...') {
+                                    setIsGenerating(true);
+                                }
+                                break;
+                            case 'docs':
+                                setDocuments(parsedData);
+                                break;
+                            case 'answer':
+                                if (!aiMessageCreated) {
+                                    setMessages(prev => [...prev, {
+                                        id: (Date.now() + 1).toString(),
+                                        type: 'ai',
+                                        content: ''
+                                    }]);
+                                    aiMessageCreated = true;
+                                }
+                                
+                                aiMessageContent += parsedData;
+                                setMessages(prev => {
+                                    const newMessages = [...prev];
+                                    const lastMessage = newMessages[newMessages.length - 1];
+                                    if (lastMessage.type === 'ai') {
+                                        lastMessage.content = aiMessageContent;
+                                    }
+                                    return newMessages;
+                                });
+                                break;
+                        }
+                    } catch (e) {
+                        console.error('Error parsing SSE data:', e);
+                    }
+                }
             };
-            setMessages(prev => [...prev, aiMessage]);
 
             while (true) {
                 const {done, value} = await reader.read();
-                if (done) break;
+                if (done) {
+                    if (buffer.trim()) {
+                        processSSEMessage(buffer);
+                    }
+                    setIsGenerating(false);
+                    setStatus('');
+                    break;
+                }
 
-                const text = decoder.decode(value);
-                aiMessageContent += text;
+                const chunk = new TextDecoder().decode(value);
+                buffer += chunk;
 
-                setMessages(prev => {
-                    const newMessages = [...prev];
-                    const lastMessage = newMessages[newMessages.length - 1];
-                    lastMessage.content = aiMessageContent;
-                    return newMessages;
-                });
+                // 查找完整的消息
+                const messages = buffer.split('\n\n');
+                // 保留最后一个可能不完整的消息
+                buffer = messages.pop() || '';
+
+                // 处理完整的消息
+                for (const message of messages) {
+                    if (message.trim()) {
+                        processSSEMessage(message);
+                        // 使用 requestAnimationFrame 控制渲染频率
+                        await new Promise(resolve => requestAnimationFrame(resolve));
+                    }
+                }
             }
         } catch (error) {
             console.error('Error:', error);
-            // TODO: 添加错误提示组件
+            setStatus('发生错误，请重试');
         } finally {
             setIsLoading(false);
+            setIsGenerating(false);
         }
     };
 
@@ -158,35 +227,11 @@ export function ChatPage({user, onKnowledgeBaseSelect, selectedChatHistory}: Cha
 
     useEffect(() => {
         scrollToBottom();
-    }, [messages]);
+    }, [messages, status]);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setInput(e.target.value);
     };
-
-    const [documents, setDocuments] = useState<Document[]>([
-        {
-            title: "Sample PDF Document",
-            author: "John Doe",
-            year: 2025,
-            source: "sample.pdf",
-            source_type: 1,
-            score: 0.9730876959261983,
-            refer_sentence: ["This is a sample reference sentence."],
-            page_content: "This is sample page content. This is a sample reference sentence. More content here."
-        },
-        {
-            title: "Sample Web Document",
-            author: "Jane Smith",
-            year: 2024,
-            source: "https://example.com",
-            source_type: 2,
-            score: 0.7530876959261983,
-            refer_sentence: ["This is another sample reference."],
-            page_content: "This is another sample page content. This is another sample reference. Even more content here."
-        },
-        // Add more sample documents as needed
-    ])
 
     return (
         <div className="flex flex-col h-screen bg-white">
@@ -287,14 +332,22 @@ export function ChatPage({user, onKnowledgeBaseSelect, selectedChatHistory}: Cha
                                             math: ({value}) => <MathJax math={value} display={true}/>,
                                             inlineMath: ({value}) => <MathJax math={value} display={false}/>,
                                         }}
-                                        remarkPlugins={[]}
-                                        rehypePlugins={[]}
+                                        remarkPlugins={[remarkGfm]}
                                     >
                                         {message.content}
                                     </ReactMarkdown>
                                 </div>
                             </div>
                         ))}
+
+                        {/* 显示状态信息 */}
+                        {(status || isGenerating) && (
+                            <div className="flex justify-center">
+                                <span className="inline-flex items-center px-4 py-2 rounded-full text-sm bg-gray-100 text-gray-700">
+                                    {isGenerating ? '正在生成回答...' : status}
+                                </span>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
@@ -325,15 +378,8 @@ export function ChatPage({user, onKnowledgeBaseSelect, selectedChatHistory}: Cha
                 </div>
             </div>
 
-            {/* 可以添加加载状态显示 */}
-            {chatHistoryLoading && (
-                <div className="flex-1 flex items-center justify-center">
-                    加载对话历史中...
-                </div>
-            )}
-
-            {/* Add the DocumentSidebar component */}
-            <DocumentSidebar documents={documents} />
+            {/* 使用真实文档数据 */}
+            <DocumentSidebar documents={documents}/>
         </div>
     )
 }

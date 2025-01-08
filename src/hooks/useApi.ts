@@ -68,3 +68,40 @@ export function useApiMutation<TData, TVariables>(
         ...options,
     })
 }
+
+// 添加新的 SSE hook
+export function useSseQuery<TVariables>(
+    endpoint: string,
+    options?: Omit<UseMutationOptions<Response, Error, TVariables>, 'mutationFn'>
+) {
+    return useMutation<Response, Error, TVariables>({
+        mutationFn: async (variables) => {
+            const token = useAuth.getState().token;
+            
+            if (!token) {
+                throw new Error('No authentication token');
+            }
+
+            const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(variables)
+            });
+
+            if (!response.ok) {
+                if (response.status === 401) {
+                    useAuth.getState().logout();
+                    window.location.href = '/';
+                }
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.detail || 'Network response was not ok');
+            }
+
+            return response;
+        },
+        ...options,
+    });
+}
