@@ -26,6 +26,7 @@ import React, {useState, useRef, useEffect} from "react";
 import {useStreamingMutation, useApiQuery} from "@/hooks/useApi.ts";
 import {UserProfile, KnowledgeBase, Message} from "@/utils/self_type.ts";
 import {ChevronDownIcon, Mic} from "lucide-react";
+import MathJax from "@/components/math-block.tsx";
 
 interface ChatPageProps {
     user: UserProfile;
@@ -48,7 +49,7 @@ export function ChatPage({user, onKnowledgeBaseSelect, selectedChatHistory}: Cha
     );
 
     // 获取历史对话
-    const { data: chatHistoryData, isLoading: chatHistoryLoading } = useApiQuery<Message[]>(
+    const {data: chatHistoryData, isLoading: chatHistoryLoading} = useApiQuery<Message[]>(
         ['chatHistory', selectedChatHistory],
         `/rag/chat/${selectedChatHistory}`,
         {
@@ -102,13 +103,13 @@ export function ChatPage({user, onKnowledgeBaseSelect, selectedChatHistory}: Cha
                 knowledge_base_name: selectedKb ? selectedKb.table_name : '',
                 history: selectedChatHistory || user.last_chat // 使用选中的对话历史或默认值
             });
-            
+
             if (!stream) throw new Error('No stream available');
-            
+
             const reader = stream.getReader();
             const decoder = new TextDecoder();
             let aiMessageContent = '';
-            
+
             const aiMessage: Message = {
                 id: (Date.now() + 1).toString(),
                 type: 'ai',
@@ -122,7 +123,7 @@ export function ChatPage({user, onKnowledgeBaseSelect, selectedChatHistory}: Cha
 
                 const text = decoder.decode(value);
                 aiMessageContent += text;
-                
+
                 setMessages(prev => {
                     const newMessages = [...prev];
                     const lastMessage = newMessages[newMessages.length - 1];
@@ -202,7 +203,7 @@ export function ChatPage({user, onKnowledgeBaseSelect, selectedChatHistory}: Cha
             </header>
 
             {/* Main chat area with full-width scroll */}
-            <div 
+            <div
                 ref={chatContainerRef}
                 className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:w-2
                     [&::-webkit-scrollbar-track]:bg-transparent
@@ -236,9 +237,10 @@ export function ChatPage({user, onKnowledgeBaseSelect, selectedChatHistory}: Cha
                                     <ReactMarkdown
                                         className="prose prose-sm max-w-none dark:prose-invert"
                                         components={{
-                                            code({className, children, ...props}) {
-                                                const match = /language-(\w+)/.exec(className || '');
-                                                return match ? (
+                                            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                                            code({node, inline, className, children, ...props}) {
+                                                const match = /language-(\w+)/.exec(className || '')
+                                                return !inline && match ? (
                                                     <SyntaxHighlighter
                                                         style={tomorrow}
                                                         language={match[1]}
@@ -252,8 +254,16 @@ export function ChatPage({user, onKnowledgeBaseSelect, selectedChatHistory}: Cha
                                                         {children}
                                                     </code>
                                                 )
-                                            }
+                                            },
+                                            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                                            p({node, children, ...props}) {
+                                                return <p {...props}>{children}</p>
+                                            },
+                                            math: ({value}) => <MathJax math={value} display={true}/>,
+                                            inlineMath: ({value}) => <MathJax math={value} display={false}/>,
                                         }}
+                                        remarkPlugins={[]}
+                                        rehypePlugins={[]}
                                     >
                                         {message.content}
                                     </ReactMarkdown>
