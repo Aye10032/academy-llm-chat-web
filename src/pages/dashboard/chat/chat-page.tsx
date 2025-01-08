@@ -24,9 +24,10 @@ import {Prism as SyntaxHighlighter} from 'react-syntax-highlighter';
 import {tomorrow} from 'react-syntax-highlighter/dist/esm/styles/prism';
 import React, {useState, useRef, useEffect} from "react";
 import {useStreamingMutation, useApiQuery} from "@/hooks/useApi.ts";
-import {UserProfile, KnowledgeBase, Message} from "@/utils/self_type.ts";
+import {UserProfile, KnowledgeBase, Message, Document} from "@/utils/self_type.ts";
 import {ChevronDownIcon, Mic} from "lucide-react";
 import MathJax from "@/components/math-block.tsx";
+import {DocumentSidebar} from "@/components/chat/document-sidebar.tsx";
 
 interface ChatPageProps {
     user: UserProfile;
@@ -163,6 +164,30 @@ export function ChatPage({user, onKnowledgeBaseSelect, selectedChatHistory}: Cha
         setInput(e.target.value);
     };
 
+    const [documents, setDocuments] = useState<Document[]>([
+        {
+            title: "Sample PDF Document",
+            author: "John Doe",
+            year: 2025,
+            source: "sample.pdf",
+            source_type: 1,
+            score: 0.9730876959261983,
+            refer_sentence: ["This is a sample reference sentence."],
+            page_content: "This is sample page content. This is a sample reference sentence. More content here."
+        },
+        {
+            title: "Sample Web Document",
+            author: "Jane Smith",
+            year: 2024,
+            source: "https://example.com",
+            source_type: 2,
+            score: 0.7530876959261983,
+            refer_sentence: ["This is another sample reference."],
+            page_content: "This is another sample page content. This is another sample reference. Even more content here."
+        },
+        // Add more sample documents as needed
+    ])
+
     return (
         <div className="flex flex-col h-screen bg-white">
             <header className="sticky top-0 flex shrink-0 items-center gap-2 border-b bg-background p-4">
@@ -231,7 +256,7 @@ export function ChatPage({user, onKnowledgeBaseSelect, selectedChatHistory}: Cha
                                     className={`inline-block p-3 rounded-lg max-w-[80%] ${
                                         message.type === 'human'
                                             ? 'bg-blue-500 text-white rounded-tr-none'
-                                            : 'bg-gray-100 text-black rounded-tl-none'
+                                            : 'bg-white text-black rounded-tl-none'
                                     }`}
                                 >
                                     <ReactMarkdown
@@ -306,6 +331,9 @@ export function ChatPage({user, onKnowledgeBaseSelect, selectedChatHistory}: Cha
                     加载对话历史中...
                 </div>
             )}
+
+            {/* Add the DocumentSidebar component */}
+            <DocumentSidebar documents={documents} />
         </div>
     )
 }

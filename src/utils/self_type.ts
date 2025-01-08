@@ -45,6 +45,17 @@ export interface Message {
     content: string;
 }
 
+export interface Document {
+    title: string
+    author: string
+    year: number
+    source: string
+    source_type: 1 | 2
+    score: number
+    refer_sentence: string[]
+    page_content: string
+}
+
 export interface ChatSession {
     chat_history: string;
     knowledge_base_name: string;

@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/sidebar"
 import {AppSidebarProps} from "@/utils/self_type.ts";
 import llmLogo from "@/assets/llm-logo1.svg"
-import {ChatSidebar} from "@/components/chat-sidebar.tsx";
+import {ChatSidebar} from "@/components/chat/chat-sidebar.tsx";
 import {WriteSidebar} from "@/components/write-sidebar.tsx";
 
 export function AppSidebar({
