@@ -176,7 +176,7 @@ export function ChatPage({user, onKnowledgeBaseSelect, selectedChatHistory}: Cha
                                     }]);
                                     aiMessageCreated = true;
                                 }
-
+                                
                                 aiMessageContent += parsedData;
                                 setMessages(prev => {
                                     const newMessages = [...prev];
@@ -200,6 +200,15 @@ export function ChatPage({user, onKnowledgeBaseSelect, selectedChatHistory}: Cha
                     if (buffer.trim()) {
                         processSSEMessage(buffer);
                     }
+                    setDocuments(prevDocs => 
+                        prevDocs.map((doc, index) => ({
+                            ...doc,
+                            metadata: {
+                                ...doc.metadata,
+                                isReferenced: aiMessageContent.includes(`[^${index + 1}]`)
+                            }
+                        }))
+                    );
                     setIsGenerating(false);
                     setStatus('');
                     break;
@@ -233,6 +242,13 @@ export function ChatPage({user, onKnowledgeBaseSelect, selectedChatHistory}: Cha
 
     // 添加处理脚注的函数
     const processFootnotes = (content: string) => {
+        // 处理已经转义的方括号
+        content = content.replace(/\\\[\\\^(\d+)\\\]/g, (_, num) => {
+            const index = parseInt(num) - 1;
+            return `<sup class="inline-flex justify-center items-center text-xs bg-gray-100 rounded px-1.5 py-0.5 ml-0.5 text-gray-600 hover:bg-gray-200 transition-colors cursor-pointer" onclick="window.handleFootnoteClick(${index})">${num}</sup>`;
+        });
+        
+        // 处理普通的方括号
         return content.replace(/\[\^(\d+)\]/g, (_, num) => {
             const index = parseInt(num) - 1;
             return `<sup class="inline-flex justify-center items-center text-xs bg-gray-100 rounded px-1.5 py-0.5 ml-0.5 text-gray-600 hover:bg-gray-200 transition-colors cursor-pointer" onclick="window.handleFootnoteClick(${index})">${num}</sup>`;
@@ -372,6 +388,30 @@ export function ChatPage({user, onKnowledgeBaseSelect, selectedChatHistory}: Cha
                                                     return <p dangerouslySetInnerHTML={{__html: processFootnotes(children)}}/>;
                                                 }
                                                 return <p>{children}</p>;
+                                            },
+                                            li({children}) {
+                                                if (typeof children === 'string') {
+                                                    return <li dangerouslySetInnerHTML={{__html: processFootnotes(children)}}/>;
+                                                }
+                                                return <li>{children}</li>;
+                                            },
+                                            strong({children}) {
+                                                if (typeof children === 'string') {
+                                                    return <strong dangerouslySetInnerHTML={{__html: processFootnotes(children)}}/>;
+                                                }
+                                                return <strong>{children}</strong>;
+                                            },
+                                            em({children}) {
+                                                if (typeof children === 'string') {
+                                                    return <em dangerouslySetInnerHTML={{__html: processFootnotes(children)}}/>;
+                                                }
+                                                return <em>{children}</em>;
+                                            },
+                                            text({children}) {
+                                                if (typeof children === 'string') {
+                                                    return <span dangerouslySetInnerHTML={{__html: processFootnotes(children)}}/>;
+                                                }
+                                                return <>{children}</>;
                                             }
                                         }}
                                         remarkPlugins={[remarkGfm, remarkMath]}
