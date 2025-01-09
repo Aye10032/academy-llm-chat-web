@@ -85,3 +85,19 @@
         @apply font-sans antialiased bg-background text-foreground;
     }
 }
+
+@keyframes highlight {
+    0% {
+        background-color: rgba(59, 130, 246, 0.1);
+    }
+    50% {
+        background-color: rgba(59, 130, 246, 0.2);
+    }
+    100% {
+        background-color: transparent;
+    }
+}
+
+.animate-highlight {
+    animation: highlight 1.5s ease-in-out;
+}

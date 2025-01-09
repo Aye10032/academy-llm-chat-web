@@ -1,6 +1,6 @@
 'use client'
 
-import {useCallback} from 'react'
+import {useCallback, useRef, useEffect} from 'react'
 import {ChevronLeft, ChevronRight, FileText, Globe} from 'lucide-react'
 import {Button} from "@/components/ui/button"
 import {ScrollArea} from "@/components/ui/scroll-area"
@@ -10,9 +10,32 @@ interface DocumentSidebarProps {
     documents: Document[]
     isOpen: boolean
     onToggle: () => void
+    activeDocIndex?: number
+    onActiveDocChange?: (index: number) => void
 }
 
-export function DocumentSidebar({documents, isOpen, onToggle}: DocumentSidebarProps) {
+export function DocumentSidebar({
+    documents, 
+    isOpen, 
+    onToggle, 
+    activeDocIndex,
+    onActiveDocChange
+}: DocumentSidebarProps) {
+    const scrollAreaRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (activeDocIndex !== undefined && scrollAreaRef.current) {
+            const docElement = scrollAreaRef.current.querySelector(`[data-doc-index="${activeDocIndex}"]`);
+            if (docElement) {
+                docElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                docElement.classList.add('animate-highlight');
+                setTimeout(() => {
+                    docElement.classList.remove('animate-highlight');
+                }, 2000);
+            }
+        }
+    }, [activeDocIndex]);
+
     const toggleSidebar = useCallback(() => {
         onToggle()
     }, [onToggle])
@@ -51,14 +74,26 @@ export function DocumentSidebar({documents, isOpen, onToggle}: DocumentSidebarPr
                 {isOpen ? <ChevronRight className="h-4 w-4"/> : <ChevronLeft className="h-4 w-4"/>}
             </Button>
             {isOpen && (
-                <ScrollArea className="flex-1 p-6">
+                <ScrollArea ref={scrollAreaRef} className="flex-1 p-6">
                     <h2 className="text-xl font-semibold mb-6 text-gray-800 pl-28">参考文档</h2>
                     {documents.map((doc, index) => (
-                        <div key={index} className="mb-6 p-4 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300">
+                        <div 
+                            key={index} 
+                            data-doc-index={index}
+                            className={`mb-6 p-4 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300 
+                                ${doc.metadata.isReferenced ? 'border-l-4 border-blue-500' : ''}`}
+                        >
                             <div className="flex justify-between items-center mb-2">
-                                <h3 className="font-medium text-lg text-gray-800">
-                                    {doc.metadata.title || 'Untitled'}
-                                </h3>
+                                <div className="flex items-center gap-2">
+                                    <h3 className="font-medium text-lg text-gray-800">
+                                        {doc.metadata.title || 'Untitled'}
+                                    </h3>
+                                    {doc.metadata.isReferenced && (
+                                        <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-semibold bg-blue-100 text-blue-800 rounded-full">
+                                            {index + 1}
+                                        </span>
+                                    )}
+                                </div>
                                 {doc.metadata.source_type === 1 ? (
                                     <FileText className="h-5 w-5 text-blue-500"/>
                                 ) : (

@@ -55,6 +55,7 @@ export interface Document {
         source_type: number;
         score: number;
         refer_sentence: string[];
+        isReferenced?: boolean;
     };
 }
 

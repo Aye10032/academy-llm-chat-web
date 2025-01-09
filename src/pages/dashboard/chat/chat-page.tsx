@@ -49,6 +49,7 @@ export function ChatPage({user, onKnowledgeBaseSelect, selectedChatHistory}: Cha
     const [documents, setDocuments] = useState<Document[]>([]);
     const [isGenerating, setIsGenerating] = useState(false);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [activeDocIndex, setActiveDocIndex] = useState<number>();
 
     // 获取知识库列表
     const {data: knowledgeBases, isLoading: knowledgeBasesLoading} = useApiQuery<KnowledgeBase[]>(
@@ -157,7 +158,14 @@ export function ChatPage({user, onKnowledgeBaseSelect, selectedChatHistory}: Cha
                                 }
                                 break;
                             case 'docs':
-                                setDocuments(parsedData);
+                                const processedDocs = parsedData.map((doc: Document, index: number) => ({
+                                    ...doc,
+                                    metadata: {
+                                        ...doc.metadata,
+                                        isReferenced: false // 初始化引用状态
+                                    }
+                                }));
+                                setDocuments(processedDocs);
                                 break;
                             case 'answer':
                                 if (!aiMessageCreated) {
@@ -225,10 +233,23 @@ export function ChatPage({user, onKnowledgeBaseSelect, selectedChatHistory}: Cha
 
     // 添加处理脚注的函数
     const processFootnotes = (content: string) => {
-        return content.replace(/\[\^(\d+)\]/g, (_, num) =>
-            `<sup class="inline-flex justify-center items-center text-xs bg-gray-100 rounded px-1.5 py-0.5 ml-0.5 text-gray-600 hover:bg-gray-200 transition-colors">${num}</sup>`
-        );
+        return content.replace(/\[\^(\d+)\]/g, (_, num) => {
+            const index = parseInt(num) - 1;
+            return `<sup class="inline-flex justify-center items-center text-xs bg-gray-100 rounded px-1.5 py-0.5 ml-0.5 text-gray-600 hover:bg-gray-200 transition-colors cursor-pointer" onclick="window.handleFootnoteClick(${index})">${num}</sup>`;
+        });
     };
+
+    // 添加全局点击处理函数
+    useEffect(() => {
+        window.handleFootnoteClick = (index: number) => {
+            setIsSidebarOpen(true);
+            setActiveDocIndex(index);
+        };
+
+        return () => {
+            delete window.handleFootnoteClick;
+        };
+    }, []);
 
     // 生成回答后自动打开侧边栏
     useEffect(() => {
@@ -405,6 +426,8 @@ export function ChatPage({user, onKnowledgeBaseSelect, selectedChatHistory}: Cha
                 documents={documents}
                 isOpen={isSidebarOpen}
                 onToggle={handleSidebarToogle}
+                activeDocIndex={activeDocIndex}
+                onActiveDocChange={setActiveDocIndex}
             />
         </div>
     )
