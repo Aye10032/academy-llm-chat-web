@@ -30,7 +30,7 @@ import {Prism as SyntaxHighlighter} from 'react-syntax-highlighter'
 import {darcula} from 'react-syntax-highlighter/dist/esm/styles/prism';
 import React, {useState, useRef, useEffect, useCallback} from "react";
 import {useApiQuery, useSseQuery} from "@/hooks/useApi.ts";
-import {KnowledgeBase, Message, Document, ChatPageProps} from "@/utils/self_type.ts";
+import {KnowledgeBase, Message, Document, ChatPageProps, UserProfile} from "@/utils/self_type.ts";
 import {ChevronDownIcon, Mic} from "lucide-react";
 import {DocumentSidebar} from "@/components/chat/document-sidebar.tsx";
 import remarkGfm from 'remark-gfm'
@@ -57,6 +57,17 @@ export function ChatPage({user, onKnowledgeBaseSelect, selectedHistoryId}: ChatP
         '/rag/knowledge_bases'
     );
 
+    // 添加初始化知识库的 useEffect
+    useEffect(() => {
+        if (!knowledgeBasesLoading && knowledgeBases && user.last_knowledge_base) {
+            const lastKb = knowledgeBases.find(kb => kb.table_name === user.last_knowledge_base);
+            if (lastKb) {
+                setSelectedKb(lastKb);
+                onKnowledgeBaseSelect?.(lastKb);
+            }
+        }
+    }, [knowledgeBasesLoading, knowledgeBases, user.last_knowledge_base, onKnowledgeBaseSelect]);
+
     // 当选择知识库时
     const handleKnowledgeBaseSelect = (kb: KnowledgeBase) => {
         setSelectedKb(kb);
@@ -72,24 +83,23 @@ export function ChatPage({user, onKnowledgeBaseSelect, selectedHistoryId}: ChatP
         }
     );
 
-    // 当历史对话数据加载完成时更新消息列表
-    useEffect(() => {
-        if (chatHistoryData) {
-            const formattedMessages = chatHistoryData.map((msg, index) => ({
-                id: index.toString(),
-                type: msg.type,
-                content: msg.content
-            }));
-            setMessages(formattedMessages);
-        }
-    }, [chatHistoryData]);
-
-    // 当选择新的对话时，清空当前消息
+    // 修改历史对话加载的逻辑
     useEffect(() => {
         if (selectedHistoryId) {
-            setMessages([]); // 在新数据加载前清空
+            // 先清空当前消息
+            setMessages([]);
+            
+            // 如果有新的历史数据，则设置
+            if (chatHistoryData) {
+                const formattedMessages = chatHistoryData.map((msg, index) => ({
+                    id: index.toString(),
+                    type: msg.type,
+                    content: msg.content
+                }));
+                setMessages(formattedMessages);
+            }
         }
-    }, [selectedHistoryId]);
+    }, [selectedHistoryId, chatHistoryData]);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setInput(e.target.value);
@@ -124,7 +134,7 @@ export function ChatPage({user, onKnowledgeBaseSelect, selectedHistoryId}: ChatP
             const response = await chatMutation.mutateAsync({
                 message: userMessage.content,
                 knowledge_base_name: selectedKb?.table_name || '',
-                history_id: selectedHistoryId || user.last_chat
+                history_id: selectedHistoryId || ''
             });
 
             const reader = response.body?.getReader();

@@ -5,10 +5,10 @@ import {
 } from "@/components/ui/sidebar"
 import {useAuth} from "@/utils/auth.ts";
 import {useQuery} from "@tanstack/react-query";
-import {UserProfile} from "@/utils/self_type.ts";
+import {UserProfile, KnowledgeBase} from "@/utils/self_type.ts";
 import {authApi} from "@/utils/api.ts";
 import {useNavigate, useParams} from "react-router-dom";
-import React from "react";
+import React, {useCallback} from "react";
 import {ChatPage} from "@/pages/dashboard/chat/chat-page.tsx";
 import {WritePage} from "@/pages/dashboard/write-page.tsx";
 
@@ -64,6 +64,17 @@ export function MainPage({defaultPage = 'chat'}: MainPageProps) {
         navigate('/login')
     }
 
+    // 修改 handleKnowledgeBaseSelect 的实现
+    const handleKnowledgeBaseSelect = useCallback((kb: KnowledgeBase | null) => {
+        setSelectedKbName(kb?.table_name);
+        // 当切换知识库时，清除当前选中的对话
+        setSelectedHistoryId(undefined);
+        // 如果在聊天页面且切换到了新的知识库，则导航到基础路径
+        if (activePage === 'chat' && kb) {
+            navigate('/c');
+        }
+    }, [activePage, navigate]);
+
     if (isLoading) {
         return <div>加载中...</div>
     }
@@ -93,7 +104,7 @@ export function MainPage({defaultPage = 'chat'}: MainPageProps) {
                 {activePage === 'chat' ? (
                     <ChatPage 
                         user={userInfo} 
-                        onKnowledgeBaseSelect={(kb) => setSelectedKbName(kb?.table_name)}
+                        onKnowledgeBaseSelect={handleKnowledgeBaseSelect}
                         selectedHistoryId={selectedHistoryId}
                     />
                 ) : (

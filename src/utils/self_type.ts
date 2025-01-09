@@ -16,7 +16,7 @@ export interface UserProfile {
     username: string,
     is_active: boolean,
     role: number,
-    last_chat: string,
+    last_knowledge_base: string,
     last_project: string
 }
 
