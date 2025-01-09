@@ -30,19 +30,13 @@ import {Prism as SyntaxHighlighter} from 'react-syntax-highlighter'
 import {darcula} from 'react-syntax-highlighter/dist/esm/styles/prism';
 import React, {useState, useRef, useEffect, useCallback} from "react";
 import {useApiQuery, useSseQuery} from "@/hooks/useApi.ts";
-import {UserProfile, KnowledgeBase, Message, Document} from "@/utils/self_type.ts";
+import {KnowledgeBase, Message, Document, ChatPageProps} from "@/utils/self_type.ts";
 import {ChevronDownIcon, Mic} from "lucide-react";
 import {DocumentSidebar} from "@/components/chat/document-sidebar.tsx";
 import remarkGfm from 'remark-gfm'
 import rehypeKatex from 'rehype-katex'
 import remarkMath from 'remark-math'
 import 'katex/dist/katex.min.css'
-
-interface ChatPageProps {
-    user: UserProfile;
-    onKnowledgeBaseSelect?: (kb: KnowledgeBase | null) => void;
-    selectedHistoryId?: string;
-}
 
 
 export function ChatPage({user, onKnowledgeBaseSelect, selectedHistoryId}: ChatPageProps) {
@@ -105,7 +99,7 @@ export function ChatPage({user, onKnowledgeBaseSelect, selectedHistoryId}: ChatP
     const chatMutation = useSseQuery<{
         message: string,
         knowledge_base_name: string,
-        history: string
+        history_id: string
     }>('/rag/chat');
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -130,7 +124,7 @@ export function ChatPage({user, onKnowledgeBaseSelect, selectedHistoryId}: ChatP
             const response = await chatMutation.mutateAsync({
                 message: userMessage.content,
                 knowledge_base_name: selectedKb?.table_name || '',
-                history_id: selectedHistoryId || user.last_history
+                history_id: selectedHistoryId || user.last_chat
             });
 
             const reader = response.body?.getReader();
@@ -472,7 +466,6 @@ export function ChatPage({user, onKnowledgeBaseSelect, selectedHistoryId}: ChatP
                 isOpen={isSidebarOpen}
                 onToggle={handleSidebarToogle}
                 activeDocIndex={activeDocIndex}
-                onActiveDocChange={setActiveDocIndex}
             />
         </div>
     )

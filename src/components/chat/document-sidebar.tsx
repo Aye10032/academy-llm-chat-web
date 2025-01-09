@@ -4,30 +4,23 @@ import {useCallback, useRef, useEffect} from 'react'
 import {ChevronLeft, ChevronRight, FileText, Globe} from 'lucide-react'
 import {Button} from "@/components/ui/button"
 import {ScrollArea} from "@/components/ui/scroll-area"
-import {Document} from "@/utils/self_type.ts";
+import {DocumentSidebarProps} from "@/utils/self_type.ts";
 
-interface DocumentSidebarProps {
-    documents: Document[]
-    isOpen: boolean
-    onToggle: () => void
-    activeDocIndex?: number
-    onActiveDocChange?: (index: number) => void
-}
-
-export function DocumentSidebar({
-    documents, 
-    isOpen, 
-    onToggle, 
-    activeDocIndex,
-    onActiveDocChange
-}: DocumentSidebarProps) {
+export function DocumentSidebar(
+    {
+        documents,
+        isOpen,
+        onToggle,
+        activeDocIndex,
+    }: DocumentSidebarProps
+) {
     const scrollAreaRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         if (activeDocIndex !== undefined && scrollAreaRef.current) {
             const docElement = scrollAreaRef.current.querySelector(`[data-doc-index="${activeDocIndex}"]`);
             if (docElement) {
-                docElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                docElement.scrollIntoView({behavior: 'smooth', block: 'center'});
                 docElement.classList.add('animate-highlight');
                 setTimeout(() => {
                     docElement.classList.remove('animate-highlight');
@@ -77,8 +70,8 @@ export function DocumentSidebar({
                 <ScrollArea ref={scrollAreaRef} className="flex-1 p-6">
                     <h2 className="text-xl font-semibold mb-6 text-gray-800 pl-28">参考文档</h2>
                     {documents.map((doc, index) => (
-                        <div 
-                            key={index} 
+                        <div
+                            key={index}
                             data-doc-index={index}
                             className={`mb-6 p-4 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300 
                                 ${doc.metadata.isReferenced ? 'border-l-4 border-blue-500' : ''}`}
@@ -89,7 +82,8 @@ export function DocumentSidebar({
                                         {doc.metadata.title || 'Untitled'}
                                     </h3>
                                     {doc.metadata.isReferenced && (
-                                        <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-semibold bg-blue-100 text-blue-800 rounded-full">
+                                        <span
+                                            className="inline-flex items-center justify-center w-5 h-5 text-xs font-semibold bg-blue-100 text-blue-800 rounded-full">
                                             {index + 1}
                                         </span>
                                     )}

@@ -42,6 +42,13 @@ export interface ChatPageProps {
     selectedHistoryId?: string;
 }
 
+export interface DocumentSidebarProps {
+    documents: Document[]
+    isOpen: boolean
+    onToggle: () => void
+    activeDocIndex?: number
+}
+
 export interface KnowledgeBase {
     table_name: string;
     table_title: string;
