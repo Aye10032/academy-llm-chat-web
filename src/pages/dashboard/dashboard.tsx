@@ -7,17 +7,45 @@ import {useAuth} from "@/utils/auth.ts";
 import {useQuery} from "@tanstack/react-query";
 import {UserProfile} from "@/utils/self_type.ts";
 import {authApi} from "@/utils/api.ts";
-import {useNavigate} from "react-router-dom";
+import {useNavigate, useParams} from "react-router-dom";
 import React from "react";
 import {ChatPage} from "@/pages/dashboard/chat/chat-page.tsx";
 import {WritePage} from "@/pages/dashboard/write-page.tsx";
 
-export function MainPage() {
+interface MainPageProps {
+    defaultPage?: 'chat' | 'write';
+}
+
+export function MainPage({defaultPage = 'chat'}: MainPageProps) {
     const {user, logout} = useAuth()
-    const navigate = useNavigate()
-    const [activePage, setActivePage] = React.useState<'chat' | 'write'>('chat')
+    const {historyId} = useParams();
+    const navigate = useNavigate();
+    const [activePage, setActivePage] = React.useState<'chat' | 'write'>(defaultPage)
     const [selectedKbName, setSelectedKbName] = React.useState<string>()
-    const [selectedChatHistory, setSelectedChatHistory] = React.useState<string>();
+    const [selectedHistoryId, setSelectedHistoryId] = React.useState<string>();
+
+    // 当 URL 中的 historyId 参数改变时，更新选中的对话
+    React.useEffect(() => {
+        if (historyId) {
+            setSelectedHistoryId(historyId);
+        }
+    }, [historyId]);
+
+    // 修改 setActivePage 的处理逻辑
+    const handlePageChange = React.useCallback((page: 'chat' | 'write') => {
+        setActivePage(page);
+        if (page === 'chat') {
+            navigate('/c');
+        } else if (page === 'write') {
+            navigate('/w');
+        }
+    }, [navigate]);
+
+    // 处理选择对话的回调
+    const handleHistorySelect = (historyId: string) => {
+        setSelectedHistoryId(historyId);
+        navigate(`/c/${historyId}`);
+    };
 
     // 使用 React Query 和 authApi.getCurrentUser
     const {
@@ -35,11 +63,6 @@ export function MainPage() {
         logout()
         navigate('/login')
     }
-
-    // 处理选择对话的回调
-    const handleChatSelect = (chatHistory: string) => {
-        setSelectedChatHistory(chatHistory);
-    };
 
     if (isLoading) {
         return <div>加载中...</div>
@@ -61,17 +84,17 @@ export function MainPage() {
                 user={userInfo}
                 handleLogout={handleLogout}
                 activePage={activePage}
-                setActivePage={setActivePage}
+                setActivePage={handlePageChange}
                 selectedKbName={selectedKbName}
-                selectedChatHistory={selectedChatHistory}
-                onChatSelect={handleChatSelect}
+                selectedHistoryId={selectedHistoryId}
+                onHistorySelect={handleHistorySelect}
             />
             <SidebarInset>
                 {activePage === 'chat' ? (
                     <ChatPage 
                         user={userInfo} 
                         onKnowledgeBaseSelect={(kb) => setSelectedKbName(kb?.table_name)}
-                        selectedChatHistory={selectedChatHistory}
+                        selectedHistoryId={selectedHistoryId}
                     />
                 ) : (
                     <WritePage />

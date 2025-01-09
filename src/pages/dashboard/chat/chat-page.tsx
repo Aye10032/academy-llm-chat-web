@@ -1,3 +1,9 @@
+declare global {
+    interface Window {
+        handleFootnoteClick?: (index: number) => void;
+    }
+}
+
 import {
     Breadcrumb,
     BreadcrumbItem,
@@ -35,11 +41,11 @@ import 'katex/dist/katex.min.css'
 interface ChatPageProps {
     user: UserProfile;
     onKnowledgeBaseSelect?: (kb: KnowledgeBase | null) => void;
-    selectedChatHistory?: string;
+    selectedHistoryId?: string;
 }
 
 
-export function ChatPage({user, onKnowledgeBaseSelect, selectedChatHistory}: ChatPageProps) {
+export function ChatPage({user, onKnowledgeBaseSelect, selectedHistoryId}: ChatPageProps) {
     const [messages, setMessages] = useState<Message[]>([]);
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -65,10 +71,10 @@ export function ChatPage({user, onKnowledgeBaseSelect, selectedChatHistory}: Cha
 
     // 获取历史对话
     const {data: chatHistoryData} = useApiQuery<Message[]>(
-        ['chatHistory', selectedChatHistory],
-        `/rag/chat/${selectedChatHistory}`,
+        ['chatHistory', selectedHistoryId],
+        `/rag/chat/${selectedHistoryId}`,
         {
-            enabled: !!selectedChatHistory,
+            enabled: !!selectedHistoryId,
         }
     );
 
@@ -86,10 +92,10 @@ export function ChatPage({user, onKnowledgeBaseSelect, selectedChatHistory}: Cha
 
     // 当选择新的对话时，清空当前消息
     useEffect(() => {
-        if (selectedChatHistory) {
+        if (selectedHistoryId) {
             setMessages([]); // 在新数据加载前清空
         }
-    }, [selectedChatHistory]);
+    }, [selectedHistoryId]);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setInput(e.target.value);
@@ -124,7 +130,7 @@ export function ChatPage({user, onKnowledgeBaseSelect, selectedChatHistory}: Cha
             const response = await chatMutation.mutateAsync({
                 message: userMessage.content,
                 knowledge_base_name: selectedKb?.table_name || '',
-                history: selectedChatHistory || user.last_chat
+                history_id: selectedHistoryId || user.last_history
             });
 
             const reader = response.body?.getReader();
@@ -461,7 +467,6 @@ export function ChatPage({user, onKnowledgeBaseSelect, selectedChatHistory}: Cha
                 </div>
             </div>
 
-            {/* 使用真实文档数据 */}
             <DocumentSidebar
                 documents={documents}
                 isOpen={isSidebarOpen}

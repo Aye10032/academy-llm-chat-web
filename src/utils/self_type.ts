@@ -24,10 +24,22 @@ export interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
     user: UserProfile;
     handleLogout: () => void;
     activePage: 'chat' | 'write';
-    setActivePage: React.Dispatch<React.SetStateAction<'chat' | 'write'>>;
+    setActivePage: (page: 'chat' | 'write') => void;
     selectedKbName?: string;
-    selectedChatHistory?: string;
-    onChatSelect?: (chatHistory: string) => void;
+    selectedHistoryId?: string;
+    onHistorySelect?: (historyId: string) => void;
+}
+
+export interface ChatSidebarProps {
+    selectedKbName?: string;
+    onHistorySelect?: (chatHistory: string) => void;
+    selectedHistoryId?: string;
+}
+
+export interface ChatPageProps {
+    user: UserProfile;
+    onKnowledgeBaseSelect?: (kb: KnowledgeBase | null) => void;
+    selectedHistoryId?: string;
 }
 
 export interface KnowledgeBase {
@@ -60,7 +72,7 @@ export interface Document {
 }
 
 export interface ChatSession {
-    chat_history: string;
+    history_id: string;
     knowledge_base_name: string;
     user_email: string;
     description: string;

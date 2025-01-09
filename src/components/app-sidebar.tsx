@@ -24,8 +24,8 @@ export function AppSidebar({
     activePage, 
     setActivePage, 
     selectedKbName,
-    selectedChatHistory,
-    onChatSelect
+    selectedHistoryId,
+    onHistorySelect
 }: AppSidebarProps) {
     // Note: I'm using state to show active item.
     // IRL you should use the url/router.
@@ -120,8 +120,8 @@ export function AppSidebar({
                 {activePage === 'chat' ? (
                     <ChatSidebar 
                         selectedKbName={selectedKbName} 
-                        onChatSelect={onChatSelect}
-                        selectedChatHistory={selectedChatHistory}
+                        onHistorySelect={onHistorySelect}
+                        selectedHistoryId={selectedHistoryId}
                     />
                 ) : (
                     <WriteSidebar/>

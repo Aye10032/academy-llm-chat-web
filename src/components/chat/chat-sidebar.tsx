@@ -20,7 +20,7 @@ import {Button} from "@/components/ui/button.tsx"
 import {EllipsisVertical, Search, Plus} from "lucide-react";
 import {Input} from "@/components/ui/input.tsx";
 import {useApiQuery} from "@/hooks/useApi.ts";
-import {ChatSession} from "@/utils/self_type.ts";
+import {ChatSession, ChatSidebarProps} from "@/utils/self_type.ts";
 
 function groupChatsByPeriod(chats: ChatSession[]) {
     const now = new Date()
@@ -48,13 +48,7 @@ function groupChatsByPeriod(chats: ChatSession[]) {
     }, {} as Record<string, ChatSession[]>)
 }
 
-interface ChatSidebarProps {
-    selectedKbName?: string;
-    onChatSelect?: (chatHistory: string) => void;
-    selectedChatHistory?: string;
-}
-
-export function ChatSidebar({ selectedKbName, onChatSelect, selectedChatHistory }: ChatSidebarProps) {
+export function ChatSidebar({ selectedKbName, onHistorySelect, selectedHistoryId }: ChatSidebarProps) {
     const [hoveredChat, setHoveredChat] = useState<string | null>(null);
     const [openMenuId, setOpenMenuId] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
@@ -85,8 +79,8 @@ export function ChatSidebar({ selectedKbName, onChatSelect, selectedChatHistory 
     }
 
     const handleChatClick = (chat: ChatSession) => {
-        if (onChatSelect) {
-            onChatSelect(chat.chat_history);
+        if (onHistorySelect) {
+            onHistorySelect(chat.history_id);
             // 可以在这里添加选中状态的视觉反馈
             setHoveredChat(null); // 清除悬停状态
             setOpenMenuId(null);  // 关闭下拉菜单
@@ -169,11 +163,11 @@ export function ChatSidebar({ selectedKbName, onChatSelect, selectedChatHistory 
                         <SidebarMenu>
                             {periodChats.map((chat) => (
                                 <SidebarMenuItem
-                                    key={chat.chat_history}
-                                    onMouseEnter={() => setHoveredChat(chat.chat_history)}
+                                    key={chat.history_id}
+                                    onMouseEnter={() => setHoveredChat(chat.history_id)}
                                     onMouseLeave={() => setHoveredChat(null)}
                                     onClick={() => handleChatClick(chat)}
-                                    className={chat.chat_history === selectedChatHistory ? 'bg-accent' : ''}
+                                    className={chat.history_id === selectedHistoryId ? 'bg-accent' : ''}
                                 >
                                     <SidebarMenuButton asChild className="h-auto py-3 px-2 text-sm font-medium w-full text-left">
                                         <div className="flex items-center justify-between">
@@ -183,13 +177,13 @@ export function ChatSidebar({ selectedKbName, onChatSelect, selectedChatHistory 
                                                     {format(new Date(chat.create_time), "MM月dd日 HH:mm", {locale: zhCN})}
                                                 </span>
                                             </a>
-                                            {(hoveredChat === chat.chat_history || openMenuId === chat.chat_history) && (
-                                                <DropdownMenu open={openMenuId === chat.chat_history}>
+                                            {(hoveredChat === chat.history_id || openMenuId === chat.history_id) && (
+                                                <DropdownMenu open={openMenuId === chat.history_id}>
                                                     <DropdownMenuTrigger asChild>
                                                         <Button
                                                             variant="ghost"
                                                             className="h-8 w-8 p-0"
-                                                            onClick={(e) => handleMoreClick(e, chat.chat_history)}
+                                                            onClick={(e) => handleMoreClick(e, chat.history_id)}
                                                         >
                                                             <EllipsisVertical className="h-4 w-4"/>
                                                             <span className="sr-only">打开菜单</span>

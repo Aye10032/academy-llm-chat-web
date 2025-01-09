@@ -64,11 +64,23 @@ function App() {
         },
         {
             path: "/",
-            element: <ProtectedRoute><MainPage/></ProtectedRoute>,
+            element: <Navigate to="/c" replace />,
+        },
+        {
+            path: "/c",
+            element: <ProtectedRoute><MainPage defaultPage="chat" /></ProtectedRoute>,
+        },
+        {
+            path: "/c/:historyId",
+            element: <ProtectedRoute><MainPage defaultPage="chat" /></ProtectedRoute>,
+        },
+        {
+            path: "/w",
+            element: <ProtectedRoute><MainPage defaultPage="write" /></ProtectedRoute>,
         },
         {
             path: "*",
-            element: <Navigate to="/" replace/>,
+            element: <Navigate to="/c" replace/>,
         }
     ])
 
