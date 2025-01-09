@@ -1,21 +1,21 @@
 'use client'
 
-import { useState, useCallback } from 'react'
-import { ChevronLeft, ChevronRight, FileText, Globe } from 'lucide-react'
-import { Button } from "@/components/ui/button"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Document} from "@/utils/self_type.ts";
+import {useCallback} from 'react'
+import {ChevronLeft, ChevronRight, FileText, Globe} from 'lucide-react'
+import {Button} from "@/components/ui/button"
+import {ScrollArea} from "@/components/ui/scroll-area"
+import {Document} from "@/utils/self_type.ts";
 
 interface DocumentSidebarProps {
     documents: Document[]
+    isOpen: boolean
+    onToggle: () => void
 }
 
-export function DocumentSidebar({ documents }: DocumentSidebarProps) {
-    const [isOpen, setIsOpen] = useState(false)
-
+export function DocumentSidebar({documents, isOpen, onToggle}: DocumentSidebarProps) {
     const toggleSidebar = useCallback(() => {
-        setIsOpen(prevState => !prevState)
-    }, [])
+        onToggle()
+    }, [onToggle])
 
     const getScoreColor = (score: number) => {
         if (score >= 0.8) return 'bg-green-100 text-green-800'
@@ -48,7 +48,7 @@ export function DocumentSidebar({ documents }: DocumentSidebarProps) {
                 } z-10 bg-white rounded-full shadow-md hover:bg-gray-100 transition-all duration-300`}
                 onClick={toggleSidebar}
             >
-                {isOpen ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+                {isOpen ? <ChevronRight className="h-4 w-4"/> : <ChevronLeft className="h-4 w-4"/>}
             </Button>
             {isOpen && (
                 <ScrollArea className="flex-1 p-6">
@@ -60,10 +60,11 @@ export function DocumentSidebar({ documents }: DocumentSidebarProps) {
                                     {doc.metadata.title || 'Untitled'}
                                 </h3>
                                 {doc.metadata.source_type === 1 ? (
-                                    <FileText className="h-5 w-5 text-blue-500" />
+                                    <FileText className="h-5 w-5 text-blue-500"/>
                                 ) : (
-                                    <a href={doc.metadata.source} target="_blank" rel="noopener noreferrer" className="hover:opacity-80 transition-opacity duration-300">
-                                        <Globe className="h-5 w-5 text-green-500" />
+                                    <a href={doc.metadata.source} target="_blank" rel="noopener noreferrer"
+                                       className="hover:opacity-80 transition-opacity duration-300">
+                                        <Globe className="h-5 w-5 text-green-500"/>
                                     </a>
                                 )}
                             </div>

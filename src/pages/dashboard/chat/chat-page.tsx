@@ -22,7 +22,7 @@ import Markdown from 'react-markdown';
 import {Prism as SyntaxHighlighter} from 'react-syntax-highlighter'
 // @ts-expect-error no need any more
 import {darcula} from 'react-syntax-highlighter/dist/esm/styles/prism';
-import React, {useState, useRef, useEffect} from "react";
+import React, {useState, useRef, useEffect, useCallback} from "react";
 import {useApiQuery, useSseQuery} from "@/hooks/useApi.ts";
 import {UserProfile, KnowledgeBase, Message, Document} from "@/utils/self_type.ts";
 import {ChevronDownIcon, Mic} from "lucide-react";
@@ -48,12 +48,19 @@ export function ChatPage({user, onKnowledgeBaseSelect, selectedChatHistory}: Cha
     const [status, setStatus] = useState<string>('');
     const [documents, setDocuments] = useState<Document[]>([]);
     const [isGenerating, setIsGenerating] = useState(false);
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
     // 获取知识库列表
     const {data: knowledgeBases, isLoading: knowledgeBasesLoading} = useApiQuery<KnowledgeBase[]>(
         ['knowledgeBases'],
         '/rag/knowledge_bases'
     );
+
+    // 当选择知识库时
+    const handleKnowledgeBaseSelect = (kb: KnowledgeBase) => {
+        setSelectedKb(kb);
+        onKnowledgeBaseSelect?.(kb);
+    };
 
     // 获取历史对话
     const {data: chatHistoryData} = useApiQuery<Message[]>(
@@ -83,6 +90,10 @@ export function ChatPage({user, onKnowledgeBaseSelect, selectedChatHistory}: Cha
         }
     }, [selectedChatHistory]);
 
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setInput(e.target.value);
+    };
+
     // 使用新的 SSE mutation
     const chatMutation = useSseQuery<{
         message: string,
@@ -106,6 +117,7 @@ export function ChatPage({user, onKnowledgeBaseSelect, selectedChatHistory}: Cha
         setStatus('');
         setDocuments([]);
         setIsGenerating(false);
+        setIsSidebarOpen(false);
 
         try {
             const response = await chatMutation.mutateAsync({
@@ -116,7 +128,7 @@ export function ChatPage({user, onKnowledgeBaseSelect, selectedChatHistory}: Cha
 
             const reader = response.body?.getReader();
             if (!reader) throw new Error('No reader available');
-            
+
             let aiMessageContent = '';
             let aiMessageCreated = false;
             let buffer = ''; // 添加缓冲区处理不完整的消息
@@ -156,7 +168,7 @@ export function ChatPage({user, onKnowledgeBaseSelect, selectedChatHistory}: Cha
                                     }]);
                                     aiMessageCreated = true;
                                 }
-                                
+
                                 aiMessageContent += parsedData;
                                 setMessages(prev => {
                                     const newMessages = [...prev];
@@ -211,18 +223,23 @@ export function ChatPage({user, onKnowledgeBaseSelect, selectedChatHistory}: Cha
         }
     };
 
-    // 当选择知识库时
-    const handleKnowledgeBaseSelect = (kb: KnowledgeBase) => {
-        setSelectedKb(kb);
-        onKnowledgeBaseSelect?.(kb);
-    };
-
     // 添加处理脚注的函数
     const processFootnotes = (content: string) => {
-        return content.replace(/\[\^(\d+)\]/g, (_, num) => 
+        return content.replace(/\[\^(\d+)\]/g, (_, num) =>
             `<sup class="inline-flex justify-center items-center text-xs bg-gray-100 rounded px-1.5 py-0.5 ml-0.5 text-gray-600 hover:bg-gray-200 transition-colors">${num}</sup>`
         );
     };
+
+    // 生成回答后自动打开侧边栏
+    useEffect(() => {
+        if (documents.length > 0 && !isGenerating && !isLoading) {
+            setIsSidebarOpen(true)
+        }
+    }, [documents, isGenerating, isLoading]);
+
+    const handleSidebarToogle = useCallback(()=>{
+        setIsSidebarOpen(prevState => !prevState)
+    },[])
 
     const scrollToBottom = () => {
         if (chatContainerRef.current) {
@@ -237,10 +254,6 @@ export function ChatPage({user, onKnowledgeBaseSelect, selectedChatHistory}: Cha
     useEffect(() => {
         scrollToBottom();
     }, [messages, status]);
-
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setInput(e.target.value);
-    };
 
     return (
         <div className="flex flex-col h-screen bg-white">
@@ -335,7 +348,7 @@ export function ChatPage({user, onKnowledgeBaseSelect, selectedChatHistory}: Cha
                                             },
                                             p({children}) {
                                                 if (typeof children === 'string') {
-                                                    return <p dangerouslySetInnerHTML={{__html: processFootnotes(children)}} />;
+                                                    return <p dangerouslySetInnerHTML={{__html: processFootnotes(children)}}/>;
                                                 }
                                                 return <p>{children}</p>;
                                             }
@@ -388,7 +401,11 @@ export function ChatPage({user, onKnowledgeBaseSelect, selectedChatHistory}: Cha
             </div>
 
             {/* 使用真实文档数据 */}
-            <DocumentSidebar documents={documents}/>
+            <DocumentSidebar
+                documents={documents}
+                isOpen={isSidebarOpen}
+                onToggle={handleSidebarToogle}
+            />
         </div>
     )
 }
