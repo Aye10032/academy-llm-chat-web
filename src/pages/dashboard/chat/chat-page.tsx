@@ -17,18 +17,20 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu.tsx";
-import ReactMarkdown from 'react-markdown';
+import Markdown from 'react-markdown';
 // @ts-expect-error no need any more
-import {Prism as SyntaxHighlighter} from 'react-syntax-highlighter';
+import {Prism as SyntaxHighlighter} from 'react-syntax-highlighter'
 // @ts-expect-error no need any more
-import {tomorrow} from 'react-syntax-highlighter/dist/esm/styles/prism';
+import {darcula} from 'react-syntax-highlighter/dist/esm/styles/prism';
 import React, {useState, useRef, useEffect} from "react";
 import {useApiQuery, useSseQuery} from "@/hooks/useApi.ts";
 import {UserProfile, KnowledgeBase, Message, Document} from "@/utils/self_type.ts";
 import {ChevronDownIcon, Mic} from "lucide-react";
-import MathJax from "@/components/math-block.tsx";
 import {DocumentSidebar} from "@/components/chat/document-sidebar.tsx";
 import remarkGfm from 'remark-gfm'
+import rehypeKatex from 'rehype-katex'
+import remarkMath from 'remark-math'
+import 'katex/dist/katex.min.css'
 
 interface ChatPageProps {
     user: UserProfile;
@@ -215,6 +217,13 @@ export function ChatPage({user, onKnowledgeBaseSelect, selectedChatHistory}: Cha
         onKnowledgeBaseSelect?.(kb);
     };
 
+    // 添加处理脚注的函数
+    const processFootnotes = (content: string) => {
+        return content.replace(/\[\^(\d+)\]/g, (_, num) => 
+            `<sup class="inline-flex justify-center items-center text-xs bg-gray-100 rounded px-1.5 py-0.5 ml-0.5 text-gray-600 hover:bg-gray-200 transition-colors">${num}</sup>`
+        );
+    };
+
     const scrollToBottom = () => {
         if (chatContainerRef.current) {
             const scrollContainer = chatContainerRef.current;
@@ -304,38 +313,38 @@ export function ChatPage({user, onKnowledgeBaseSelect, selectedChatHistory}: Cha
                                             : 'bg-white text-black rounded-tl-none'
                                     }`}
                                 >
-                                    <ReactMarkdown
+                                    <Markdown
                                         className="prose prose-sm max-w-none dark:prose-invert"
                                         components={{
-                                            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                                            code({node, inline, className, children, ...props}) {
+                                            code(props) {
+                                                const {children, className, node, ...rest} = props
                                                 const match = /language-(\w+)/.exec(className || '')
-                                                return !inline && match ? (
+                                                return match ? (
                                                     <SyntaxHighlighter
-                                                        style={tomorrow}
-                                                        language={match[1]}
+                                                        {...rest}
                                                         PreTag="div"
-                                                        {...props}
-                                                    >
-                                                        {String(children).replace(/\n$/, '')}
-                                                    </SyntaxHighlighter>
+                                                        children={String(children).replace(/\n$/, '')}
+                                                        language={match[1]}
+                                                        style={darcula}
+                                                    />
                                                 ) : (
-                                                    <code className={className} {...props}>
+                                                    <code {...rest} className={className}>
                                                         {children}
                                                     </code>
                                                 )
                                             },
-                                            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                                            p({node, children, ...props}) {
-                                                return <p {...props}>{children}</p>
-                                            },
-                                            math: ({value}) => <MathJax math={value} display={true}/>,
-                                            inlineMath: ({value}) => <MathJax math={value} display={false}/>,
+                                            p({children}) {
+                                                if (typeof children === 'string') {
+                                                    return <p dangerouslySetInnerHTML={{__html: processFootnotes(children)}} />;
+                                                }
+                                                return <p>{children}</p>;
+                                            }
                                         }}
-                                        remarkPlugins={[remarkGfm]}
+                                        remarkPlugins={[remarkGfm, remarkMath]}
+                                        rehypePlugins={[rehypeKatex]}
                                     >
                                         {message.content}
-                                    </ReactMarkdown>
+                                    </Markdown>
                                 </div>
                             </div>
                         ))}
