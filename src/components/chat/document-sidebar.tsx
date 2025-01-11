@@ -53,14 +53,14 @@ export function DocumentSidebar(
     return (
         <div
             className={`fixed top-0 right-0 h-full bg-gray-50 border-l border-gray-200 shadow-lg transition-all duration-300 ${
-                isOpen ? 'w-96' : 'w-8'
+                isOpen ? 'w-96' : 'w-0'
             } flex flex-col`}
         >
             <Button
                 variant="ghost"
                 size="icon"
                 className={`absolute top-4 ${
-                    isOpen ? 'left-2' : '-left-4'
+                    isOpen ? 'left-2' : 'right-4'
                 } z-10 bg-white rounded-full shadow-md hover:bg-gray-100 transition-all duration-300`}
                 onClick={toggleSidebar}
             >

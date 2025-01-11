@@ -92,10 +92,10 @@ export function ChatPage({user, onKnowledgeBaseSelect, selectedHistoryId}: ChatP
             setMessages([]);
             return;
         }
-        
+
         // 如果有选中的对话ID，先清空当前消息
         setMessages([]);
-        
+
         // 如果有新的历史数据，则设置
         if (chatHistoryData) {
             const formattedMessages = chatHistoryData.map((msg, index) => ({
@@ -215,7 +215,7 @@ export function ChatPage({user, onKnowledgeBaseSelect, selectedHistoryId}: ChatP
                                     }]);
                                     aiMessageCreated = true;
                                 }
-                                
+
                                 aiMessageContent += parsedData;
                                 setMessages(prev => {
                                     const newMessages = [...prev];
@@ -239,7 +239,7 @@ export function ChatPage({user, onKnowledgeBaseSelect, selectedHistoryId}: ChatP
                     if (buffer.trim()) {
                         processSSEMessage(buffer);
                     }
-                    setDocuments(prevDocs => 
+                    setDocuments(prevDocs =>
                         prevDocs.map((doc, index) => ({
                             ...doc,
                             metadata: {
@@ -290,7 +290,7 @@ export function ChatPage({user, onKnowledgeBaseSelect, selectedHistoryId}: ChatP
             const index = parseInt(num) - 1;
             return `<sup class="inline-flex justify-center items-center text-xs bg-gray-100 rounded px-1.5 py-0.5 ml-0.5 text-gray-600 hover:bg-gray-200 transition-colors cursor-pointer" onclick="window.handleFootnoteClick(${index})">${num}</sup>`;
         });
-        
+
         // 处理普通的方括号
         return content.replace(/\[\^(\d+)\]/g, (_, num) => {
             const index = parseInt(num) - 1;
@@ -317,9 +317,9 @@ export function ChatPage({user, onKnowledgeBaseSelect, selectedHistoryId}: ChatP
         }
     }, [documents, isGenerating, isLoading]);
 
-    const handleSidebarToogle = useCallback(()=>{
+    const handleSidebarToogle = useCallback(() => {
         setIsSidebarOpen(prevState => !prevState)
-    },[])
+    }, [])
 
     const scrollToBottom = () => {
         if (chatContainerRef.current) {
@@ -381,7 +381,9 @@ export function ChatPage({user, onKnowledgeBaseSelect, selectedHistoryId}: ChatP
                     [&::-webkit-scrollbar-track]:bg-transparent
                     [&::-webkit-scrollbar-thumb]:bg-gray-200
                     [&::-webkit-scrollbar-thumb]:rounded-full
-                    hover:[&::-webkit-scrollbar-thumb]:bg-gray-300"
+                    hover:[&::-webkit-scrollbar-thumb]:bg-gray-300
+                    transition-all duration-300"
+                style={{paddingRight: isSidebarOpen ? '24rem' : '0'}}
             >
                 <div className="max-w-3xl mx-auto px-4">
                     <div className="space-y-6 py-8">
@@ -479,7 +481,10 @@ export function ChatPage({user, onKnowledgeBaseSelect, selectedHistoryId}: ChatP
             </div>
 
             {/* Fixed input area */}
-            <div className="sticky bottom-0 left-0 right-0 bg-white/80 backdrop-blur-sm border-t">
+            <div
+                className="sticky bottom-0 left-0 right-0 bg-white/80 backdrop-blur-sm border-t"
+                style={{paddingRight: isSidebarOpen ? '24rem' : '0'}}
+            >
                 <div className="max-w-3xl mx-auto px-4 py-4">
                     <form onSubmit={handleSubmit} className="flex gap-2">
                         <div className="relative flex-1">
