@@ -30,7 +30,7 @@ import {Prism as SyntaxHighlighter} from 'react-syntax-highlighter'
 import {darcula} from 'react-syntax-highlighter/dist/esm/styles/prism';
 import React, {useState, useRef, useEffect, useCallback} from "react";
 import {useApiQuery, useSseQuery, useApiMutation} from "@/hooks/useApi.ts";
-import {KnowledgeBase, Message, Document, ChatPageProps, UserProfile} from "@/utils/self_type.ts";
+import {KnowledgeBase, Message, Document, ChatPageProps} from "@/utils/self_type.ts";
 import {ChevronDownIcon, Mic} from "lucide-react";
 import {DocumentSidebar} from "@/components/chat/document-sidebar.tsx";
 import remarkGfm from 'remark-gfm'
@@ -283,19 +283,50 @@ export function ChatPage({user, onKnowledgeBaseSelect, selectedHistoryId}: ChatP
         }
     };
 
-    // 添加处理脚注的函数
-    const processFootnotes = (content: string) => {
+    // 修改 processFootnotes 函数使其能够递归处理嵌套的HTML内容
+    const processFootnotes = (content: string | React.ReactNode): string | React.ReactNode => {
+        if (typeof content !== 'string') {
+            return content;
+        }
+
         // 处理已经转义的方括号
-        content = content.replace(/\\\[\\\^(\d+)\\\]/g, (_, num) => {
+        let processed = content.replace(/\\\[\\\^(\d+)\\\]/g, (_, num) => {
             const index = parseInt(num) - 1;
             return `<sup class="inline-flex justify-center items-center text-xs bg-gray-100 rounded px-1.5 py-0.5 ml-0.5 text-gray-600 hover:bg-gray-200 transition-colors cursor-pointer" onclick="window.handleFootnoteClick(${index})">${num}</sup>`;
         });
 
         // 处理普通的方括号
-        return content.replace(/\[\^(\d+)\]/g, (_, num) => {
+        processed = processed.replace(/\[\^(\d+)\]/g, (_, num) => {
             const index = parseInt(num) - 1;
             return `<sup class="inline-flex justify-center items-center text-xs bg-gray-100 rounded px-1.5 py-0.5 ml-0.5 text-gray-600 hover:bg-gray-200 transition-colors cursor-pointer" onclick="window.handleFootnoteClick(${index})">${num}</sup>`;
         });
+
+        return processed;
+    };
+
+    // 创建一个通用的内容处理组件
+    const ProcessContent = ({ children, as: Component = 'span' }: { children: React.ReactNode, as?: keyof JSX.IntrinsicElements }) => {
+        const processChildren = (child: React.ReactNode): React.ReactNode => {
+            if (typeof child === 'string') {
+                return <span dangerouslySetInnerHTML={{ __html: processFootnotes(child) as string }} />;
+            }
+            
+            if (Array.isArray(child)) {
+                return child.map((c, index) => <React.Fragment key={index}>{processChildren(c)}</React.Fragment>);
+            }
+            
+            if (React.isValidElement(child)) {
+                const props = {
+                    ...child.props,
+                    children: processChildren(child.props.children)
+                };
+                return React.cloneElement(child, props);
+            }
+            
+            return child;
+        };
+
+        return <Component>{processChildren(children)}</Component>;
     };
 
     // 添加全局点击处理函数
@@ -428,35 +459,17 @@ export function ChatPage({user, onKnowledgeBaseSelect, selectedHistoryId}: ChatP
                                                     </code>
                                                 )
                                             },
-                                            p({children}) {
-                                                if (typeof children === 'string') {
-                                                    return <p dangerouslySetInnerHTML={{__html: processFootnotes(children)}}/>;
-                                                }
-                                                return <p>{children}</p>;
+                                            p(props) {
+                                                return <ProcessContent as="p">{props.children}</ProcessContent>;
                                             },
-                                            li({children}) {
-                                                if (typeof children === 'string') {
-                                                    return <li dangerouslySetInnerHTML={{__html: processFootnotes(children)}}/>;
-                                                }
-                                                return <li>{children}</li>;
+                                            li(props) {
+                                                return <ProcessContent as="li">{props.children}</ProcessContent>;
                                             },
-                                            strong({children}) {
-                                                if (typeof children === 'string') {
-                                                    return <strong dangerouslySetInnerHTML={{__html: processFootnotes(children)}}/>;
-                                                }
-                                                return <strong>{children}</strong>;
+                                            strong(props) {
+                                                return <ProcessContent as="strong">{props.children}</ProcessContent>;
                                             },
-                                            em({children}) {
-                                                if (typeof children === 'string') {
-                                                    return <em dangerouslySetInnerHTML={{__html: processFootnotes(children)}}/>;
-                                                }
-                                                return <em>{children}</em>;
-                                            },
-                                            text({children}) {
-                                                if (typeof children === 'string') {
-                                                    return <span dangerouslySetInnerHTML={{__html: processFootnotes(children)}}/>;
-                                                }
-                                                return <>{children}</>;
+                                            em(props) {
+                                                return <ProcessContent as="em">{props.children}</ProcessContent>;
                                             }
                                         }}
                                         remarkPlugins={[remarkGfm, remarkMath]}
