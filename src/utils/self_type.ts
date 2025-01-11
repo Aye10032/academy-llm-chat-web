@@ -70,8 +70,10 @@ export interface Document {
         title?: string;
         author?: string;
         year?: number;
-        source: string;
-        source_type: number;
+        source: Array<{
+            source_url: string
+            source_type: number  // 1 for PDF, 2 for web page
+        }>
         score: number;
         refer_sentence: string[];
         isReferenced?: boolean;

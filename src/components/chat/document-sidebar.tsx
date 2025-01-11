@@ -88,14 +88,6 @@ export function DocumentSidebar(
                                         </span>
                                     )}
                                 </div>
-                                {doc.metadata.source_type === 1 ? (
-                                    <FileText className="h-5 w-5 text-blue-500"/>
-                                ) : (
-                                    <a href={doc.metadata.source} target="_blank" rel="noopener noreferrer"
-                                       className="hover:opacity-80 transition-opacity duration-300">
-                                        <Globe className="h-5 w-5 text-green-500"/>
-                                    </a>
-                                )}
                             </div>
                             {doc.metadata.author && (
                                 <p className="text-sm text-gray-600 mb-1">Author: {doc.metadata.author}</p>
@@ -103,11 +95,28 @@ export function DocumentSidebar(
                             {doc.metadata.year && (
                                 <p className="text-sm text-gray-600 mb-1">Year: {doc.metadata.year}</p>
                             )}
-                            <p className={`text-xs font-medium px-2 py-1 rounded-full inline-block mb-2 ${
-                                getScoreColor(doc.metadata.score)
-                            }`}>
-                                Score: {doc.metadata.score.toFixed(2)}
-                            </p>
+                            <div className="flex justify-between items-center mt-2">
+                                <p className={`text-xs font-medium px-2 py-1 rounded-full ${getScoreColor(doc.metadata.score)}`}>
+                                    Score: {doc.metadata.score.toFixed(2)}
+                                </p>
+                                <div className="flex space-x-1">
+                                    {doc.metadata.source.map((source, sourceIndex) => (
+                                        <a
+                                            key={sourceIndex}
+                                            href={source.source_url}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="hover:opacity-80 transition-opacity duration-300 mt-1"
+                                        >
+                                            {source.source_type === 1 ? (
+                                                <FileText className="h-5 w-5 text-blue-500"/>
+                                            ) : (
+                                                <Globe className="h-5 w-5 text-green-500"/>
+                                            )}
+                                        </a>
+                                    ))}
+                                </div>
+                            </div>
                             {doc.metadata.refer_sentence && doc.metadata.refer_sentence.length > 0 && (
                                 <div
                                     className="text-sm mt-2 text-gray-700 bg-white p-2 rounded-md border border-gray-200"

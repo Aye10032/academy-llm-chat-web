@@ -67,13 +67,15 @@ export function MainPage({defaultPage = 'chat'}: MainPageProps) {
     // 修改 handleKnowledgeBaseSelect 的实现
     const handleKnowledgeBaseSelect = useCallback((kb: KnowledgeBase | null) => {
         setSelectedKbName(kb?.table_name);
-        // 当切换知识库时，清除当前选中的对话
-        setSelectedHistoryId(undefined);
-        // 如果在聊天页面且切换到了新的知识库，则导航到基础路径
-        if (activePage === 'chat' && kb) {
-            navigate('/c');
+        
+        // 只有在没有选中对话的情况下，才重置 URL 到 /c
+        if (!selectedHistoryId) {
+            setSelectedHistoryId(undefined);
+            if (activePage === 'chat' && kb) {
+                navigate('/c');
+            }
         }
-    }, [activePage, navigate]);
+    }, [activePage, navigate, selectedHistoryId]);
 
     if (isLoading) {
         return <div>加载中...</div>

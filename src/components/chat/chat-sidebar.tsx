@@ -21,34 +21,47 @@ import {EllipsisVertical, Search, Plus} from "lucide-react";
 import {Input} from "@/components/ui/input.tsx";
 import {useApiQuery} from "@/hooks/useApi.ts";
 import {ChatSession, ChatSidebarProps} from "@/utils/self_type.ts";
+import {useNavigate} from "react-router-dom";
 
 function groupChatsByPeriod(chats: ChatSession[]) {
+    // 首先按更新时间降序排序
+    const sortedChats = [...chats].sort((a, b) => 
+        new Date(b.update_time).getTime() - new Date(a.update_time).getTime()
+    );
+
     const now = new Date()
     const sevenDaysAgo = subDays(now, 7)
     const thirtyDaysAgo = subDays(now, 30)
 
-    return chats.reduce((groups, chat) => {
-        const chatDate = new Date(chat.create_time)
+    const groups = {
+        "今天": [] as ChatSession[],
+        "近7天": [] as ChatSession[],
+        "近30天": [] as ChatSession[],
+        "更早": [] as ChatSession[],
+    };
+
+    sortedChats.forEach(chat => {
+        const chatDate = new Date(chat.update_time)
 
         if (isToday(chatDate)) {
-            if (!groups["今天"]) groups["今天"] = []
             groups["今天"].push(chat)
         } else if (isAfter(chatDate, sevenDaysAgo)) {
-            if (!groups["近7天"]) groups["近7天"] = []
             groups["近7天"].push(chat)
         } else if (isAfter(chatDate, thirtyDaysAgo)) {
-            if (!groups["近30天"]) groups["近30天"] = []
             groups["近30天"].push(chat)
         } else {
-            if (!groups["更早"]) groups["更早"] = []
             groups["更早"].push(chat)
         }
+    });
 
-        return groups
-    }, {} as Record<string, ChatSession[]>)
+    // 只返回有内容的分组
+    return Object.fromEntries(
+        Object.entries(groups).filter(([_, chats]) => chats.length > 0)
+    );
 }
 
 export function ChatSidebar({ selectedKbName, onHistorySelect, selectedHistoryId }: ChatSidebarProps) {
+    const navigate = useNavigate();
     const [hoveredChat, setHoveredChat] = useState<string | null>(null);
     const [openMenuId, setOpenMenuId] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
@@ -63,8 +76,12 @@ export function ChatSidebar({ selectedKbName, onHistorySelect, selectedHistoryId
     );
 
     const handleNewChat = () => {
-        // 处理新建聊天的逻辑
-        console.log('新建聊天')
+        // 清除当前选中的对话
+        if (onHistorySelect) {
+            onHistorySelect('');
+        }
+        // 导航到基础聊天路径
+        navigate('/c');
     }
 
     const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -104,7 +121,13 @@ export function ChatSidebar({ selectedKbName, onHistorySelect, selectedHistoryId
                                 disabled
                             />
                         </div>
-                        <Button onClick={handleNewChat} size="icon" variant="outline" className="rounded-full" disabled>
+                        <Button 
+                            onClick={handleNewChat} 
+                            size="icon" 
+                            variant="outline" 
+                            className="rounded-full"
+                            disabled={!selectedKbName} // 如果没有选择知识库则禁用
+                        >
                             <Plus className="h-4 w-4"/>
                             <span className="sr-only">新建聊天</span>
                         </Button>
@@ -148,7 +171,13 @@ export function ChatSidebar({ selectedKbName, onHistorySelect, selectedHistoryId
                             className="pl-8 pr-4 py-2 w-full text-sm rounded-full bg-white"
                         />
                     </div>
-                    <Button onClick={handleNewChat} size="icon" variant="outline" className="rounded-full">
+                    <Button 
+                        onClick={handleNewChat} 
+                        size="icon" 
+                        variant="outline" 
+                        className="rounded-full"
+                        disabled={!selectedKbName} // 如果没有选择知识库则禁用
+                    >
                         <Plus className="h-4 w-4"/>
                         <span className="sr-only">新建聊天</span>
                     </Button>
