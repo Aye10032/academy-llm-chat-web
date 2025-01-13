@@ -1,17 +1,22 @@
-import { useState, useRef, DragEvent } from "react"
-import {MessageSquare, Send, Check, Undo, ChevronRight, FolderOpen, File, Paperclip, Plus, Folder, Bot} from 'lucide-react'
-import { Button } from "@/components/ui/button"
-import { Textarea } from "@/components/ui/textarea"
-import { Card, CardContent } from "@/components/ui/card"
+import React, {useState, useRef, DragEvent} from "react"
 import {
-    Accordion,
-    AccordionContent,
-    AccordionItem,
-    AccordionTrigger,
-} from "@/components/ui/accordion"
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
-import { Input } from "@/components/ui/input"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+    Bot,
+    ChevronDown,
+    MessageSquare,
+    Send,
+    Check,
+    Undo,
+    ChevronLeft,
+    FolderOpen,
+    File,
+    Paperclip,
+    Plus,
+    Folder,
+    ChevronRight
+} from 'lucide-react'
+import {Button} from "@/components/ui/button"
+import {Textarea} from "@/components/ui/textarea"
+import {Card, CardContent} from "@/components/ui/card"
 import {
     Breadcrumb,
     BreadcrumbItem,
@@ -20,6 +25,27 @@ import {
     BreadcrumbPage,
     BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import {
+    Accordion,
+    AccordionContent,
+    AccordionItem,
+    AccordionTrigger,
+} from "@/components/ui/accordion"
+import {
+    Collapsible,
+    CollapsibleContent,
+    CollapsibleTrigger
+} from "@/components/ui/collapsible"
+import {Input} from "@/components/ui/input"
+import {Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger} from "@/components/ui/dialog"
+import {FloatingActions} from "@/components/write/floating-actions"
+import {CodeEditor} from "@/components/write/code-editor"
 
 interface FileStructure {
     id: string
@@ -64,6 +90,10 @@ export function WritePage() {
                     modified: "这不仅简化了工作流程，还显著提高了时间效益。",
                     explanation: "更准确地描述AI带来的具体好处。",
                 },
+                {
+                    type: "text",
+                    content: "修改后的完整文段：\n\n在这个日新月异的时代，人工智能技术正在各个领域蓬勃发展。众多企业纷纷导入AI技术以提升运营效能。这不仅简化了工作流程，还显著提高了时间效益。",
+                }
             ],
         },
     ])
@@ -74,15 +104,15 @@ export function WritePage() {
             name: '项目文件夹',
             type: 'folder',
             children: [
-                { id: '2', name: '主文档.txt', type: 'file' },
-                { id: '3', name: '参考资料.txt', type: 'file' },
+                {id: '2', name: '主文档.txt', type: 'file'},
+                {id: '3', name: '参考资料.txt', type: 'file'},
                 {
                     id: '4',
                     name: '草稿',
                     type: 'folder',
                     children: [
-                        { id: '5', name: '草稿1.txt', type: 'file' },
-                        { id: '6', name: '草稿2.txt', type: 'file' },
+                        {id: '5', name: '草稿1.txt', type: 'file'},
+                        {id: '6', name: '草稿2.txt', type: 'file'},
                     ]
                 }
             ]
@@ -155,9 +185,9 @@ export function WritePage() {
             <div key={item.id} className="ml-4">
                 {item.type === 'folder' ? (
                     <Collapsible>
-                        <CollapsibleTrigger className="flex items-center gap-1 hover:bg-muted/50 w-full p-1 rounded">
-                            <ChevronRight className="h-4 w-4" />
-                            <FolderOpen className="h-4 w-4" />
+                        <CollapsibleTrigger className="flex items-center gap-1 hover:bg-muted/50 w-full p-1 rounded transition-colors">
+                            <ChevronRight className="h-4 w-4 transition-transform duration-200"/>
+                            <FolderOpen className="h-4 w-4"/>
                             <span>{item.name}</span>
                         </CollapsibleTrigger>
                         <CollapsibleContent>
@@ -166,15 +196,20 @@ export function WritePage() {
                     </Collapsible>
                 ) : (
                     <button
-                        className={`flex items-center gap-1 hover:bg-muted/50 w-full p-1 rounded ${currentFile === item.name ? 'bg-muted' : ''}`}
+                        className={`flex items-center gap-1 hover:bg-muted/50 w-full p-1 rounded transition-colors ${currentFile === item.name ? 'bg-muted text-primary' : ''}`}
                         onClick={() => setCurrentFile(item.name)}
                     >
-                        <File className="h-4 w-4" />
+                        <File className="h-4 w-4"/>
                         <span>{item.name}</span>
                     </button>
                 )}
             </div>
         ))
+    }
+
+    const handleSave = () => {
+        // Handle save functionality
+        console.log('Saving changes...')
     }
 
     return (
@@ -195,15 +230,28 @@ export function WritePage() {
 
             <div className="flex-1 grid" style={{gridTemplateColumns: '1fr 3fr'}}>
                 {/* Chat Section */}
-                <div className="flex flex-col border-r h-full overflow-hidden">
+                <div className="flex flex-col border-r h-full overflow-hidden bg-muted/30">
                     <header className="h-14 border-b flex items-center justify-between px-4">
                         <div className="flex items-center gap-2">
                             <Bot className="h-5 w-5"/>
                             <span className="font-medium">AI写作助手</span>
                         </div>
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="outline" className="gap-2">
+                                    写作模式
+                                    <ChevronDown className="h-4 w-4"/>
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                <DropdownMenuItem>学术论文</DropdownMenuItem>
+                                <DropdownMenuItem>商务文案</DropdownMenuItem>
+                                <DropdownMenuItem>创意写作</DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
                     </header>
 
-                    <div ref={chatRef} className="flex-1 overflow-auto p-4">
+                    <div ref={chatRef} className="flex-1 overflow-y-auto p-4">
                         {messages.map((message, index) => (
                             <div
                                 key={index}
@@ -331,14 +379,14 @@ export function WritePage() {
                 </div>
 
                 {/* Editor Section */}
-                <div className="flex h-full overflow-hidden">
+                <div className="flex h-full overflow-hidden bg-background">
                     <Collapsible className="relative">
                         <CollapsibleTrigger
-                            className="absolute -right-3 top-1/2 -translate-y-1/2 z-10 flex h-6 w-6 items-center justify-center rounded-full border bg-background transition-transform data-[state=open]:rotate-90">
-                            <ChevronRight className="h-4 w-4"/>
+                            className="absolute -right-3 top-1/2 -translate-y-1/2 z-10 flex h-8 w-8 items-center justify-center rounded-full border bg-background shadow-md transition-transform hover:bg-muted focus:outline-none focus:ring-2 focus:ring-muted focus:ring-offset-2 data-[state=open]:rotate-180">
+                            <ChevronLeft className="h-4 w-4"/>
                         </CollapsibleTrigger>
                         <CollapsibleContent>
-                            <div className="w-64 border-r h-full flex flex-col">
+                            <div className="w-64 border-r h-full flex flex-col bg-muted/10">
                                 <header className="h-14 border-b flex items-center justify-between px-4">
                                     <span className="font-medium">文件列表</span>
                                     <div className="flex gap-2">
@@ -387,25 +435,26 @@ export function WritePage() {
                         </CollapsibleContent>
                     </Collapsible>
                     <div className="flex-1 flex flex-col">
-                        <header className="h-14 border-b flex items-center justify-between px-4">
+                        <header className="h-14 border-b flex items-center px-4">
                             <div className="flex items-center gap-2">
                                 <MessageSquare className="h-5 w-5"/>
                                 <span className="font-medium">写作编辑区 - {currentFile}</span>
                             </div>
-                            <Button>保存修改</Button>
                         </header>
 
                         <div ref={editorRef} className="flex-1 p-4 overflow-auto">
-                            <Textarea
+                            <CodeEditor
                                 value={editorContent}
-                                onChange={(e) => setEditorContent(e.target.value)}
+                                onChange={setEditorContent}
                                 placeholder="在这里输入或粘贴你想要修改的文字..."
-                                className="min-h-full w-full resize-none"
+                                className="min-h-full w-full"
                             />
                         </div>
                     </div>
                 </div>
             </div>
+
+            <FloatingActions onSave={handleSave}/>
         </div>
     )
 }
