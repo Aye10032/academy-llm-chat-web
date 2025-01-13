@@ -9,7 +9,7 @@ import {UserProfile, KnowledgeBase} from "@/utils/self_type.ts";
 import {authApi} from "@/utils/api.ts";
 import {useNavigate, useParams} from "react-router-dom";
 import React, {useCallback} from "react";
-import {ChatPage} from "@/pages/dashboard/chat/chat-page.tsx";
+import {ChatPage} from "@/pages/dashboard/chat-page.tsx";
 import {WritePage} from "@/pages/dashboard/write-page.tsx";
 
 interface MainPageProps {
