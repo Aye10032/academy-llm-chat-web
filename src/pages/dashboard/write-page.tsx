@@ -1,4 +1,6 @@
-import React, {useState, useRef, DragEvent} from "react"
+'use client'
+
+import React, {useState, useRef, DragEvent, useCallback} from "react"
 import {
     Bot,
     ChevronDown,
@@ -12,7 +14,8 @@ import {
     Paperclip,
     Plus,
     Folder,
-    ChevronRight
+    ChevronRight,
+    Copy
 } from 'lucide-react'
 import {Button} from "@/components/ui/button"
 import {Textarea} from "@/components/ui/textarea"
@@ -45,13 +48,23 @@ import {
 import {Input} from "@/components/ui/input"
 import {Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger} from "@/components/ui/dialog"
 import {FloatingActions} from "@/components/write/floating-actions"
-import {CodeEditor} from "@/components/write/code-editor"
+import {MaterialsManager} from '@/components/write/materials-manager'
 
 interface FileStructure {
     id: string
     name: string
     type: 'file' | 'folder'
     children?: FileStructure[]
+}
+
+interface Material {
+    id: string
+    title: string
+    timestamp: string
+    summary: string
+    source: string
+    type: 'pdf' | 'web'
+    isHidden: boolean
 }
 
 export function WritePage() {
@@ -123,6 +136,36 @@ export function WritePage() {
     const [newItemName, setNewItemName] = useState<string>('')
     const [isNewFolderDialogOpen, setIsNewFolderDialogOpen] = useState<boolean>(false)
     const [isNewFileDialogOpen, setIsNewFileDialogOpen] = useState<boolean>(false)
+    const [materials, setMaterials] = useState<Material[]>([
+        {
+            id: '1',
+            title: 'AI在企业中的应用',
+            timestamp: '2023-05-15 14:30',
+            summary: '本文探讨了人工智能在现代企业中的广泛应用，以及它如何提高效率和生产力。',
+            source: 'https://example.com/ai-in-business',
+            type: 'web',
+            isHidden: false
+        },
+        {
+            id: '2',
+            title: '人工智能的未来展望',
+            timestamp: '2023-05-16 10:15',
+            summary: '这份报告详细分析了人工智能技术的发展趋势，并预测了未来可能的突破。',
+            source: 'AI_Future_Report.pdf',
+            type: 'pdf',
+            isHidden: false
+        },
+        {
+            id: '3',
+            title: 'AI伦理问题探讨',
+            timestamp: '2023-05-17 09:45',
+            summary: '本文讨论了人工智能发展中面临的各种伦理问题，包括隐私、就业和决策偏见等。',
+            source: 'https://example.com/ai-ethics',
+            type: 'web',
+            isHidden: true
+        },
+    ])
+    const [isMaterialsDropdownOpen, setIsMaterialsDropdownOpen] = useState(false)
 
     const applyModification = (original: string, modified: string) => {
         setEditorContent(prev => prev.replace(original, modified))
@@ -131,6 +174,27 @@ export function WritePage() {
     const undoModification = (original: string, modified: string) => {
         setEditorContent(prev => prev.replace(modified, original))
     }
+
+    const handleDeleteMaterial = (id: string) => {
+        setMaterials(prevMaterials => prevMaterials.filter(material => material.id !== id))
+    }
+
+    const handleToggleMaterialVisibility = (id: string) => {
+        setMaterials(prevMaterials => prevMaterials.map(material =>
+            material.id === id ? {...material, isHidden: !material.isHidden} : material
+        ))
+    }
+
+    const handlePreviewMaterial = (id: string) => {
+        const material = materials.find(m => m.id === id)
+        if (material && material.type === 'web') {
+            window.open(material.source, '_blank')
+        }
+    }
+
+    const handleMaterialsDropdownOpenChange = useCallback((open: boolean) => {
+        setIsMaterialsDropdownOpen(open)
+    }, [])
 
     const chatRef = useRef<HTMLDivElement>(null)
     const editorRef = useRef<HTMLDivElement>(null)
@@ -213,7 +277,7 @@ export function WritePage() {
     }
 
     return (
-        <div className="flex flex-col h-screen">
+        <div className="flex flex-col h-screen overflow-hidden">
             <header className="sticky top-0 flex shrink-0 items-center gap-2 border-b bg-background p-4">
                 <Breadcrumb>
                     <BreadcrumbList>
@@ -228,30 +292,10 @@ export function WritePage() {
                 </Breadcrumb>
             </header>
 
-            <div className="flex-1 grid" style={{gridTemplateColumns: '1fr 3fr'}}>
+            <div className="flex-1 grid overflow-hidden" style={{gridTemplateColumns: '1fr 3fr'}}>
                 {/* Chat Section */}
                 <div className="flex flex-col border-r h-full overflow-hidden bg-muted/30">
-                    <header className="h-14 border-b flex items-center justify-between px-4">
-                        <div className="flex items-center gap-2">
-                            <Bot className="h-5 w-5"/>
-                            <span className="font-medium">AI写作助手</span>
-                        </div>
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button variant="outline" className="gap-2">
-                                    写作模式
-                                    <ChevronDown className="h-4 w-4"/>
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                                <DropdownMenuItem>学术论文</DropdownMenuItem>
-                                <DropdownMenuItem>商务文案</DropdownMenuItem>
-                                <DropdownMenuItem>创意写作</DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                    </header>
-
-                    <div ref={chatRef} className="flex-1 overflow-y-auto p-4">
+                    <div ref={chatRef} className="flex-1 overflow-y-auto p-4 space-y-4">
                         {messages.map((message, index) => (
                             <div
                                 key={index}
@@ -380,13 +424,13 @@ export function WritePage() {
 
                 {/* Editor Section */}
                 <div className="flex h-full overflow-hidden bg-background">
-                    <Collapsible className="relative">
+                    <Collapsible className="relative border-r">
                         <CollapsibleTrigger
                             className="absolute -right-3 top-1/2 -translate-y-1/2 z-10 flex h-8 w-8 items-center justify-center rounded-full border bg-background shadow-md transition-transform hover:bg-muted focus:outline-none focus:ring-2 focus:ring-muted focus:ring-offset-2 data-[state=open]:rotate-180">
                             <ChevronLeft className="h-4 w-4"/>
                         </CollapsibleTrigger>
                         <CollapsibleContent>
-                            <div className="w-64 border-r h-full flex flex-col bg-muted/10">
+                            <div className="w-64 h-full flex flex-col bg-muted/10">
                                 <header className="h-14 border-b flex items-center justify-between px-4">
                                     <span className="font-medium">文件列表</span>
                                     <div className="flex gap-2">
@@ -435,19 +479,45 @@ export function WritePage() {
                         </CollapsibleContent>
                     </Collapsible>
                     <div className="flex-1 flex flex-col">
-                        <header className="h-14 border-b flex items-center px-4">
+                        <header className="h-14 border-b flex items-center justify-between px-4">
                             <div className="flex items-center gap-2">
                                 <MessageSquare className="h-5 w-5"/>
                                 <span className="font-medium">写作编辑区 - {currentFile}</span>
                             </div>
+                            <MaterialsManager
+                                materials={materials}
+                                onDeleteMaterial={handleDeleteMaterial}
+                                onToggleMaterialVisibility={handleToggleMaterialVisibility}
+                                onPreviewMaterial={handlePreviewMaterial}
+                                onOpenChange={handleMaterialsDropdownOpenChange}
+                            />
                         </header>
 
-                        <div ref={editorRef} className="flex-1 p-4 overflow-auto">
-                            <CodeEditor
+                        <div ref={editorRef} className="relative flex-1">
+                            {!isMaterialsDropdownOpen && (
+                                <div className="absolute right-4 top-4 z-10">
+                                    <Button
+                                        variant="outline"
+                                        size="icon"
+                                        className="h-8 w-8 bg-background"
+                                        onClick={async () => {
+                                            await navigator.clipboard.writeText(editorContent)
+                                            // Could add a toast notification here
+                                        }}
+                                    >
+                                        <Copy className="h-4 w-4"/>
+                                    </Button>
+                                </div>
+                            )}
+                            <textarea
                                 value={editorContent}
-                                onChange={setEditorContent}
+                                onChange={(e) => setEditorContent(e.target.value)}
                                 placeholder="在这里输入或粘贴你想要修改的文字..."
-                                className="min-h-full w-full"
+                                className="w-full h-full p-4 resize-none focus:outline-none font-mono text-sm"
+                                style={{
+                                    lineHeight: '1.5',
+                                    tabSize: 2,
+                                }}
                             />
                         </div>
                     </div>

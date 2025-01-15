@@ -1,107 +1,115 @@
 'use client'
 
 import * as React from 'react'
-import {
-    Save,
-    Languages,
-    Timer,
-    History,
-    MoreVertical
-} from 'lucide-react'
+import { Save, Languages, Timer, History, MoreVertical } from 'lucide-react'
 import {
     Tooltip,
     TooltipContent,
     TooltipProvider,
     TooltipTrigger,
 } from "@/components/ui/tooltip"
-import {Button} from "@/components/ui/button"
-import {cn} from "@/lib/utils"
+import { Button } from "@/components/ui/button"
+import { cn } from "@/lib/utils"
 
 interface FloatingActionsProps {
     onSave: () => void
 }
 
-export function FloatingActions({onSave}: FloatingActionsProps) {
+export function FloatingActions({ onSave }: FloatingActionsProps) {
     const [isOpen, setIsOpen] = React.useState(false)
     const menuRef = React.useRef<HTMLDivElement>(null)
 
+    const toggleMenu = React.useCallback(() => {
+        setIsOpen(prev => !prev)
+    }, [])
+
+    const closeMenu = React.useCallback(() => {
+        setIsOpen(false)
+    }, [])
+
+    const handleAction = React.useCallback((action: () => void) => {
+        action()
+        closeMenu()
+    }, [closeMenu])
+
     React.useEffect(() => {
-        function handleClickOutside(event: MouseEvent) {
+        const handleClickOutside = (event: MouseEvent) => {
             if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-                setIsOpen(false)
+                closeMenu()
             }
         }
 
         document.addEventListener('mousedown', handleClickOutside)
-        return () => document.removeEventListener('mousedown', handleClickOutside)
-    }, [])
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside)
+        }
+    }, [closeMenu])
 
     return (
         <div className="fixed bottom-6 right-6 flex flex-col gap-3">
-            <div ref={menuRef}>
-                <div
+            <div ref={menuRef} className="relative">
+                <Button
+                    variant="outline"
+                    size="icon"
                     className={cn(
-                        "bg-background border shadow-lg transition-all duration-200",
-                        isOpen
-                            ? "w-[48px] rounded-[24px]"
-                            : "rounded-full w-12 h-12 flex items-center justify-center hover:bg-muted/50"
+                        "h-12 w-12 rounded-full bg-background shadow-lg transition-all duration-200",
+                        isOpen ? "bg-muted" : "hover:bg-muted/50"
                     )}
-                    onMouseEnter={() => setIsOpen(true)}
+                    onClick={toggleMenu}
                 >
-                    {isOpen ? (
-                        <div className="flex flex-col items-center py-2 gap-2">
-                            <TooltipProvider delayDuration={0}>
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            className="h-10 w-10 rounded-full"
-                                            onClick={() => setIsOpen(false)}
-                                        >
-                                            <Languages className="h-4 w-4"/>
-                                        </Button>
-                                    </TooltipTrigger>
-                                    <TooltipContent side="left">
-                                        <p>转移到一种语言</p>
-                                    </TooltipContent>
-                                </Tooltip>
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            className="h-10 w-10 rounded-full"
-                                            onClick={() => setIsOpen(false)}
-                                        >
-                                            <Timer className="h-4 w-4"/>
-                                        </Button>
-                                    </TooltipTrigger>
-                                    <TooltipContent side="left">
-                                        <p>设置定时器</p>
-                                    </TooltipContent>
-                                </Tooltip>
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            className="h-10 w-10 rounded-full"
-                                            onClick={() => setIsOpen(false)}
-                                        >
-                                            <History className="h-4 w-4"/>
-                                        </Button>
-                                    </TooltipTrigger>
-                                    <TooltipContent side="left">
-                                        <p>历史记录</p>
-                                    </TooltipContent>
-                                </Tooltip>
-                            </TooltipProvider>
-                        </div>
-                    ) : (
-                        <MoreVertical className="h-5 w-5"/>
-                    )}
-                </div>
+                    <MoreVertical className="h-5 w-5" />
+                </Button>
+                {isOpen && (
+                    <div className="absolute bottom-full right-0 mb-2 flex flex-col items-end space-y-2">
+                        <TooltipProvider delayDuration={0}>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button
+                                        variant="outline"
+                                        size="icon"
+                                        className="h-10 w-10 rounded-full bg-background shadow-md"
+                                        onClick={() => handleAction(() => console.log('Language action'))}
+                                    >
+                                        <Languages className="h-4 w-4" />
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent side="left">
+                                    <p>转移到一种语言</p>
+                                </TooltipContent>
+                            </Tooltip>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button
+                                        variant="outline"
+                                        size="icon"
+                                        className="h-10 w-10 rounded-full bg-background shadow-md"
+                                        onClick={() => handleAction(() => console.log('Timer action'))}
+                                    >
+                                        <Timer className="h-4 w-4" />
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent side="left">
+                                    <p>设置定时器</p>
+                                </TooltipContent>
+                            </Tooltip>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button
+                                        variant="outline"
+                                        size="icon"
+                                        className="h-10 w-10 rounded-full bg-background shadow-md"
+                                        onClick={() => handleAction(() => console.log('History action'))}
+                                    >
+                                        <History className="h-4 w-4" />
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent side="left">
+                                    <p>历史记录</p>
+                                </TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
+                    </div>
+                )}
             </div>
             <TooltipProvider>
                 <Tooltip>
@@ -112,7 +120,7 @@ export function FloatingActions({onSave}: FloatingActionsProps) {
                             className="h-12 w-12 rounded-full bg-background shadow-lg hover:bg-muted/50"
                             onClick={onSave}
                         >
-                            <Save className="h-5 w-5"/>
+                            <Save className="h-5 w-5" />
                         </Button>
                     </TooltipTrigger>
                     <TooltipContent side="left">
