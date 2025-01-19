@@ -49,44 +49,60 @@ const queryClient = new QueryClient({
 })
 
 function App() {
-    const router = createBrowserRouter([
+    const router = createBrowserRouter(
+        [
+            {
+                path: "/login",
+                element: <PublicRoute><LoginPage/></PublicRoute>,
+            },
+            {
+                path: "/register",
+                element: <PublicRoute><RegisterPage/></PublicRoute>,
+            },
+            {
+                path: "/forgot-password",
+                element: <PublicRoute><ForgotPswPage/></PublicRoute>,
+            },
+            {
+                path: "/",
+                element: <Navigate to="/c" replace/>,
+            },
+            {
+                path: "/c",
+                element: <ProtectedRoute><MainPage defaultPage="chat"/></ProtectedRoute>,
+            },
+            {
+                path: "/c/:historyId",
+                element: <ProtectedRoute><MainPage defaultPage="chat"/></ProtectedRoute>,
+            },
+            {
+                path: "/w",
+                element: <ProtectedRoute><MainPage defaultPage="write"/></ProtectedRoute>,
+            },
+            {
+                path: "*",
+                element: <Navigate to="/c" replace/>,
+            }
+        ],
         {
-            path: "/login",
-            element: <PublicRoute><LoginPage/></PublicRoute>,
-        },
-        {
-            path: "/register",
-            element: <PublicRoute><RegisterPage/></PublicRoute>,
-        },
-        {
-            path: "/forgot-password",
-            element: <PublicRoute><ForgotPswPage/></PublicRoute>,
-        },
-        {
-            path: "/",
-            element: <Navigate to="/c" replace />,
-        },
-        {
-            path: "/c",
-            element: <ProtectedRoute><MainPage defaultPage="chat" /></ProtectedRoute>,
-        },
-        {
-            path: "/c/:historyId",
-            element: <ProtectedRoute><MainPage defaultPage="chat" /></ProtectedRoute>,
-        },
-        {
-            path: "/w",
-            element: <ProtectedRoute><MainPage defaultPage="write" /></ProtectedRoute>,
-        },
-        {
-            path: "*",
-            element: <Navigate to="/c" replace/>,
+            future: {
+                v7_relativeSplatPath: true,
+                v7_fetcherPersist: true,
+                v7_normalizeFormMethod: true,
+                v7_partialHydration: true,
+                v7_skipActionErrorRevalidation: true
+            }
         }
-    ])
+    )
 
     return (
         <QueryClientProvider client={queryClient}>
-            <RouterProvider router={router}/>
+            <RouterProvider
+                router={router}
+                future={{
+                    v7_startTransition: true
+                }}
+            />
         </QueryClientProvider>
     )
 }
