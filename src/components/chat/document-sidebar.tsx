@@ -2,7 +2,7 @@
 
 import {useCallback, useRef, useEffect, useState} from 'react'
 import {ChevronLeft, ChevronRight, Globe} from 'lucide-react'
-import {FaRegFilePdf} from "react-icons/fa";
+import { FaRegFilePdf } from "react-icons/fa";
 import {Button} from "@/components/ui/button"
 import {ScrollArea} from "@/components/ui/scroll-area"
 import {DocumentSidebarProps} from "@/utils/self_type.ts";
