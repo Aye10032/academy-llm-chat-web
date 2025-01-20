@@ -11,6 +11,15 @@ export interface TokenResponse {
     token_type: string
 }
 
+export interface AuthState {
+    token: string | null
+    user: UserProfile | null
+    isAuthenticated: boolean
+    setToken: (token: string | null) => void
+    setUser: (user: UserProfile | null) => void
+    logout: () => void
+}
+
 export interface UserProfile {
     email: string,
     username: string,
@@ -20,26 +29,30 @@ export interface UserProfile {
     last_project: string
 }
 
+export interface MainPageProps {
+    defaultPage: 'chat' | 'write';
+}
+
 export interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
     user: UserProfile;
     handleLogout: () => void;
     activePage: 'chat' | 'write';
     setActivePage: (page: 'chat' | 'write') => void;
-    selectedKbName?: string;
-    selectedHistoryId?: string;
-    onHistorySelect?: (historyId: string) => void;
+    selectedKbName: string;
+    selectedHistoryId: string;
+    onHistorySelect: (historyId: string) => void;
 }
 
 export interface ChatSidebarProps {
-    selectedKbName?: string;
-    onHistorySelect?: (chatHistory: string) => void;
-    selectedHistoryId?: string;
+    selectedKbName: string;
+    onHistorySelect: (chatHistory: string) => void;
+    selectedHistoryId: string;
 }
 
 export interface ChatPageProps {
     user: UserProfile;
-    onKnowledgeBaseSelect?: (kb: KnowledgeBase | null) => void;
-    selectedHistoryId?: string;
+    onKnowledgeBaseSelect: (kb: KnowledgeBase | null) => void;
+    selectedHistoryId: string;
 }
 
 export interface DocumentSidebarProps {

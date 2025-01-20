@@ -1,10 +1,12 @@
 'use client'
 
-import {useCallback, useRef, useEffect} from 'react'
-import {ChevronLeft, ChevronRight, FileText, Globe} from 'lucide-react'
+import {useCallback, useRef, useEffect, useState} from 'react'
+import {ChevronLeft, ChevronRight, Globe} from 'lucide-react'
+import {FaRegFilePdf} from "react-icons/fa";
 import {Button} from "@/components/ui/button"
 import {ScrollArea} from "@/components/ui/scroll-area"
 import {DocumentSidebarProps} from "@/utils/self_type.ts";
+import {PDFPreview} from "@/components/pdf-viewer.tsx";
 
 export function DocumentSidebar(
     {
@@ -15,6 +17,7 @@ export function DocumentSidebar(
     }: DocumentSidebarProps
 ) {
     const scrollAreaRef = useRef<HTMLDivElement>(null);
+    const [pdfPreviewUrl, setPdfPreviewUrl] = useState<string | null>(null)
 
     useEffect(() => {
         if (activeDocIndex !== undefined && scrollAreaRef.current) {
@@ -53,7 +56,7 @@ export function DocumentSidebar(
     return (
         <div
             className={`fixed top-0 right-0 h-full bg-gray-50 border-l border-gray-200 shadow-lg transition-all duration-300 ${
-                isOpen ? 'w-96' : 'w-0'
+                isOpen ? 'w-1/4' : 'w-0'
             } flex flex-col`}
         >
             <Button
@@ -68,7 +71,10 @@ export function DocumentSidebar(
             </Button>
             {isOpen && (
                 <ScrollArea ref={scrollAreaRef} className="flex-1 p-6">
-                    <h2 className="text-xl font-semibold mb-6 text-gray-800 pl-28">参考文档</h2>
+                    <h2
+                        className="text-xl font-semibold mb-6 text-gray-800"
+                        style={{paddingLeft: '40%'}}
+                    >参考文档</h2>
                     {documents.map((doc, index) => (
                         <div
                             key={index}
@@ -109,7 +115,7 @@ export function DocumentSidebar(
                                             className="hover:opacity-80 transition-opacity duration-300 mt-1"
                                         >
                                             {source.source_type === 1 ? (
-                                                <FileText className="h-5 w-5 text-blue-500"/>
+                                                <FaRegFilePdf className="h-5 w-5 text-red-500"/>
                                             ) : (
                                                 <Globe className="h-5 w-5 text-green-500"/>
                                             )}
@@ -129,6 +135,12 @@ export function DocumentSidebar(
                     ))}
                 </ScrollArea>
             )}
+
+            <PDFPreview
+                isOpen={!!pdfPreviewUrl}
+                onClose={() => setPdfPreviewUrl(null)}
+                pdfUrl={pdfPreviewUrl || ''}
+            />
         </div>
     )
 }

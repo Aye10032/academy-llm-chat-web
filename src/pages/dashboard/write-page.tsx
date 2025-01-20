@@ -2,8 +2,6 @@
 
 import React, {useState, useRef, DragEvent, useCallback} from "react"
 import {
-    Bot,
-    ChevronDown,
     MessageSquare,
     Send,
     Check,
@@ -28,12 +26,6 @@ import {
     BreadcrumbPage,
     BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
 import {
     Accordion,
     AccordionContent,

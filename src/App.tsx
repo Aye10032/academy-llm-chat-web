@@ -72,10 +72,6 @@ function App() {
                 element: <ProtectedRoute><MainPage defaultPage="chat"/></ProtectedRoute>,
             },
             {
-                path: "/c/:historyId",
-                element: <ProtectedRoute><MainPage defaultPage="chat"/></ProtectedRoute>,
-            },
-            {
                 path: "/w",
                 element: <ProtectedRoute><MainPage defaultPage="write"/></ProtectedRoute>,
             },

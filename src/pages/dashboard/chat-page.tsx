@@ -37,11 +37,9 @@ import remarkGfm from 'remark-gfm'
 import rehypeKatex from 'rehype-katex'
 import remarkMath from 'remark-math'
 import 'katex/dist/katex.min.css'
-import {useNavigate} from "react-router-dom";
 
 
 export function ChatPage({user, onKnowledgeBaseSelect, selectedHistoryId}: ChatPageProps) {
-    const navigate = useNavigate();
     const [messages, setMessages] = useState<Message[]>([]);
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -53,30 +51,13 @@ export function ChatPage({user, onKnowledgeBaseSelect, selectedHistoryId}: ChatP
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [activeDocIndex, setActiveDocIndex] = useState<number>();
 
-    // 获取知识库列表
+    // 获取知识库列表请求
     const {data: knowledgeBases, isLoading: knowledgeBasesLoading} = useApiQuery<KnowledgeBase[]>(
         ['knowledgeBases'],
         '/rag/knowledge_bases'
     );
 
-    // 添加初始化知识库的 useEffect
-    useEffect(() => {
-        if (!knowledgeBasesLoading && knowledgeBases && user.last_knowledge_base) {
-            const lastKb = knowledgeBases.find(kb => kb.table_name === user.last_knowledge_base);
-            if (lastKb) {
-                setSelectedKb(lastKb);
-                onKnowledgeBaseSelect?.(lastKb);
-            }
-        }
-    }, [knowledgeBasesLoading, knowledgeBases, user.last_knowledge_base, onKnowledgeBaseSelect]);
-
-    // 当选择知识库时
-    const handleKnowledgeBaseSelect = (kb: KnowledgeBase) => {
-        setSelectedKb(kb);
-        onKnowledgeBaseSelect?.(kb);
-    };
-
-    // 获取历史对话
+    // 获取历史对话请求
     const {data: chatHistoryData} = useApiQuery<Message[]>(
         ['chatHistory', selectedHistoryId],
         `/rag/chat/${selectedHistoryId}`,
@@ -85,16 +66,56 @@ export function ChatPage({user, onKnowledgeBaseSelect, selectedHistoryId}: ChatP
         }
     );
 
-    // 修改历史对话加载的逻辑
-    useEffect(() => {
-        // 当 selectedHistoryId 为空或 undefined 时，清空消息
-        if (!selectedHistoryId) {
-            setMessages([]);
-            return;
-        }
+    // 新建对话请求
+    const newChatMutation = useApiMutation<string, void>(
+        `/rag/chat/${selectedKb?.table_name || ''}`,
+        'PATCH'
+    );
 
-        // 如果有选中的对话ID，先清空当前消息
+    // 对话 SSE mutation
+    const chatMutation = useSseQuery<{
+        message: string,
+        knowledge_base_name: string,
+        history_id: string
+    }>('/rag/chat');
+
+    // 初始化知识库
+    useEffect(() => {
+        if (!knowledgeBasesLoading && knowledgeBases && user.last_knowledge_base) {
+            const lastKb = knowledgeBases.find(kb => kb.table_name === user.last_knowledge_base);
+            if (lastKb) {
+                setSelectedKb(lastKb);
+                onKnowledgeBaseSelect(lastKb);
+            }
+        }
+    }, [knowledgeBasesLoading, knowledgeBases, user.last_knowledge_base, onKnowledgeBaseSelect]);
+
+    // 选择知识库事件处理
+    const handleKnowledgeBaseSelect = (kb: KnowledgeBase) => {
+        if (kb.table_name == selectedKb?.table_name) return;
+
         setMessages([]);
+        clearState();
+        setSelectedKb(kb);
+        onKnowledgeBaseSelect(kb);
+        setIsLoading(false);
+    };
+
+    const clearState = () => {
+        setInput('');
+        setIsLoading(true);
+        setStatus('');
+        setDocuments([]);
+        setIsGenerating(false);
+        setIsSidebarOpen(false);
+    }
+
+    // 历史对话加载
+    useEffect(() => {
+        setMessages([]);
+
+        // 当 selectedHistoryId 为空时，直接返回
+        if (!selectedHistoryId) return;
 
         // 如果有新的历史数据，则设置
         if (chatHistoryData) {
@@ -111,19 +132,7 @@ export function ChatPage({user, onKnowledgeBaseSelect, selectedHistoryId}: ChatP
         setInput(e.target.value);
     };
 
-    // 使用新的 SSE mutation
-    const chatMutation = useSseQuery<{
-        message: string,
-        knowledge_base_name: string,
-        history_id: string
-    }>('/rag/chat');
-
-    // 添加新建对话的 mutation
-    const newChatMutation = useApiMutation<string, void>(
-        `/rag/chat/${selectedKb?.table_name || ''}`,
-        'PATCH'
-    );
-
+    // 对话提交事件处理
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!input.trim() || isLoading || !selectedKb) return;
@@ -134,21 +143,15 @@ export function ChatPage({user, onKnowledgeBaseSelect, selectedHistoryId}: ChatP
             content: input.trim()
         };
 
-        setInput('');
-        setIsLoading(true);
-        setStatus('');
-        setDocuments([]);
-        setIsGenerating(false);
-        setIsSidebarOpen(false);
+        clearState();
 
         try {
             let currentHistoryId = selectedHistoryId;
 
-            // 如果在 /c 路径下且没有选中的对话，先创建新对话
-            if (!selectedHistoryId && window.location.pathname === '/c') {
+            // 如果没有选中的对话，先创建新对话
+            if (!selectedHistoryId) {
                 try {
                     currentHistoryId = await newChatMutation.mutateAsync();
-                    navigate(`/c/${currentHistoryId}`);
                 } catch (error) {
                     console.error('Failed to create new chat:', error);
                     setStatus('创建新对话失败');
@@ -196,8 +199,8 @@ export function ChatPage({user, onKnowledgeBaseSelect, selectedHistoryId}: ChatP
                                     setIsGenerating(true);
                                 }
                                 break;
-                            case 'docs':
-                                const processedDocs = parsedData.map((doc: Document, index: number) => ({
+                            case 'docs': {
+                                const processedDocs = parsedData.map((doc: Document) => ({
                                     ...doc,
                                     metadata: {
                                         ...doc.metadata,
@@ -206,6 +209,7 @@ export function ChatPage({user, onKnowledgeBaseSelect, selectedHistoryId}: ChatP
                                 }));
                                 setDocuments(processedDocs);
                                 break;
+                            }
                             case 'answer':
                                 if (!aiMessageCreated) {
                                     setMessages(prev => [...prev, {
@@ -305,16 +309,16 @@ export function ChatPage({user, onKnowledgeBaseSelect, selectedHistoryId}: ChatP
     };
 
     // 创建一个通用的内容处理组件
-    const ProcessContent = ({ children, as: Component = 'span' }: { children: React.ReactNode, as?: keyof JSX.IntrinsicElements }) => {
+    const ProcessContent = ({children, as: Component = 'span'}: { children: React.ReactNode, as?: keyof JSX.IntrinsicElements }) => {
         const processChildren = (child: React.ReactNode): React.ReactNode => {
             if (typeof child === 'string') {
-                return <span dangerouslySetInnerHTML={{ __html: processFootnotes(child) as string }} />;
+                return <span dangerouslySetInnerHTML={{__html: processFootnotes(child) as string}}/>;
             }
-            
+
             if (Array.isArray(child)) {
                 return child.map((c, index) => <React.Fragment key={index}>{processChildren(c)}</React.Fragment>);
             }
-            
+
             if (React.isValidElement(child)) {
                 const props = {
                     ...child.props,
@@ -322,7 +326,7 @@ export function ChatPage({user, onKnowledgeBaseSelect, selectedHistoryId}: ChatP
                 };
                 return React.cloneElement(child, props);
             }
-            
+
             return child;
         };
 
@@ -352,6 +356,7 @@ export function ChatPage({user, onKnowledgeBaseSelect, selectedHistoryId}: ChatP
         setIsSidebarOpen(prevState => !prevState)
     }, [])
 
+    // 自动滚动到底部
     const scrollToBottom = () => {
         if (chatContainerRef.current) {
             const scrollContainer = chatContainerRef.current;
@@ -414,7 +419,7 @@ export function ChatPage({user, onKnowledgeBaseSelect, selectedHistoryId}: ChatP
                     [&::-webkit-scrollbar-thumb]:rounded-full
                     hover:[&::-webkit-scrollbar-thumb]:bg-gray-300
                     transition-all duration-300"
-                style={{paddingRight: isSidebarOpen ? '24rem' : '0'}}
+                style={{paddingRight: isSidebarOpen ? '25%' : '0'}}
             >
                 <div className="max-w-3xl mx-auto px-4">
                     <div className="space-y-6 py-8">
@@ -443,7 +448,7 @@ export function ChatPage({user, onKnowledgeBaseSelect, selectedHistoryId}: ChatP
                                         className="prose prose-sm max-w-none dark:prose-invert"
                                         components={{
                                             code(props) {
-                                                const {children, className, node, ...rest} = props
+                                                const {children, className, ...rest} = props
                                                 const match = /language-(\w+)/.exec(className || '')
                                                 return match ? (
                                                     <SyntaxHighlighter
@@ -496,7 +501,7 @@ export function ChatPage({user, onKnowledgeBaseSelect, selectedHistoryId}: ChatP
             {/* Fixed input area */}
             <div
                 className="sticky bottom-0 left-0 right-0 bg-white/80 backdrop-blur-sm border-t"
-                style={{paddingRight: isSidebarOpen ? '24rem' : '0'}}
+                style={{paddingRight: isSidebarOpen ? '25%' : '0'}}
             >
                 <div className="max-w-3xl mx-auto px-4 py-4">
                     <form onSubmit={handleSubmit} className="flex gap-2">

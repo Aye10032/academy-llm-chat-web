@@ -21,10 +21,9 @@ import {EllipsisVertical, Search, Plus} from "lucide-react";
 import {Input} from "@/components/ui/input.tsx";
 import {useApiQuery} from "@/hooks/useApi.ts";
 import {ChatSession, ChatSidebarProps} from "@/utils/self_type.ts";
-import {useNavigate} from "react-router-dom";
 
 function groupChatsByPeriod(chats: ChatSession[]) {
-    // 首先按更新时间降序排序
+    // 按更新时间降序排序
     const sortedChats = [...chats].sort((a, b) => 
         new Date(b.update_time).getTime() - new Date(a.update_time).getTime()
     );
@@ -61,32 +60,28 @@ function groupChatsByPeriod(chats: ChatSession[]) {
 }
 
 export function ChatSidebar({ selectedKbName, onHistorySelect, selectedHistoryId }: ChatSidebarProps) {
-    const navigate = useNavigate();
     const [hoveredChat, setHoveredChat] = useState<string | null>(null);
     const [openMenuId, setOpenMenuId] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
 
-    // 使用 useApiQuery 获取聊天记录
+    // 获取聊天记录
     const { data: chats, isLoading } = useApiQuery<ChatSession[]>(
         ['chats', selectedKbName],
-        `/rag/chats?knowledge_base_name=${selectedKbName || ''}`,
+        `/rag/chats?knowledge_base_name=${selectedKbName}`,
         {
             enabled: !!selectedKbName,
         }
     );
 
+    // 这里实际上是清空当前对话记录
     const handleNewChat = () => {
         // 清除当前选中的对话
-        if (onHistorySelect) {
-            onHistorySelect('');
-        }
-        // 导航到基础聊天路径
-        navigate('/c');
+        onHistorySelect('');
     }
 
     const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
         setSearchQuery(event.target.value)
-        // 这里可以添加搜索逻辑
+        // TODO 对话历史搜索功能
     }
 
     const handleMoreClick = (e: React.MouseEvent, chatId: string) => {
@@ -98,7 +93,6 @@ export function ChatSidebar({ selectedKbName, onHistorySelect, selectedHistoryId
     const handleChatClick = (chat: ChatSession) => {
         if (onHistorySelect) {
             onHistorySelect(chat.history_id);
-            // 可以在这里添加选中状态的视觉反馈
             setHoveredChat(null); // 清除悬停状态
             setOpenMenuId(null);  // 关闭下拉菜单
         }
@@ -145,7 +139,6 @@ export function ChatSidebar({ selectedKbName, onHistorySelect, selectedHistoryId
         );
     }
 
-    // 如果正在加载，可以显示加载状态
     if (isLoading) {
         return (
             <SidebarContent className="px-1 py-2">
@@ -154,7 +147,6 @@ export function ChatSidebar({ selectedKbName, onHistorySelect, selectedHistoryId
         );
     }
 
-    // 如果有聊天记录数据，按时间分组显示
     const groupedChats = chats ? groupChatsByPeriod(chats) : {};
 
     return (
