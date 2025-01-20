@@ -8,7 +8,7 @@ import {useQuery} from "@tanstack/react-query";
 import {UserProfile, KnowledgeBase, MainPageProps} from "@/utils/self_type.ts";
 import {authApi} from "@/utils/api.ts";
 import {useNavigate} from "react-router-dom";
-import React, {useState, useEffect, useCallback} from "react";
+import React, {useState, useCallback} from "react";
 import {ChatPage} from "@/pages/dashboard/chat-page.tsx";
 import {WritePage} from "@/pages/dashboard/write-page.tsx";
 
@@ -18,8 +18,8 @@ export function MainPage({defaultPage}: MainPageProps) {
     const [activePage, setActivePage] = useState<'chat' | 'write'>(defaultPage)
     const [selectedKbName, setSelectedKb] = useState<string>('')
     const [selectedChatHistoryId, setSelectedChatHistory] = useState<string>('')
-    const [selectedProjectName, setSelectedProject] = useState<string>('')
-    const [selectedWriteHistoryId, setSelectedWriteHistory] = useState<string>('')
+    // const [selectedProjectName, setSelectedProject] = useState<string>('')
+    // const [selectedWriteHistoryId, setSelectedWriteHistory] = useState<string>('')
 
 
     // ======================================
