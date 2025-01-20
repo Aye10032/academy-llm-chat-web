@@ -16,43 +16,6 @@ export function useApiQuery<T>(
     })
 }
 
-// 用于流式响应的 hook
-export function useStreamingMutation<TVariables>(
-    endpoint: string,
-    options?: Omit<UseMutationOptions<ReadableStream | null, Error, TVariables>, 'mutationFn'>
-) {
-    return useMutation<ReadableStream | null, Error, TVariables>({
-        mutationFn: async (variables) => {
-            const token = useAuth.getState().token;
-            
-            if (!token) {
-                throw new Error('No authentication token');
-            }
-
-            const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify(variables)
-            });
-
-            if (!response.ok) {
-                if (response.status === 401) {
-                    useAuth.getState().logout();
-                    window.location.href = '/';
-                }
-                const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.detail || 'Network response was not ok');
-            }
-
-            return response.body;
-        },
-        ...options,
-    })
-}
-
 // 用于普通 POST/PUT/DELETE 请求的 hook
 export function useApiMutation<TData, TVariables>(
     endpoint: string,
@@ -69,7 +32,7 @@ export function useApiMutation<TData, TVariables>(
     })
 }
 
-// 添加新的 SSE hook
+// 用于响应 SSE 请求的 hook
 export function useSseQuery<TVariables>(
     endpoint: string,
     options?: Omit<UseMutationOptions<Response, Error, TVariables>, 'mutationFn'>
