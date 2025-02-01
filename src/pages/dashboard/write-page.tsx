@@ -34,6 +34,7 @@ import {ChatInput} from "@/components/write/chat-input.tsx";
 import {MaterialsManager} from "@/components/write/materials-manager.tsx";
 import {FloatingActions} from "@/components/write/floating-actions.tsx";
 import {SidebarTrigger} from "@/components/ui/sidebar.tsx";
+import {Separator} from "@/components/ui/separator.tsx";
 
 interface FileStructure {
     id: string
@@ -154,7 +155,6 @@ export function WritePage() {
             isHidden: true,
         },
     ])
-    const [isMaterialsDropdownOpen, setIsMaterialsDropdownOpen] = useState(false)
 
     const applyModification = (original: string, modified: string) => {
         setEditorContent((prev) => prev.replace(original, modified))
@@ -180,10 +180,6 @@ export function WritePage() {
             window.open(material.source, "_blank")
         }
     }
-
-    const handleMaterialsDropdownOpenChange = useCallback((open: boolean) => {
-        setIsMaterialsDropdownOpen(open)
-    }, [])
 
     const chatRef = useRef<HTMLDivElement>(null)
     const editorRef = useRef<HTMLDivElement>(null)
@@ -248,19 +244,28 @@ export function WritePage() {
 
     return (
         <div className="flex flex-col h-screen overflow-hidden">
-            <header className="sticky top-0 flex shrink-0 items-center gap-2 border-b bg-background p-4">
-                <SidebarTrigger className="-ml-1"/>
-                <Breadcrumb>
-                    <BreadcrumbList>
-                        <BreadcrumbItem>
-                            <BreadcrumbLink href="#">主页</BreadcrumbLink>
-                        </BreadcrumbItem>
-                        <BreadcrumbSeparator/>
-                        <BreadcrumbItem>
-                            <BreadcrumbPage>写作助手</BreadcrumbPage>
-                        </BreadcrumbItem>
-                    </BreadcrumbList>
-                </Breadcrumb>
+            <header className="sticky top-0 flex shrink-0 items-center justify-between gap-2 border-b bg-background p-4">
+                <div className="flex items-center gap-2">
+                    <SidebarTrigger className="-ml-1"/>
+                    <Separator orientation="vertical" className="mr-2 h-4"/>
+                    <Breadcrumb>
+                        <BreadcrumbList>
+                            <BreadcrumbItem>
+                                <BreadcrumbLink href="#">主页</BreadcrumbLink>
+                            </BreadcrumbItem>
+                            <BreadcrumbSeparator/>
+                            <BreadcrumbItem>
+                                <BreadcrumbPage>写作助手</BreadcrumbPage>
+                            </BreadcrumbItem>
+                        </BreadcrumbList>
+                    </Breadcrumb>
+                </div>
+                <MaterialsManager
+                    materials={materials}
+                    onDeleteMaterial={handleDeleteMaterial}
+                    onToggleMaterialVisibility={handleToggleMaterialVisibility}
+                    onPreviewMaterial={handlePreviewMaterial}
+                />
             </header>
 
             <div className="flex-1 grid overflow-hidden" style={{gridTemplateColumns: "1fr 3fr"}}>
@@ -431,31 +436,37 @@ export function WritePage() {
                                 <MessageSquare className="h-5 w-5"/>
                                 <span className="font-medium">写作编辑区 - {currentFile}</span>
                             </div>
-                            <MaterialsManager
-                                materials={materials}
-                                onDeleteMaterial={handleDeleteMaterial}
-                                onToggleMaterialVisibility={handleToggleMaterialVisibility}
-                                onPreviewMaterial={handlePreviewMaterial}
-                                onOpenChange={handleMaterialsDropdownOpenChange}
-                            />
+                            <div className="flex items-center gap-2">
+                                <Button
+                                    variant="outline"
+                                    size="icon"
+                                    className="h-8 w-8"
+                                    onClick={async () => {
+                                        await navigator.clipboard.writeText(editorContent)
+                                        // Could add a toast notification here
+                                    }}
+                                >
+                                    <Copy className="h-4 w-4"/>
+                                </Button>
+                            </div>
                         </header>
 
                         <div ref={editorRef} className="relative flex-1">
-                            {!isMaterialsDropdownOpen && (
-                                <div className="absolute right-4 top-4 z-10">
-                                    <Button
-                                        variant="outline"
-                                        size="icon"
-                                        className="h-8 w-8 bg-background"
-                                        onClick={async () => {
-                                            await navigator.clipboard.writeText(editorContent)
-                                            // Could add a toast notification here
-                                        }}
-                                    >
-                                        <Copy className="h-4 w-4"/>
-                                    </Button>
-                                </div>
-                            )}
+                            {/*{!isMaterialsDropdownOpen && (*/}
+                            {/*    <div className="absolute right-4 top-4 z-10">*/}
+                            {/*        <Button*/}
+                            {/*            variant="outline"*/}
+                            {/*            size="icon"*/}
+                            {/*            className="h-8 w-8 bg-background"*/}
+                            {/*            onClick={async () => {*/}
+                            {/*                await navigator.clipboard.writeText(editorContent)*/}
+                            {/*                // Could add a toast notification here*/}
+                            {/*            }}*/}
+                            {/*        >*/}
+                            {/*            <Copy className="h-4 w-4"/>*/}
+                            {/*        </Button>*/}
+                            {/*    </div>*/}
+                            {/*)}*/}
                             <textarea
                                 value={editorContent}
                                 onChange={(e) => setEditorContent(e.target.value)}
