@@ -1,22 +1,21 @@
-'use client'
+"use client"
 
-import React, {useState, useRef, DragEvent, useCallback} from "react"
+import React, {useState, useRef, useCallback} from "react"
 import {
+    Bot,
+    ChevronDown,
     MessageSquare,
-    Send,
     Check,
     Undo,
     ChevronLeft,
     FolderOpen,
     File,
-    Paperclip,
     Plus,
     Folder,
     ChevronRight,
-    Copy
-} from 'lucide-react'
+    Copy,
+} from "lucide-react"
 import {Button} from "@/components/ui/button"
-import {Textarea} from "@/components/ui/textarea"
 import {Card, CardContent} from "@/components/ui/card"
 import {
     Breadcrumb,
@@ -26,26 +25,20 @@ import {
     BreadcrumbPage,
     BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
-import {
-    Accordion,
-    AccordionContent,
-    AccordionItem,
-    AccordionTrigger,
-} from "@/components/ui/accordion"
-import {
-    Collapsible,
-    CollapsibleContent,
-    CollapsibleTrigger
-} from "@/components/ui/collapsible"
+import {DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger} from "@/components/ui/dropdown-menu"
+import {Accordion, AccordionContent, AccordionItem, AccordionTrigger} from "@/components/ui/accordion"
+import {Collapsible, CollapsibleContent, CollapsibleTrigger} from "@/components/ui/collapsible"
 import {Input} from "@/components/ui/input"
 import {Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger} from "@/components/ui/dialog"
-import {FloatingActions} from "@/components/write/floating-actions"
-import {MaterialsManager} from '@/components/write/materials-manager'
+import {ChatInput} from "@/components/write/chat-input.tsx";
+import {MaterialsManager} from "@/components/write/materials-manager.tsx";
+import {FloatingActions} from "@/components/write/floating-actions.tsx";
+import {SidebarTrigger} from "@/components/ui/sidebar.tsx";
 
 interface FileStructure {
     id: string
     name: string
-    type: 'file' | 'folder'
+    type: "file" | "folder"
     children?: FileStructure[]
 }
 
@@ -55,12 +48,14 @@ interface Material {
     timestamp: string
     summary: string
     source: string
-    type: 'pdf' | 'web'
+    type: "pdf" | "web"
     isHidden: boolean
 }
 
 export function WritePage() {
-    const [editorContent, setEditorContent] = useState<string>("在当今快速发展的世界中，人工智能技术的应用越来越广泛。很多公司都在使用AI来提高效率。这不仅让工作更简单，还能省很多时间。")
+    const [editorContent, setEditorContent] = useState<string>(
+        "在当今快速发展的世界中，人工智能技术的应用越来越广泛。很多公司都在使用AI来提高效率。这不仅让工作更简单，还能省很多时间。",
+    )
     const [messages] = useState([
         {
             role: "assistant",
@@ -68,7 +63,8 @@ export function WritePage() {
         },
         {
             role: "user",
-            content: "请帮我修改这段文字：\n\n在当今快速发展的世界中，人工智能技术的应用越来越广泛。很多公司都在使用AI来提高效率。这不仅让工作更简单，还能省很多时间。",
+            content:
+                "请帮我修改这段文字：\n\n在当今快速发展的世界中，人工智能技术的应用越来越广泛。很多公司都在使用AI来提高效率。这不仅让工作更简单，还能省很多时间。",
         },
         {
             role: "assistant",
@@ -97,90 +93,91 @@ export function WritePage() {
                 },
                 {
                     type: "text",
-                    content: "修改后的完整文段：\n\n在这个日新月异的时代，人工智能技术正在各个领域蓬勃发展。众多企业纷纷导入AI技术以提升运营效能。这不仅简化了工作流程，还显著提高了时间效益。",
-                }
+                    content:
+                        "修改后的完整文段：\n\n在这个日新月异的时代，人工智能技术正在各个领域蓬勃发展。众多企业纷纷导入AI技术以提升运营效能。这不仅简化了工作流程，还显著提高了时间效益。",
+                },
             ],
         },
     ])
 
     const [fileStructure, setFileStructure] = useState<FileStructure[]>([
         {
-            id: '1',
-            name: '项目文件夹',
-            type: 'folder',
+            id: "1",
+            name: "项目文件夹",
+            type: "folder",
             children: [
-                {id: '2', name: '主文档.txt', type: 'file'},
-                {id: '3', name: '参考资料.txt', type: 'file'},
+                {id: "2", name: "主文档.txt", type: "file"},
+                {id: "3", name: "参考资料.txt", type: "file"},
                 {
-                    id: '4',
-                    name: '草稿',
-                    type: 'folder',
+                    id: "4",
+                    name: "草稿",
+                    type: "folder",
                     children: [
-                        {id: '5', name: '草稿1.txt', type: 'file'},
-                        {id: '6', name: '草稿2.txt', type: 'file'},
-                    ]
-                }
-            ]
-        }
+                        {id: "5", name: "草稿1.txt", type: "file"},
+                        {id: "6", name: "草稿2.txt", type: "file"},
+                    ],
+                },
+            ],
+        },
     ])
 
-    const [currentFile, setCurrentFile] = useState<string>('主文档.txt')
-    const [newItemName, setNewItemName] = useState<string>('')
+    const [currentFile, setCurrentFile] = useState<string>("主文档.txt")
+    const [newItemName, setNewItemName] = useState<string>("")
     const [isNewFolderDialogOpen, setIsNewFolderDialogOpen] = useState<boolean>(false)
     const [isNewFileDialogOpen, setIsNewFileDialogOpen] = useState<boolean>(false)
     const [materials, setMaterials] = useState<Material[]>([
         {
-            id: '1',
-            title: 'AI在企业中的应用',
-            timestamp: '2023-05-15 14:30',
-            summary: '本文探讨了人工智能在现代企业中的广泛应用，以及它如何提高效率和生产力。',
-            source: 'https://example.com/ai-in-business',
-            type: 'web',
-            isHidden: false
+            id: "1",
+            title: "AI在企业中的应用",
+            timestamp: "2023-05-15 14:30",
+            summary: "本文探讨了人工智能在现代企业中的广泛应用，以及它如何提高效率和生产力。",
+            source: "https://example.com/ai-in-business",
+            type: "web",
+            isHidden: false,
         },
         {
-            id: '2',
-            title: '人工智能的未来展望',
-            timestamp: '2023-05-16 10:15',
-            summary: '这份报告详细分析了人工智能技术的发展趋势，并预测了未来可能的突破。',
-            source: 'AI_Future_Report.pdf',
-            type: 'pdf',
-            isHidden: false
+            id: "2",
+            title: "人工智能的未来展望",
+            timestamp: "2023-05-16 10:15",
+            summary: "这份报告详细分析了人工智能技术的发展趋势，并预测了未来可能的突破。",
+            source: "AI_Future_Report.pdf",
+            type: "pdf",
+            isHidden: false,
         },
         {
-            id: '3',
-            title: 'AI伦理问题探讨',
-            timestamp: '2023-05-17 09:45',
-            summary: '本文讨论了人工智能发展中面临的各种伦理问题，包括隐私、就业和决策偏见等。',
-            source: 'https://example.com/ai-ethics',
-            type: 'web',
-            isHidden: true
+            id: "3",
+            title: "AI伦理问题探讨",
+            timestamp: "2023-05-17 09:45",
+            summary: "本文讨论了人工智能发展中面临的各种伦理问题，包括隐私、就业和决策偏见等。",
+            source: "https://example.com/ai-ethics",
+            type: "web",
+            isHidden: true,
         },
     ])
     const [isMaterialsDropdownOpen, setIsMaterialsDropdownOpen] = useState(false)
 
     const applyModification = (original: string, modified: string) => {
-        setEditorContent(prev => prev.replace(original, modified))
+        setEditorContent((prev) => prev.replace(original, modified))
     }
 
     const undoModification = (original: string, modified: string) => {
-        setEditorContent(prev => prev.replace(modified, original))
+        setEditorContent((prev) => prev.replace(modified, original))
     }
 
     const handleDeleteMaterial = (id: string) => {
-        setMaterials(prevMaterials => prevMaterials.filter(material => material.id !== id))
+        setMaterials((prevMaterials) => prevMaterials.filter((material) => material.id !== id))
     }
 
     const handleToggleMaterialVisibility = (id: string) => {
-        setMaterials(prevMaterials => prevMaterials.map(material =>
-            material.id === id ? {...material, isHidden: !material.isHidden} : material
-        ))
+        setMaterials((prevMaterials) =>
+            prevMaterials.map((material) => (material.id === id ? {...material, isHidden: !material.isHidden} : material)),
+        )
     }
 
     const handlePreviewMaterial = (id: string) => {
-        const material = materials.find(m => m.id === id)
-        if (material && material.type === 'web') {
-            window.open(material.source, '_blank')
+        const material = materials.find((m) => m.id === id)
+        if (material && material.type === "web") {
+            window.open(material.source, "_blank")
         }
     }
 
@@ -190,69 +187,40 @@ export function WritePage() {
 
     const chatRef = useRef<HTMLDivElement>(null)
     const editorRef = useRef<HTMLDivElement>(null)
-    const [isDragging, setIsDragging] = useState(false)
-    const fileInputRef = useRef<HTMLInputElement>(null)
 
-    const handleDragOver = (e: DragEvent) => {
-        e.preventDefault()
-        setIsDragging(true)
-    }
-
-    const handleDragLeave = (e: DragEvent) => {
-        e.preventDefault()
-        setIsDragging(false)
-    }
-
-    const handleDrop = (e: DragEvent) => {
-        e.preventDefault()
-        setIsDragging(false)
-
-        const files = Array.from(e.dataTransfer.files)
-        handleFiles(files)
-    }
-
-    const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const files = e.target.files ? Array.from(e.target.files) : []
-        handleFiles(files)
-    }
-
-    const handleFiles = (files: File[]) => {
-        // Handle the files here
-        console.log('Files received:', files)
-        // You can process the files or upload them as needed
-    }
-
-    const createNewItem = (type: 'file' | 'folder') => {
+    const createNewItem = (type: "file" | "folder") => {
         if (newItemName) {
             const newItem: FileStructure = {
                 id: Date.now().toString(),
-                name: newItemName + (type === 'file' ? '.txt' : ''),
+                name: newItemName + (type === "file" ? ".txt" : ""),
                 type: type,
-                children: type === 'folder' ? [] : undefined
+                children: type === "folder" ? [] : undefined,
             }
-            setFileStructure(prev => [...prev, newItem])
-            setNewItemName('')
-            type === 'file' ? setIsNewFileDialogOpen(false) : setIsNewFolderDialogOpen(false)
+            setFileStructure((prev) => [...prev, newItem])
+            setNewItemName("")
+            if (type === "file") {
+                setIsNewFileDialogOpen(false)
+            } else {
+                setIsNewFolderDialogOpen(false)
+            }
         }
     }
 
     const renderFileTree = (items: FileStructure[]) => {
         return items.map((item) => (
             <div key={item.id} className="ml-4">
-                {item.type === 'folder' ? (
+                {item.type === "folder" ? (
                     <Collapsible>
                         <CollapsibleTrigger className="flex items-center gap-1 hover:bg-muted/50 w-full p-1 rounded transition-colors">
                             <ChevronRight className="h-4 w-4 transition-transform duration-200"/>
                             <FolderOpen className="h-4 w-4"/>
                             <span>{item.name}</span>
                         </CollapsibleTrigger>
-                        <CollapsibleContent>
-                            {item.children && renderFileTree(item.children)}
-                        </CollapsibleContent>
+                        <CollapsibleContent>{item.children && renderFileTree(item.children)}</CollapsibleContent>
                     </Collapsible>
                 ) : (
                     <button
-                        className={`flex items-center gap-1 hover:bg-muted/50 w-full p-1 rounded transition-colors ${currentFile === item.name ? 'bg-muted text-primary' : ''}`}
+                        className={`flex items-center gap-1 hover:bg-muted/50 w-full p-1 rounded transition-colors ${currentFile === item.name ? "bg-muted text-primary" : ""}`}
                         onClick={() => setCurrentFile(item.name)}
                     >
                         <File className="h-4 w-4"/>
@@ -265,12 +233,23 @@ export function WritePage() {
 
     const handleSave = () => {
         // Handle save functionality
-        console.log('Saving changes...')
+        console.log("Saving changes...")
+    }
+
+    const handleSendMessage = (message: string) => {
+        // Handle sending message
+        console.log("Sending message:", message)
+    }
+
+    const handleFileUpload = (files: File[]) => {
+        // Handle file upload
+        console.log("Uploading files:", files)
     }
 
     return (
         <div className="flex flex-col h-screen overflow-hidden">
             <header className="sticky top-0 flex shrink-0 items-center gap-2 border-b bg-background p-4">
+                <SidebarTrigger className="-ml-1"/>
                 <Breadcrumb>
                     <BreadcrumbList>
                         <BreadcrumbItem>
@@ -284,16 +263,34 @@ export function WritePage() {
                 </Breadcrumb>
             </header>
 
-            <div className="flex-1 grid overflow-hidden" style={{gridTemplateColumns: '1fr 3fr'}}>
+            <div className="flex-1 grid overflow-hidden" style={{gridTemplateColumns: "1fr 3fr"}}>
                 {/* Chat Section */}
                 <div className="flex flex-col border-r h-full overflow-hidden bg-muted/30">
+                    <header className="h-14 border-b flex items-center justify-between px-4">
+                        <div className="flex items-center gap-2">
+                            <Bot className="h-5 w-5"/>
+                            <span className="font-medium">AI写作助手</span>
+                        </div>
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="outline" className="gap-2">
+                                    写作模式
+                                    <ChevronDown className="h-4 w-4"/>
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                <DropdownMenuItem>学术论文</DropdownMenuItem>
+                                <DropdownMenuItem>商务文案</DropdownMenuItem>
+                                <DropdownMenuItem>创意写作</DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </header>
+
                     <div ref={chatRef} className="flex-1 overflow-y-auto p-4 space-y-4">
                         {messages.map((message, index) => (
                             <div
                                 key={index}
-                                className={`mb-6 flex ${
-                                    message.role === "assistant" ? "justify-start" : "justify-end"
-                                }`}
+                                className={`mb-6 flex ${message.role === "assistant" ? "justify-start" : "justify-end"}`}
                             >
                                 <div className={`max-w-[90%] space-y-4`}>
                                     {Array.isArray(message.content) ? (
@@ -309,9 +306,7 @@ export function WritePage() {
                                                 return (
                                                     <Accordion type="single" collapsible className="w-full" key={i}>
                                                         <AccordionItem value={`item-${i}`}>
-                                                            <AccordionTrigger className="text-sm">
-                                                                修改建议 {i + 1}
-                                                            </AccordionTrigger>
+                                                            <AccordionTrigger className="text-sm">修改建议 {i + 1}</AccordionTrigger>
                                                             <AccordionContent>
                                                                 <Card className="bg-muted/50">
                                                                     <CardContent className="p-4 space-y-2">
@@ -322,8 +317,9 @@ export function WritePage() {
                                                                         </div>
                                                                         <div className="space-y-1">
                                                                             <div className="text-sm text-muted-foreground">修改建议：</div>
-                                                                            <div
-                                                                                className="bg-background rounded p-2 text-sm text-primary">{item.modified}</div>
+                                                                            <div className="bg-background rounded p-2 text-sm text-primary">
+                                                                                {item.modified}
+                                                                            </div>
                                                                         </div>
                                                                         <div className="space-y-1">
                                                                             <div className="text-sm text-muted-foreground">说明：</div>
@@ -361,9 +357,7 @@ export function WritePage() {
                                     ) : (
                                         <div
                                             className={`rounded-lg px-4 py-2 ${
-                                                message.role === "assistant"
-                                                    ? "bg-muted"
-                                                    : "bg-primary text-primary-foreground"
+                                                message.role === "assistant" ? "bg-muted" : "bg-primary text-primary-foreground"
                                             }`}
                                         >
                                             <pre className="whitespace-pre-wrap font-sans">{message.content}</pre>
@@ -374,44 +368,7 @@ export function WritePage() {
                         ))}
                     </div>
 
-                    <div className="border-t p-4">
-                        <div
-                            className={`relative ${isDragging ? 'bg-muted/50' : ''}`}
-                            onDragOver={handleDragOver}
-                            onDragLeave={handleDragLeave}
-                            onDrop={handleDrop}
-                        >
-                            <input
-                                type="file"
-                                ref={fileInputRef}
-                                onChange={handleFileSelect}
-                                className="hidden"
-                                multiple
-                            />
-                            <Textarea
-                                placeholder="输入消息或拖拽文件到此处..."
-                                className="min-h-[80px] pr-24 resize-none"
-                            />
-                            <div className="absolute bottom-3 right-3 flex gap-2">
-                                <Button
-                                    size="icon"
-                                    variant="ghost"
-                                    onClick={() => fileInputRef.current?.click()}
-                                >
-                                    <Paperclip className="h-4 w-4"/>
-                                </Button>
-                                <Button size="icon">
-                                    <Send className="h-4 w-4"/>
-                                </Button>
-                            </div>
-                            {isDragging && (
-                                <div
-                                    className="absolute inset-0 border-2 border-dashed border-primary rounded-lg flex items-center justify-center bg-background/80">
-                                    <p className="text-primary">释放以上传文件</p>
-                                </div>
-                            )}
-                        </div>
-                    </div>
+                    <ChatInput onSendMessage={handleSendMessage} onFileUpload={handleFileUpload}/>
                 </div>
 
                 {/* Editor Section */}
@@ -441,7 +398,7 @@ export function WritePage() {
                                                     onChange={(e) => setNewItemName(e.target.value)}
                                                     placeholder="输入文件夹名称"
                                                 />
-                                                <Button onClick={() => createNewItem('folder')}>创建</Button>
+                                                <Button onClick={() => createNewItem("folder")}>创建</Button>
                                             </DialogContent>
                                         </Dialog>
                                         <Dialog open={isNewFileDialogOpen} onOpenChange={setIsNewFileDialogOpen}>
@@ -459,14 +416,12 @@ export function WritePage() {
                                                     onChange={(e) => setNewItemName(e.target.value)}
                                                     placeholder="输入文件名称"
                                                 />
-                                                <Button onClick={() => createNewItem('file')}>创建</Button>
+                                                <Button onClick={() => createNewItem("file")}>创建</Button>
                                             </DialogContent>
                                         </Dialog>
                                     </div>
                                 </header>
-                                <div className="flex-1 overflow-auto p-2">
-                                    {renderFileTree(fileStructure)}
-                                </div>
+                                <div className="flex-1 overflow-auto p-2">{renderFileTree(fileStructure)}</div>
                             </div>
                         </CollapsibleContent>
                     </Collapsible>
@@ -507,7 +462,7 @@ export function WritePage() {
                                 placeholder="在这里输入或粘贴你想要修改的文字..."
                                 className="w-full h-full p-4 resize-none focus:outline-none font-mono text-sm"
                                 style={{
-                                    lineHeight: '1.5',
+                                    lineHeight: "1.5",
                                     tabSize: 2,
                                 }}
                             />
