@@ -48,7 +48,8 @@ const queryClient = new QueryClient({
     },
 })
 
-function App() {
+
+export default function App() {
     const router = createBrowserRouter(
         [
             {
@@ -102,5 +103,3 @@ function App() {
         </QueryClientProvider>
     )
 }
-
-export default App
