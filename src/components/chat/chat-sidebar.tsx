@@ -20,11 +20,17 @@ import {Button} from "@/components/ui/button.tsx"
 import {EllipsisVertical, Search, Plus} from "lucide-react";
 import {Input} from "@/components/ui/input.tsx";
 import {useApiQuery} from "@/hooks/useApi.ts";
-import {ChatSession, ChatSidebarProps} from "@/utils/self_type.ts";
+import {ChatSession} from "@/utils/self_type.ts";
+
+interface ChatSidebarProps {
+    selectedKbName: string;
+    onHistorySelect: (chatHistory: string) => void;
+    selectedHistoryId: string;
+}
 
 function groupChatsByPeriod(chats: ChatSession[]) {
     // 按更新时间降序排序
-    const sortedChats = [...chats].sort((a, b) => 
+    const sortedChats = [...chats].sort((a, b) =>
         new Date(b.update_time).getTime() - new Date(a.update_time).getTime()
     );
 
@@ -59,13 +65,19 @@ function groupChatsByPeriod(chats: ChatSession[]) {
     );
 }
 
-export function ChatSidebar({ selectedKbName, onHistorySelect, selectedHistoryId }: ChatSidebarProps) {
+export function ChatSidebar(
+    {
+        selectedKbName,
+        onHistorySelect,
+        selectedHistoryId
+    }: ChatSidebarProps
+) {
     const [hoveredChat, setHoveredChat] = useState<string | null>(null);
     const [openMenuId, setOpenMenuId] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
 
     // 获取聊天记录
-    const { data: chats, isLoading } = useApiQuery<ChatSession[]>(
+    const {data: chats, isLoading} = useApiQuery<ChatSession[]>(
         ['chats', selectedKbName],
         `/rag/chats?knowledge_base_name=${selectedKbName}`,
         {
@@ -115,10 +127,10 @@ export function ChatSidebar({ selectedKbName, onHistorySelect, selectedHistoryId
                                 disabled
                             />
                         </div>
-                        <Button 
-                            onClick={handleNewChat} 
-                            size="icon" 
-                            variant="outline" 
+                        <Button
+                            onClick={handleNewChat}
+                            size="icon"
+                            variant="outline"
                             className="rounded-full"
                             disabled={!selectedKbName} // 如果没有选择知识库则禁用
                         >
@@ -128,7 +140,7 @@ export function ChatSidebar({ selectedKbName, onHistorySelect, selectedHistoryId
                     </div>
                 </div>
                 <div className="flex flex-1 flex-col gap-4 p-4">
-                    {Array.from({ length: 24 }).map((_, index) => (
+                    {Array.from({length: 24}).map((_, index) => (
                         <div
                             key={index}
                             className="aspect-video h-12 w-full rounded-lg bg-muted/50"
@@ -163,10 +175,10 @@ export function ChatSidebar({ selectedKbName, onHistorySelect, selectedHistoryId
                             className="pl-8 pr-4 py-2 w-full text-sm rounded-full bg-white"
                         />
                     </div>
-                    <Button 
-                        onClick={handleNewChat} 
-                        size="icon" 
-                        variant="outline" 
+                    <Button
+                        onClick={handleNewChat}
+                        size="icon"
+                        variant="outline"
                         className="rounded-full"
                         disabled={!selectedKbName} // 如果没有选择知识库则禁用
                     >

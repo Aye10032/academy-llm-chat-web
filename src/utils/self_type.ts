@@ -1,6 +1,4 @@
-import * as React from "react";
-import {Sidebar} from "@/components/ui/sidebar.tsx";
-
+// 登陆相关
 export interface LoginCredentials {
     username: string
     password: string
@@ -29,39 +27,7 @@ export interface UserProfile {
     last_project: string
 }
 
-export interface MainPageProps {
-    defaultPage: 'chat' | 'write';
-}
-
-export interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
-    user: UserProfile;
-    handleLogout: () => void;
-    activePage: 'chat' | 'write';
-    setActivePage: (page: 'chat' | 'write') => void;
-    selectedKbName: string;
-    selectedHistoryId: string;
-    onHistorySelect: (historyId: string) => void;
-}
-
-export interface ChatSidebarProps {
-    selectedKbName: string;
-    onHistorySelect: (chatHistory: string) => void;
-    selectedHistoryId: string;
-}
-
-export interface ChatPageProps {
-    user: UserProfile;
-    onKnowledgeBaseSelect: (kb: KnowledgeBase | null) => void;
-    selectedHistoryId: string;
-}
-
-export interface DocumentSidebarProps {
-    documents: Document[]
-    isOpen: boolean
-    onToggle: () => void
-    activeDocIndex?: number
-}
-
+// 对话界面
 export interface KnowledgeBase {
     table_name: string;
     table_title: string;
@@ -85,9 +51,9 @@ export interface Document {
         year?: number;
         source: Array<{
             source_url: string
-            source_type: number  // 1 for PDF, 2 for web page
+            source_type: number
         }>
-        score: number;
+        score: number
         refer_sentence: string[];
         isReferenced?: boolean;
     };

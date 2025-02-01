@@ -5,12 +5,16 @@ import {
 } from "@/components/ui/sidebar"
 import {useAuth} from "@/utils/auth.ts";
 import {useQuery} from "@tanstack/react-query";
-import {UserProfile, KnowledgeBase, MainPageProps} from "@/utils/self_type.ts";
+import {UserProfile, KnowledgeBase} from "@/utils/self_type.ts";
 import {authApi} from "@/utils/api.ts";
 import {useNavigate} from "react-router-dom";
 import React, {useState, useCallback} from "react";
 import {ChatPage} from "@/pages/dashboard/chat-page.tsx";
 import {WritePage} from "@/pages/dashboard/write-page.tsx";
+
+interface MainPageProps {
+    defaultPage: 'chat' | 'write';
+}
 
 export function MainPage({defaultPage}: MainPageProps) {
     const {user, logout} = useAuth()
@@ -45,11 +49,11 @@ export function MainPage({defaultPage}: MainPageProps) {
     const handlePageChange = useCallback((page: 'chat' | 'write') => {
         setActivePage(page);
         if (page === 'chat') {
-            navigate('/c');
+            navigate('/c')
         } else if (page === 'write') {
-            navigate('/w');
+            navigate('/w')
         }
-    }, [navigate]);
+    }, [navigate])
 
     // ======================问答界面相关======================
     // 响应知识库选择事件
@@ -61,15 +65,8 @@ export function MainPage({defaultPage}: MainPageProps) {
         }
     }, []);
 
-    // 处理对话选择事件回调
-    const handleHistorySelect = useCallback((historyId: string) => {
-        if (activePage === 'chat') {
-            setSelectedChatHistory(historyId)
-        } else if (activePage === 'write') {
-            // TODO
-        }
 
-    }, [activePage]);
+    // ======================写作界面相关======================
 
 
     if (isLoading) {
@@ -95,7 +92,7 @@ export function MainPage({defaultPage}: MainPageProps) {
                 setActivePage={handlePageChange}
                 selectedKbName={selectedKbName}
                 selectedHistoryId={selectedChatHistoryId}
-                onHistorySelect={handleHistorySelect}
+                onHistorySelect={setSelectedChatHistory}
             />
             <SidebarInset>
                 {activePage === 'chat' ? (

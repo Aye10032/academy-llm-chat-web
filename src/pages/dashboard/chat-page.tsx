@@ -30,7 +30,7 @@ import {Prism as SyntaxHighlighter} from 'react-syntax-highlighter'
 import {darcula} from 'react-syntax-highlighter/dist/esm/styles/prism';
 import React, {useState, useRef, useEffect, useCallback} from "react";
 import {useApiQuery, useSseQuery, useApiMutation} from "@/hooks/useApi.ts";
-import {KnowledgeBase, Message, Document, ChatPageProps} from "@/utils/self_type.ts";
+import {KnowledgeBase, Message, Document, UserProfile} from "@/utils/self_type.ts";
 import {ChevronDownIcon, Mic} from "lucide-react";
 import {DocumentSidebar} from "@/components/chat/document-sidebar.tsx";
 import remarkGfm from 'remark-gfm'
@@ -38,6 +38,11 @@ import rehypeKatex from 'rehype-katex'
 import remarkMath from 'remark-math'
 import 'katex/dist/katex.min.css'
 
+interface ChatPageProps {
+    user: UserProfile;
+    onKnowledgeBaseSelect: (kb: KnowledgeBase | null) => void;
+    selectedHistoryId: string;
+}
 
 export function ChatPage({user, onKnowledgeBaseSelect, selectedHistoryId}: ChatPageProps) {
     const [messages, setMessages] = useState<Message[]>([]);
