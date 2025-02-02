@@ -29,6 +29,7 @@ export interface UserProfile {
 
 // 对话界面
 export interface KnowledgeBase {
+    uid: string
     table_name: string;
     table_title: string;
     description: string;
@@ -60,8 +61,8 @@ export interface Document {
 }
 
 export interface ChatSession {
-    history_id: string;
-    knowledge_base_name: string;
+    chat_uid: string;
+    parent_uid: string;
     user_email: string;
     description: string;
     create_time: string;

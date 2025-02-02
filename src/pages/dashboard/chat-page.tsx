@@ -41,10 +41,10 @@ import 'katex/dist/katex.min.css'
 interface ChatPageProps {
     user: UserProfile;
     onKnowledgeBaseSelect: (kb: KnowledgeBase | null) => void;
-    selectedHistoryId: string;
+    selectedChatUID: string;
 }
 
-export function ChatPage({user, onKnowledgeBaseSelect, selectedHistoryId}: ChatPageProps) {
+export function ChatPage({user, onKnowledgeBaseSelect, selectedChatUID}: ChatPageProps) {
     const [messages, setMessages] = useState<Message[]>([]);
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -64,30 +64,30 @@ export function ChatPage({user, onKnowledgeBaseSelect, selectedHistoryId}: ChatP
 
     // 获取历史对话请求
     const {data: chatHistoryData} = useApiQuery<Message[]>(
-        ['chatHistory', selectedHistoryId],
-        `/rag/chat/${selectedHistoryId}`,
+        ['chatHistory', selectedChatUID],
+        `/rag/chat/${selectedChatUID}`,
         {
-            enabled: !!selectedHistoryId,
+            enabled: !!selectedChatUID,
         }
     );
 
     // 新建对话请求
     const newChatMutation = useApiMutation<string, void>(
-        `/rag/chat/${selectedKb?.table_name || ''}`,
+        `/rag/new_chat/${selectedKb?.uid || ''}`,
         'PATCH'
     );
 
     // 对话 SSE mutation
     const chatMutation = useSseQuery<{
         message: string,
-        knowledge_base_name: string,
-        history_id: string
+        knowledge_base_uid: string,
+        chat_uid: string
     }>('/rag/chat');
 
     // 初始化知识库
     useEffect(() => {
         if (!knowledgeBasesLoading && knowledgeBases && user.last_knowledge_base) {
-            const lastKb = knowledgeBases.find(kb => kb.table_name === user.last_knowledge_base);
+            const lastKb = knowledgeBases.find(kb => kb.uid === user.last_knowledge_base);
             if (lastKb) {
                 setSelectedKb(lastKb);
                 onKnowledgeBaseSelect(lastKb);
@@ -97,7 +97,7 @@ export function ChatPage({user, onKnowledgeBaseSelect, selectedHistoryId}: ChatP
 
     // 选择知识库事件处理
     const handleKnowledgeBaseSelect = (kb: KnowledgeBase) => {
-        if (kb.table_name == selectedKb?.table_name) return;
+        if (kb.uid == selectedKb?.uid) return;
 
         setMessages([]);
         clearState();
@@ -117,10 +117,11 @@ export function ChatPage({user, onKnowledgeBaseSelect, selectedHistoryId}: ChatP
 
     // 历史对话加载
     useEffect(() => {
-        setMessages([]);
-
         // 当 selectedHistoryId 为空时，直接返回
-        if (!selectedHistoryId) return;
+        if (!selectedChatUID) {
+            setMessages([]);
+            return;
+        }
 
         // 如果有新的历史数据，则设置
         if (chatHistoryData) {
@@ -131,7 +132,7 @@ export function ChatPage({user, onKnowledgeBaseSelect, selectedHistoryId}: ChatP
             }));
             setMessages(formattedMessages);
         }
-    }, [selectedHistoryId, chatHistoryData]);
+    }, [selectedChatUID, chatHistoryData]);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setInput(e.target.value);
@@ -151,10 +152,10 @@ export function ChatPage({user, onKnowledgeBaseSelect, selectedHistoryId}: ChatP
         clearState();
 
         try {
-            let currentHistoryId = selectedHistoryId;
+            let currentHistoryId = selectedChatUID;
 
             // 如果没有选中的对话，先创建新对话
-            if (!selectedHistoryId) {
+            if (!selectedChatUID) {
                 try {
                     currentHistoryId = await newChatMutation.mutateAsync();
                 } catch (error) {
@@ -167,11 +168,11 @@ export function ChatPage({user, onKnowledgeBaseSelect, selectedHistoryId}: ChatP
             // 设置消息
             setMessages(prev => [...prev, userMessage]);
 
-            // 使用可能更新的 historyId 发送聊天请求
+            // 发送聊天请求
             const response = await chatMutation.mutateAsync({
                 message: userMessage.content,
-                knowledge_base_name: selectedKb.table_name,
-                history_id: currentHistoryId || ''
+                knowledge_base_uid: selectedKb.uid,
+                chat_uid: currentHistoryId || ''
             });
 
             const reader = response.body?.getReader();
@@ -283,7 +284,7 @@ export function ChatPage({user, onKnowledgeBaseSelect, selectedHistoryId}: ChatP
             console.error('Error:', error);
             setStatus('发生错误，请重试');
             // 如果是新建的对话失败了，清空消息
-            if (!selectedHistoryId) {
+            if (!selectedChatUID) {
                 setMessages([]);
             }
         } finally {

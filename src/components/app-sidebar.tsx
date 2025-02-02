@@ -5,7 +5,6 @@ import {
     MessageCircleMoreIcon,
     PenLineIcon
 } from "lucide-react"
-
 import {NavUser} from "@/components/nav-user"
 import {
     Sidebar,
@@ -25,8 +24,8 @@ interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
     activePage: 'chat' | 'write';
     setActivePage: (page: 'chat' | 'write') => void;
     selectedKbName: string;
-    selectedHistoryId: string;
-    onHistorySelect: (historyId: string) => void;
+    selectedChatUID: string;
+    onChatSelect: (chatUID: string) => void;
 }
 
 export function AppSidebar(
@@ -36,8 +35,8 @@ export function AppSidebar(
         activePage,
         setActivePage,
         selectedKbName,
-        selectedHistoryId,
-        onHistorySelect
+        selectedChatUID,
+        onChatSelect
     }: AppSidebarProps) {
     const {setOpen} = useSidebar()
 
@@ -130,8 +129,8 @@ export function AppSidebar(
                 {activePage === 'chat' ? (
                     <ChatSidebar
                         selectedKbName={selectedKbName}
-                        onHistorySelect={onHistorySelect}
-                        selectedHistoryId={selectedHistoryId}
+                        onChatSelect={onChatSelect}
+                        selectedChatUID={selectedChatUID}
                     />
                 ) : (
                     <WriteSidebar/>

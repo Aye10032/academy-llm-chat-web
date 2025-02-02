@@ -21,7 +21,7 @@ export function MainPage({defaultPage}: MainPageProps) {
     const navigate = useNavigate();
     const [activePage, setActivePage] = useState<'chat' | 'write'>(defaultPage)
     const [selectedKbName, setSelectedKb] = useState<string>('')
-    const [selectedChatHistoryId, setSelectedChatHistory] = useState<string>('')
+    const [selectedChatUID, setSelectedChatUID] = useState<string>('')
     // const [selectedProjectName, setSelectedProject] = useState<string>('')
     // const [selectedWriteHistoryId, setSelectedWriteHistory] = useState<string>('')
 
@@ -59,7 +59,7 @@ export function MainPage({defaultPage}: MainPageProps) {
     // 响应知识库选择事件
     const handleKnowledgeBaseSelect = useCallback((kb: KnowledgeBase | null) => {
         if (kb) {
-            setSelectedKb(kb.table_name);
+            setSelectedKb(kb.uid);
         } else {
             setSelectedKb('');
         }
@@ -91,15 +91,15 @@ export function MainPage({defaultPage}: MainPageProps) {
                 activePage={activePage}
                 setActivePage={handlePageChange}
                 selectedKbName={selectedKbName}
-                selectedHistoryId={selectedChatHistoryId}
-                onHistorySelect={setSelectedChatHistory}
+                selectedChatUID={selectedChatUID}
+                onChatSelect={setSelectedChatUID}
             />
             <SidebarInset>
                 {activePage === 'chat' ? (
                     <ChatPage
                         user={userInfo}
                         onKnowledgeBaseSelect={handleKnowledgeBaseSelect}
-                        selectedHistoryId={selectedChatHistoryId}
+                        selectedChatUID={selectedChatUID}
                     />
                 ) : (
                     <WritePage/>

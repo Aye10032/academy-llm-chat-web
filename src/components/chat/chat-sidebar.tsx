@@ -1,4 +1,4 @@
-import {format, isToday, isAfter, subDays} from "date-fns"
+import {format} from "date-fns"
 import {zhCN} from "date-fns/locale"
 import {
     SidebarContent,
@@ -21,65 +21,29 @@ import {EllipsisVertical, Search, Plus} from "lucide-react";
 import {Input} from "@/components/ui/input.tsx";
 import {useApiQuery} from "@/hooks/useApi.ts";
 import {ChatSession} from "@/utils/self_type.ts";
+import {groupChatsByPeriod} from "@/utils/sort.ts";
 
 interface ChatSidebarProps {
     selectedKbName: string;
-    onHistorySelect: (chatHistory: string) => void;
-    selectedHistoryId: string;
-}
-
-function groupChatsByPeriod(chats: ChatSession[]) {
-    // 按更新时间降序排序
-    const sortedChats = [...chats].sort((a, b) =>
-        new Date(b.update_time).getTime() - new Date(a.update_time).getTime()
-    );
-
-    const now = new Date()
-    const sevenDaysAgo = subDays(now, 7)
-    const thirtyDaysAgo = subDays(now, 30)
-
-    const groups = {
-        "今天": [] as ChatSession[],
-        "近7天": [] as ChatSession[],
-        "近30天": [] as ChatSession[],
-        "更早": [] as ChatSession[],
-    };
-
-    sortedChats.forEach(chat => {
-        const chatDate = new Date(chat.update_time)
-
-        if (isToday(chatDate)) {
-            groups["今天"].push(chat)
-        } else if (isAfter(chatDate, sevenDaysAgo)) {
-            groups["近7天"].push(chat)
-        } else if (isAfter(chatDate, thirtyDaysAgo)) {
-            groups["近30天"].push(chat)
-        } else {
-            groups["更早"].push(chat)
-        }
-    });
-
-    // 只返回有内容的分组
-    return Object.fromEntries(
-        Object.entries(groups).filter(([_, chats]) => chats.length > 0)
-    );
+    onChatSelect: (chatUID: string) => void;
+    selectedChatUID: string;
 }
 
 export function ChatSidebar(
     {
         selectedKbName,
-        onHistorySelect,
-        selectedHistoryId
+        onChatSelect,
+        selectedChatUID
     }: ChatSidebarProps
 ) {
     const [hoveredChat, setHoveredChat] = useState<string | null>(null);
     const [openMenuId, setOpenMenuId] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
 
-    // 获取聊天记录
+    // 获取聊天列表
     const {data: chats, isLoading} = useApiQuery<ChatSession[]>(
         ['chats', selectedKbName],
-        `/rag/chats?knowledge_base_name=${selectedKbName}`,
+        `/rag/chats?knowledge_base_uid=${selectedKbName}`,
         {
             enabled: !!selectedKbName,
         }
@@ -88,7 +52,7 @@ export function ChatSidebar(
     // 这里实际上是清空当前对话记录
     const handleNewChat = () => {
         // 清除当前选中的对话
-        onHistorySelect('');
+        onChatSelect('');
     }
 
     const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -103,15 +67,15 @@ export function ChatSidebar(
     }
 
     const handleChatClick = (chat: ChatSession) => {
-        if (onHistorySelect) {
-            onHistorySelect(chat.history_id);
+        if (onChatSelect) {
+            onChatSelect(chat.chat_uid);
             setHoveredChat(null); // 清除悬停状态
             setOpenMenuId(null);  // 关闭下拉菜单
         }
     };
 
     // 如果没有选择知识库，显示占位内容
-    if (!selectedKbName) {
+    if (!selectedKbName || isLoading) {
         return (
             <SidebarContent className="px-1 py-2">
                 <div className="p-4 space-y-4">
@@ -147,14 +111,6 @@ export function ChatSidebar(
                         />
                     ))}
                 </div>
-            </SidebarContent>
-        );
-    }
-
-    if (isLoading) {
-        return (
-            <SidebarContent className="px-1 py-2">
-                <div className="p-4">加载中...</div>
             </SidebarContent>
         );
     }
@@ -196,11 +152,11 @@ export function ChatSidebar(
                         <SidebarMenu>
                             {periodChats.map((chat) => (
                                 <SidebarMenuItem
-                                    key={chat.history_id}
-                                    onMouseEnter={() => setHoveredChat(chat.history_id)}
+                                    key={chat.chat_uid}
+                                    onMouseEnter={() => setHoveredChat(chat.chat_uid)}
                                     onMouseLeave={() => setHoveredChat(null)}
                                     onClick={() => handleChatClick(chat)}
-                                    className={chat.history_id === selectedHistoryId ? 'bg-accent' : ''}
+                                    className={chat.chat_uid === selectedChatUID ? 'bg-accent' : ''}
                                 >
                                     <SidebarMenuButton asChild className="h-auto py-3 px-2 text-sm font-medium w-full text-left">
                                         <div className="flex items-center justify-between">
@@ -210,13 +166,13 @@ export function ChatSidebar(
                                                     {format(new Date(chat.create_time), "MM月dd日 HH:mm", {locale: zhCN})}
                                                 </span>
                                             </a>
-                                            {(hoveredChat === chat.history_id || openMenuId === chat.history_id) && (
-                                                <DropdownMenu open={openMenuId === chat.history_id}>
+                                            {(hoveredChat === chat.chat_uid || openMenuId === chat.chat_uid) && (
+                                                <DropdownMenu open={openMenuId === chat.chat_uid}>
                                                     <DropdownMenuTrigger asChild>
                                                         <Button
                                                             variant="ghost"
                                                             className="h-8 w-8 p-0"
-                                                            onClick={(e) => handleMoreClick(e, chat.history_id)}
+                                                            onClick={(e) => handleMoreClick(e, chat.chat_uid)}
                                                         >
                                                             <EllipsisVertical className="h-4 w-4"/>
                                                             <span className="sr-only">打开菜单</span>
