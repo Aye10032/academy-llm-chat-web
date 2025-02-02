@@ -163,7 +163,7 @@ export function ChatSidebar(
                                             <a href="#" className="flex flex-col items-start gap-1 flex-grow min-w-0">
                                                 <span className="truncate w-full pr-4">{chat.description}</span>
                                                 <span className="text-[10px] text-muted-foreground">
-                                                    {format(new Date(chat.create_time), "MM月dd日 HH:mm", {locale: zhCN})}
+                                                    {format(new Date(chat.update_time), "MM月dd日 HH:mm", {locale: zhCN})}
                                                 </span>
                                             </a>
                                             {(hoveredChat === chat.chat_uid || openMenuId === chat.chat_uid) && (
