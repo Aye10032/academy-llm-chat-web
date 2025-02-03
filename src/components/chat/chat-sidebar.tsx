@@ -22,37 +22,31 @@ import {Input} from "@/components/ui/input.tsx";
 import {useApiQuery} from "@/hooks/useApi.ts";
 import {ChatSession} from "@/utils/self_type.ts";
 import {groupChatsByPeriod} from "@/utils/sort.ts";
+import {chatStore, kbStore} from "@/utils/self-state";
 
-interface ChatSidebarProps {
-    selectedKbName: string;
-    onChatSelect: (chatUID: string) => void;
-    selectedChatUID: string;
-}
+export function ChatSidebar() {
+    const selectedKbUID = kbStore((state) => state.selectedKbUID);
+    const selectedChatUID = chatStore((state) => state.selectedChatUID);
+    const setSelectedChatUID = chatStore((state) => state.setSelectedChatUID)
 
-export function ChatSidebar(
-    {
-        selectedKbName,
-        onChatSelect,
-        selectedChatUID
-    }: ChatSidebarProps
-) {
     const [hoveredChat, setHoveredChat] = useState<string | null>(null);
     const [openMenuId, setOpenMenuId] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
 
+
     // 获取聊天列表
     const {data: chats, isLoading} = useApiQuery<ChatSession[]>(
-        ['chats', selectedKbName],
-        `/rag/chats?knowledge_base_uid=${selectedKbName}`,
+        ['chats', selectedKbUID],
+        `/rag/chats?knowledge_base_uid=${selectedKbUID}`,
         {
-            enabled: !!selectedKbName,
+            enabled: !!selectedKbUID,
         }
     );
 
     // 这里实际上是清空当前对话记录
     const handleNewChat = () => {
         // 清除当前选中的对话
-        onChatSelect('');
+        setSelectedChatUID('');
     }
 
     const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -67,15 +61,13 @@ export function ChatSidebar(
     }
 
     const handleChatClick = (chat: ChatSession) => {
-        if (onChatSelect) {
-            onChatSelect(chat.chat_uid);
-            setHoveredChat(null); // 清除悬停状态
-            setOpenMenuId(null);  // 关闭下拉菜单
-        }
+        setSelectedChatUID(chat.chat_uid);
+        setHoveredChat(null); // 清除悬停状态
+        setOpenMenuId(null);  // 关闭下拉菜单
     };
 
     // 如果没有选择知识库，显示占位内容
-    if (!selectedKbName || isLoading) {
+    if (!selectedKbUID || isLoading) {
         return (
             <SidebarContent className="px-1 py-2">
                 <div className="p-4 space-y-4">
@@ -96,7 +88,7 @@ export function ChatSidebar(
                             size="icon"
                             variant="outline"
                             className="rounded-full"
-                            disabled={!selectedKbName} // 如果没有选择知识库则禁用
+                            disabled={!selectedKbUID} // 如果没有选择知识库则禁用
                         >
                             <Plus className="h-4 w-4"/>
                             <span className="sr-only">新建聊天</span>
@@ -136,7 +128,7 @@ export function ChatSidebar(
                         size="icon"
                         variant="outline"
                         className="rounded-full"
-                        disabled={!selectedKbName} // 如果没有选择知识库则禁用
+                        disabled={!selectedKbUID} // 如果没有选择知识库则禁用
                     >
                         <Plus className="h-4 w-4"/>
                         <span className="sr-only">新建聊天</span>

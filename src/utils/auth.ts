@@ -1,6 +1,14 @@
 import {create} from 'zustand'
-import {AuthState, UserProfile} from './self_type'
+import {UserProfile} from './self_type'
 
+interface AuthState {
+    token: string | null
+    user: UserProfile | null
+    isAuthenticated: boolean
+    setToken: (token: string | null) => void
+    setUser: (user: UserProfile | null) => void
+    logout: () => void
+}
 
 export const useAuth = create<AuthState>((set) => ({
     token: localStorage.getItem('token'),

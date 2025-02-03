@@ -9,62 +9,65 @@ export interface TokenResponse {
     token_type: string
 }
 
-export interface AuthState {
-    token: string | null
-    user: UserProfile | null
-    isAuthenticated: boolean
-    setToken: (token: string | null) => void
-    setUser: (user: UserProfile | null) => void
-    logout: () => void
-}
-
 export interface UserProfile {
-    email: string,
-    username: string,
-    is_active: boolean,
-    role: number,
-    last_knowledge_base: string,
+    email: string
+    username: string
+    is_active: boolean
+    role: number
+    last_knowledge_base: string
     last_project: string
 }
 
-// 对话界面
-export interface KnowledgeBase {
-    uid: string
-    table_name: string;
-    table_title: string;
-    description: string;
-    create_time: string;
-    last_update: string;
-    is_active: boolean;
-}
-
+// AI相关通用类型
 export interface Message {
-    id: string;
-    type: 'human' | 'ai';
-    content: string;
+    id: string
+    type: 'human' | 'ai'
+    content: string
 }
 
 export interface Document {
-    content: string;
+    content: string
     metadata: {
-        title?: string;
-        author?: string;
-        year?: number;
+        title?: string
+        author?: string
+        year?: number
         source: Array<{
             source_url: string
             source_type: number
         }>
         score: number
-        refer_sentence: string[];
-        isReferenced?: boolean;
+        refer_sentence: string[]
+        isReferenced?: boolean
     };
 }
 
 export interface ChatSession {
-    chat_uid: string;
-    parent_uid: string;
-    user_email: string;
-    description: string;
-    create_time: string;
-    update_time: string;
+    chat_uid: string
+    parent_uid: string
+    user_email: string
+    description: string
+    create_time: string
+    update_time: string
+}
+
+// 知识库
+export interface KnowledgeBase {
+    uid: string
+    table_name: string
+    table_title: string
+    description: string
+    create_time: string
+    last_update: string
+    is_active: boolean
+}
+
+// 写作相关
+export interface WriteProject {
+    uid: string
+    graph_checkpoint: string
+    user_email: string
+    description: string
+    last_manuscript: string
+    create_time: string
+    update_time: string
 }

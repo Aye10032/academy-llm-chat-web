@@ -26,15 +26,23 @@ import {
     SidebarMenuButton,
     SidebarMenuItem, useSidebar,
 } from "@/components/ui/sidebar"
+import {useAuth} from "@/utils/auth.ts";
+import {useNavigate} from "react-router-dom";
 import {UserProfile} from "@/utils/self_type.ts";
 
-interface NavUserProps {
-    user: UserProfile;
-    handleLogout: () => void;
+interface NavProps {
+    user: UserProfile
 }
 
-export function NavUser({user, handleLogout}: NavUserProps) {
+export function NavUser({user}: NavProps) {
+    const {logout} = useAuth()
     const {isMobile} = useSidebar()
+    const navigate = useNavigate();
+
+    const handleLogout = () => {
+        logout()
+        navigate('/login')
+    }
 
     return (
         <SidebarMenu>

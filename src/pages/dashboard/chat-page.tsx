@@ -28,39 +28,44 @@ import Markdown from 'react-markdown';
 import {Prism as SyntaxHighlighter} from 'react-syntax-highlighter'
 // @ts-expect-error no need any more
 import {darcula} from 'react-syntax-highlighter/dist/esm/styles/prism';
-import React, {useState, useRef, useEffect, useCallback} from "react";
-import {useApiQuery, useSseQuery, useApiMutation} from "@/hooks/useApi.ts";
-import {KnowledgeBase, Message, Document, UserProfile} from "@/utils/self_type.ts";
-import {ChevronDownIcon, Mic} from "lucide-react";
-import {DocumentSidebar} from "@/components/chat/document-sidebar.tsx";
 import remarkGfm from 'remark-gfm'
 import rehypeKatex from 'rehype-katex'
 import remarkMath from 'remark-math'
 import 'katex/dist/katex.min.css'
+import React, {useState, useRef, useEffect, useCallback} from "react";
+import {chatStore, kbStore} from "@/utils/self-state.tsx";
+import {useApiQuery, useSseQuery, useApiMutation} from "@/hooks/useApi.ts";
+import {KnowledgeBase, Message, Document, UserProfile} from "@/utils/self_type.ts";
+import {ChevronDownIcon, Mic} from "lucide-react";
+import {DocumentSidebar} from "@/components/chat/document-sidebar.tsx";
 
 interface ChatPageProps {
     user: UserProfile;
-    onKnowledgeBaseSelect: (kb: KnowledgeBase | null) => void;
-    selectedChatUID: string;
 }
 
-export function ChatPage({user, onKnowledgeBaseSelect, selectedChatUID}: ChatPageProps) {
-    const [messages, setMessages] = useState<Message[]>([]);
-    const [input, setInput] = useState('');
-    const [isLoading, setIsLoading] = useState(false);
-    const chatContainerRef = useRef<HTMLDivElement>(null);
+export function ChatPage({user}: ChatPageProps) {
+    const setSelectedKbUID = kbStore((state) => state.setSelectedKbUID)
+    const selectedChatUID = chatStore((state) => state.selectedChatUID)
+
     const [selectedKb, setSelectedKb] = useState<KnowledgeBase | null>(null);
-    const [status, setStatus] = useState<string>('');
-    const [documents, setDocuments] = useState<Document[]>([]);
-    const [isGenerating, setIsGenerating] = useState(false);
-    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-    const [activeDocIndex, setActiveDocIndex] = useState<number>();
+
+    const [messages, setMessages] = useState<Message[]>([])
+    const [input, setInput] = useState('')
+    const [isLoading, setIsLoading] = useState(false)
+    const chatContainerRef = useRef<HTMLDivElement>(null)
+
+    const [status, setStatus] = useState<string>('')
+    const [documents, setDocuments] = useState<Document[]>([])
+    const [isGenerating, setIsGenerating] = useState(false)
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+    const [activeDocIndex, setActiveDocIndex] = useState<number>()
+
 
     // 获取知识库列表请求
     const {data: knowledgeBases, isLoading: knowledgeBasesLoading} = useApiQuery<KnowledgeBase[]>(
         ['knowledgeBases'],
         '/rag/knowledge_bases'
-    );
+    )
 
     // 获取历史对话请求
     const {data: chatHistoryData} = useApiQuery<Message[]>(
@@ -69,20 +74,20 @@ export function ChatPage({user, onKnowledgeBaseSelect, selectedChatUID}: ChatPag
         {
             enabled: !!selectedChatUID,
         }
-    );
+    )
 
     // 新建对话请求
     const newChatMutation = useApiMutation<string, void>(
         `/rag/new_chat/${selectedKb?.uid || ''}`,
         'PATCH'
-    );
+    )
 
     // 对话 SSE mutation
     const chatMutation = useSseQuery<{
         message: string,
         knowledge_base_uid: string,
         chat_uid: string
-    }>('/rag/chat');
+    }>('/rag/chat')
 
     // 初始化知识库
     useEffect(() => {
@@ -90,19 +95,18 @@ export function ChatPage({user, onKnowledgeBaseSelect, selectedChatUID}: ChatPag
             const lastKb = knowledgeBases.find(kb => kb.uid === user.last_knowledge_base);
             if (lastKb) {
                 setSelectedKb(lastKb);
-                onKnowledgeBaseSelect(lastKb);
+                setSelectedKbUID(lastKb.uid);
             }
         }
-    }, [knowledgeBasesLoading, knowledgeBases, user.last_knowledge_base, onKnowledgeBaseSelect]);
+    }, [knowledgeBasesLoading, knowledgeBases, user.last_knowledge_base, setSelectedKbUID])
 
     // 选择知识库事件处理
     const handleKnowledgeBaseSelect = (kb: KnowledgeBase) => {
         if (kb.uid == selectedKb?.uid) return;
 
-        setMessages([]);
         clearState();
         setSelectedKb(kb);
-        onKnowledgeBaseSelect(kb);
+        setSelectedKbUID(kb.uid);
         setIsLoading(false);
     };
 

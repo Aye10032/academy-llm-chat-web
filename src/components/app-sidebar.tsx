@@ -12,31 +12,23 @@ import {
     SidebarFooter, SidebarGroup, SidebarGroupContent,
     SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar,
 } from "@/components/ui/sidebar"
-import {UserProfile} from "@/utils/self_type.ts";
 import llmLogo from "@/assets/llm-logo1.svg"
 import {ChatSidebar} from "@/components/chat/chat-sidebar.tsx";
-import {WriteSidebar} from "@/components/write-sidebar.tsx";
+import {WriteSidebar} from "@/components/write/write-sidebar.tsx";
 import * as React from "react";
+import {UserProfile} from "@/utils/self_type.ts";
 
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
-    user: UserProfile;
-    handleLogout: () => void;
-    activePage: 'chat' | 'write';
-    setActivePage: (page: 'chat' | 'write') => void;
-    selectedKbName: string;
-    selectedChatUID: string;
-    onChatSelect: (chatUID: string) => void;
+    user: UserProfile
+    activePage: 'chat' | 'write'
+    setActivePage: (page: 'chat' | 'write') => void
 }
 
 export function AppSidebar(
     {
         user,
-        handleLogout,
         activePage,
         setActivePage,
-        selectedKbName,
-        selectedChatUID,
-        onChatSelect
     }: AppSidebarProps) {
     const {setOpen} = useSidebar()
 
@@ -110,7 +102,7 @@ export function AppSidebar(
                     </SidebarGroup>
                 </SidebarContent>
                 <SidebarFooter>
-                    <NavUser user={user} handleLogout={handleLogout}/>
+                    <NavUser user={user}/>
                 </SidebarFooter>
             </Sidebar>
 
@@ -127,11 +119,7 @@ export function AppSidebar(
                     </div>
                 </SidebarHeader>
                 {activePage === 'chat' ? (
-                    <ChatSidebar
-                        selectedKbName={selectedKbName}
-                        onChatSelect={onChatSelect}
-                        selectedChatUID={selectedChatUID}
-                    />
+                    <ChatSidebar/>
                 ) : (
                     <WriteSidebar/>
                 )}
