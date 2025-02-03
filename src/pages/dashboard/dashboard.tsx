@@ -11,13 +11,15 @@ import {useNavigate} from "react-router-dom";
 import React, {useState, useCallback} from "react";
 import {ChatPage} from "@/pages/dashboard/chat-page.tsx";
 import {WritePage} from "@/pages/dashboard/write-page.tsx";
+import {chatStore} from "@/utils/self-state.tsx";
 
 interface MainPageProps {
     defaultPage: 'chat' | 'write';
 }
 
 export function MainPage({defaultPage}: MainPageProps) {
-    const {user} = useAuth()
+    const user = useAuth((state) => state.user)
+    const setSelectedChatUID = chatStore((state) => state.setSelectedChatUID)
     const navigate = useNavigate();
     const [activePage, setActivePage] = useState<'chat' | 'write'>(defaultPage)
 
@@ -38,13 +40,16 @@ export function MainPage({defaultPage}: MainPageProps) {
     // ======================================
     // 子页面切换逻辑处理
     const handlePageChange = useCallback((page: 'chat' | 'write') => {
-        setActivePage(page);
+        if (activePage === page) return
+
+        setSelectedChatUID('')
+        setActivePage(page)
         if (page === 'chat') {
             navigate('/c')
         } else if (page === 'write') {
             navigate('/w')
         }
-    }, [navigate])
+    }, [activePage, navigate, setSelectedChatUID])
 
 
     // ======================写作界面相关======================
