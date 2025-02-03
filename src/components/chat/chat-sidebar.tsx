@@ -21,7 +21,7 @@ import {EllipsisVertical, Search, Plus} from "lucide-react";
 import {Input} from "@/components/ui/input.tsx";
 import {useApiQuery} from "@/hooks/useApi.ts";
 import {ChatSession} from "@/utils/self_type.ts";
-import {groupChatsByPeriod} from "@/utils/sort.ts";
+import {groupItemsByPeriod} from "@/utils/sort.ts";
 import {chatStore, kbStore} from "@/utils/self-state";
 
 export function ChatSidebar() {
@@ -107,7 +107,7 @@ export function ChatSidebar() {
         );
     }
 
-    const groupedChats = chats ? groupChatsByPeriod(chats) : {};
+    const groupedChats = chats ? groupItemsByPeriod(chats) : {};
 
     return (
         <SidebarContent className="px-1 py-2">

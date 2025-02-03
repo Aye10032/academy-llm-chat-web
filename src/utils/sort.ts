@@ -1,9 +1,13 @@
-import {ChatSession} from "@/utils/self_type.ts";
 import {isAfter, isToday, subDays} from "date-fns";
 
-export function groupChatsByPeriod(chats: ChatSession[]) {
+// 定义一个类型约束，确保传入的对象具有 update_time 属性
+interface HasUpdateTime {
+    update_time: string;
+}
+
+export function groupItemsByPeriod<T extends HasUpdateTime>(items: T[]) {
     // 按更新时间降序排序
-    const sortedChats = [...chats].sort((a, b) =>
+    const sortedItems = [...items].sort((a, b) =>
         new Date(b.update_time).getTime() - new Date(a.update_time).getTime()
     );
 
@@ -12,28 +16,29 @@ export function groupChatsByPeriod(chats: ChatSession[]) {
     const thirtyDaysAgo = subDays(now, 30)
 
     const groups = {
-        "今天": [] as ChatSession[],
-        "近7天": [] as ChatSession[],
-        "近30天": [] as ChatSession[],
-        "更早": [] as ChatSession[],
+        "今天": [] as T[],
+        "近7天": [] as T[],
+        "近30天": [] as T[],
+        "更早": [] as T[],
     };
 
-    sortedChats.forEach(chat => {
-        const chatDate = new Date(chat.update_time)
+    sortedItems.forEach(item => {
+        const itemDate = new Date(item.update_time)
 
-        if (isToday(chatDate)) {
-            groups["今天"].push(chat)
-        } else if (isAfter(chatDate, sevenDaysAgo)) {
-            groups["近7天"].push(chat)
-        } else if (isAfter(chatDate, thirtyDaysAgo)) {
-            groups["近30天"].push(chat)
+        if (isToday(itemDate)) {
+            groups["今天"].push(item)
+        } else if (isAfter(itemDate, sevenDaysAgo)) {
+            groups["近7天"].push(item)
+        } else if (isAfter(itemDate, thirtyDaysAgo)) {
+            groups["近30天"].push(item)
         } else {
-            groups["更早"].push(chat)
+            groups["更早"].push(item)
         }
     });
 
     // 只返回有内容的分组
     return Object.fromEntries(
-        Object.entries(groups).filter(([_, chats]) => chats.length > 0)
-    );
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        Object.entries(groups).filter(([_, items]) => items.length > 0)
+    ) as Record<string, T[]>;
 }
