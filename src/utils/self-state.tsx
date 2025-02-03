@@ -10,6 +10,16 @@ export const kbStore = create<KbState>((set) => ({
     setSelectedKbUID: (uid: string) => set({selectedKbUID: uid}),
 }));
 
+interface ProjectState {
+    selectProjectUID: string
+    setSelectProjectUID: (uid: string) => void
+}
+
+export const projectStore = create<ProjectState>((set) => ({
+    selectProjectUID: '',
+    setSelectProjectUID: (uid: string) => set({selectProjectUID: uid})
+}))
+
 interface ChatState {
     selectedChatUID: string
     setSelectedChatUID: (chatUID: string) => void

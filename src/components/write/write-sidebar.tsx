@@ -1,19 +1,20 @@
-import {Label} from "@/components/ui/label"
+import {Label} from "@/components/ui/label.tsx"
 import {
     Select,
     SelectContent,
     SelectItem,
     SelectTrigger,
     SelectValue,
-} from "@/components/ui/select"
+} from "@/components/ui/select.tsx"
 import {
     SidebarContent,
     SidebarGroup,
     SidebarGroupContent,
-} from "@/components/ui/sidebar"
-import {Plus, Search} from "lucide-react";
+} from "@/components/ui/sidebar.tsx"
+import {Search} from "lucide-react";
 import {Input} from "@/components/ui/input.tsx";
-import {Button} from "@/components/ui/button.tsx";
+import {useState} from "react";
+import {NewProjectDialog} from "@/components/write/new-project-form.tsx";
 
 const writeOptions = [
     {value: "article", label: "文章"},
@@ -23,6 +24,8 @@ const writeOptions = [
 ]
 
 export function WriteSidebar() {
+    const [isNewProjectDialogOpen, setIsNewProjectDialogOpen] = useState<boolean>(false)
+
     return (
         <SidebarContent className="px-1 py-2">
             <div className="p-4 space-y-4">
@@ -37,16 +40,10 @@ export function WriteSidebar() {
                             className="pl-8 pr-4 py-2 w-full text-sm rounded-full bg-white"
                         />
                     </div>
-                    <Button
-                        // onClick={handleNewChat}
-                        size="icon"
-                        variant="outline"
-                        className="rounded-full"
-                        // disabled={!selectedKbName} // 如果没有选择知识库则禁用
-                    >
-                        <Plus className="h-4 w-4"/>
-                        <span className="sr-only">新建聊天</span>
-                    </Button>
+                    <NewProjectDialog
+                        isNewProjectDialogOpen={isNewProjectDialogOpen}
+                        onNewProjectDialogOpen={setIsNewProjectDialogOpen}
+                    />
                 </div>
             </div>
             <SidebarGroup className="px-4 py-2">

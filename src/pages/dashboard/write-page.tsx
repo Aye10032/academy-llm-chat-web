@@ -1,9 +1,8 @@
 "use client"
 
-import React, {useState, useRef, useCallback} from "react"
+import {useState, useRef} from "react"
 import {
     Bot,
-    ChevronDown,
     MessageSquare,
     Check,
     Undo,
@@ -11,7 +10,6 @@ import {
     FolderOpen,
     File,
     Plus,
-    Folder,
     ChevronRight,
     Copy,
 } from "lucide-react"
@@ -25,7 +23,6 @@ import {
     BreadcrumbPage,
     BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
-import {DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger} from "@/components/ui/dropdown-menu"
 import {Accordion, AccordionContent, AccordionItem, AccordionTrigger} from "@/components/ui/accordion"
 import {Collapsible, CollapsibleContent, CollapsibleTrigger} from "@/components/ui/collapsible"
 import {Input} from "@/components/ui/input"
@@ -35,6 +32,7 @@ import {MaterialsManager} from "@/components/write/materials-manager.tsx";
 import {FloatingActions} from "@/components/write/floating-actions.tsx";
 import {SidebarTrigger} from "@/components/ui/sidebar.tsx";
 import {Separator} from "@/components/ui/separator.tsx";
+import {ChatHistory} from "@/components/write/chat-history-form.tsx";
 
 interface FileStructure {
     id: string
@@ -124,7 +122,6 @@ export function WritePage() {
 
     const [currentFile, setCurrentFile] = useState<string>("主文档.txt")
     const [newItemName, setNewItemName] = useState<string>("")
-    const [isNewFolderDialogOpen, setIsNewFolderDialogOpen] = useState<boolean>(false)
     const [isNewFileDialogOpen, setIsNewFileDialogOpen] = useState<boolean>(false)
     const [materials, setMaterials] = useState<Material[]>([
         {
@@ -194,11 +191,7 @@ export function WritePage() {
             }
             setFileStructure((prev) => [...prev, newItem])
             setNewItemName("")
-            if (type === "file") {
-                setIsNewFileDialogOpen(false)
-            } else {
-                setIsNewFolderDialogOpen(false)
-            }
+            setIsNewFileDialogOpen(false)
         }
     }
 
@@ -276,19 +269,13 @@ export function WritePage() {
                             <Bot className="h-5 w-5"/>
                             <span className="font-medium">AI写作助手</span>
                         </div>
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button variant="outline" className="gap-2">
-                                    写作模式
-                                    <ChevronDown className="h-4 w-4"/>
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                                <DropdownMenuItem>学术论文</DropdownMenuItem>
-                                <DropdownMenuItem>商务文案</DropdownMenuItem>
-                                <DropdownMenuItem>创意写作</DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
+                        <ChatHistory
+                            chats={[]}
+                            onSelectChat={(chatId) => {
+                                console.log("Selected chat:", chatId)
+                                // Handle chat selection
+                            }}
+                        />
                     </header>
 
                     <div ref={chatRef} className="flex-1 overflow-y-auto p-4 space-y-4">
@@ -388,24 +375,24 @@ export function WritePage() {
                                 <header className="h-14 border-b flex items-center justify-between px-4">
                                     <span className="font-medium">文件列表</span>
                                     <div className="flex gap-2">
-                                        <Dialog open={isNewFolderDialogOpen} onOpenChange={setIsNewFolderDialogOpen}>
-                                            <DialogTrigger asChild>
-                                                <Button variant="outline" size="icon">
-                                                    <Folder className="h-4 w-4"/>
-                                                </Button>
-                                            </DialogTrigger>
-                                            <DialogContent>
-                                                <DialogHeader>
-                                                    <DialogTitle>新建文件夹</DialogTitle>
-                                                </DialogHeader>
-                                                <Input
-                                                    value={newItemName}
-                                                    onChange={(e) => setNewItemName(e.target.value)}
-                                                    placeholder="输入文件夹名称"
-                                                />
-                                                <Button onClick={() => createNewItem("folder")}>创建</Button>
-                                            </DialogContent>
-                                        </Dialog>
+                                        {/*<Dialog open={isNewFolderDialogOpen} onOpenChange={setIsNewFolderDialogOpen}>*/}
+                                        {/*    <DialogTrigger asChild>*/}
+                                        {/*        <Button variant="outline" size="icon">*/}
+                                        {/*            <Folder className="h-4 w-4"/>*/}
+                                        {/*        </Button>*/}
+                                        {/*    </DialogTrigger>*/}
+                                        {/*    <DialogContent>*/}
+                                        {/*        <DialogHeader>*/}
+                                        {/*            <DialogTitle>新建文件夹</DialogTitle>*/}
+                                        {/*        </DialogHeader>*/}
+                                        {/*        <Input*/}
+                                        {/*            value={newItemName}*/}
+                                        {/*            onChange={(e) => setNewItemName(e.target.value)}*/}
+                                        {/*            placeholder="输入文件夹名称"*/}
+                                        {/*        />*/}
+                                        {/*        <Button onClick={() => createNewItem("folder")}>创建</Button>*/}
+                                        {/*    </DialogContent>*/}
+                                        {/*</Dialog>*/}
                                         <Dialog open={isNewFileDialogOpen} onOpenChange={setIsNewFileDialogOpen}>
                                             <DialogTrigger asChild>
                                                 <Button variant="outline" size="icon">
@@ -452,21 +439,6 @@ export function WritePage() {
                         </header>
 
                         <div ref={editorRef} className="relative flex-1">
-                            {/*{!isMaterialsDropdownOpen && (*/}
-                            {/*    <div className="absolute right-4 top-4 z-10">*/}
-                            {/*        <Button*/}
-                            {/*            variant="outline"*/}
-                            {/*            size="icon"*/}
-                            {/*            className="h-8 w-8 bg-background"*/}
-                            {/*            onClick={async () => {*/}
-                            {/*                await navigator.clipboard.writeText(editorContent)*/}
-                            {/*                // Could add a toast notification here*/}
-                            {/*            }}*/}
-                            {/*        >*/}
-                            {/*            <Copy className="h-4 w-4"/>*/}
-                            {/*        </Button>*/}
-                            {/*    </div>*/}
-                            {/*)}*/}
                             <textarea
                                 value={editorContent}
                                 onChange={(e) => setEditorContent(e.target.value)}
