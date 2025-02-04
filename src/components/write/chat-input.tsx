@@ -66,7 +66,7 @@ export function ChatInput({onSendMessage, onFileUpload}: ChatInputProps) {
         }
     }
 
-    const handleFiles = (files: File[]) => {
+    const handleFiles = useCallback((files: File[]) => {
         const newUploadingFiles = files.map((file) => ({
             id: Math.random().toString(36).substring(7),
             file,
@@ -95,7 +95,7 @@ export function ChatInput({onSendMessage, onFileUpload}: ChatInputProps) {
                 )
             }, 500)
         })
-    }
+    }, [onFileUpload])
 
     const handleDrop = useCallback((e: React.DragEvent) => {
         e.preventDefault()
