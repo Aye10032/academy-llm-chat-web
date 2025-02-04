@@ -51,10 +51,41 @@ interface Material {
     isHidden: boolean
 }
 
+
 export function WritePage() {
     const [editorContent, setEditorContent] = useState<string>(
         "在当今快速发展的世界中，人工智能技术的应用越来越广泛。很多公司都在使用AI来提高效率。这不仅让工作更简单，还能省很多时间。",
     )
+    const [materials, setMaterials] = useState<Material[]>([
+        {
+            id: "1",
+            title: "AI在企业中的应用",
+            timestamp: "2023-05-15 14:30",
+            summary: "本文探讨了人工智能在现代企业中的广泛应用，以及它如何提高效率和生产力。",
+            source: "https://example.com/ai-in-business",
+            type: "web",
+            isHidden: false,
+        },
+        {
+            id: "2",
+            title: "人工智能的未来展望",
+            timestamp: "2023-05-16 10:15",
+            summary: "这份报告详细分析了人工智能技术的发展趋势，并预测了未来可能的突破。",
+            source: "AI_Future_Report.pdf",
+            type: "pdf",
+            isHidden: false,
+        },
+        {
+            id: "3",
+            title: "AI伦理问题探讨",
+            timestamp: "2023-05-17 09:45",
+            summary: "本文讨论了人工智能发展中面临的各种伦理问题，包括隐私、就业和决策偏见等。",
+            source: "https://example.com/ai-ethics",
+            type: "web",
+            isHidden: true,
+        },
+    ])
+
     const [messages] = useState([
         {
             role: "assistant",
@@ -120,38 +151,11 @@ export function WritePage() {
         },
     ])
 
+
     const [currentFile, setCurrentFile] = useState<string>("主文档.txt")
     const [newItemName, setNewItemName] = useState<string>("")
     const [isNewFileDialogOpen, setIsNewFileDialogOpen] = useState<boolean>(false)
-    const [materials, setMaterials] = useState<Material[]>([
-        {
-            id: "1",
-            title: "AI在企业中的应用",
-            timestamp: "2023-05-15 14:30",
-            summary: "本文探讨了人工智能在现代企业中的广泛应用，以及它如何提高效率和生产力。",
-            source: "https://example.com/ai-in-business",
-            type: "web",
-            isHidden: false,
-        },
-        {
-            id: "2",
-            title: "人工智能的未来展望",
-            timestamp: "2023-05-16 10:15",
-            summary: "这份报告详细分析了人工智能技术的发展趋势，并预测了未来可能的突破。",
-            source: "AI_Future_Report.pdf",
-            type: "pdf",
-            isHidden: false,
-        },
-        {
-            id: "3",
-            title: "AI伦理问题探讨",
-            timestamp: "2023-05-17 09:45",
-            summary: "本文讨论了人工智能发展中面临的各种伦理问题，包括隐私、就业和决策偏见等。",
-            source: "https://example.com/ai-ethics",
-            type: "web",
-            isHidden: true,
-        },
-    ])
+
 
     const applyModification = (original: string, modified: string) => {
         setEditorContent((prev) => prev.replace(original, modified))
@@ -269,13 +273,12 @@ export function WritePage() {
                             <Bot className="h-5 w-5"/>
                             <span className="font-medium">AI写作助手</span>
                         </div>
-                        <ChatHistory
-                            chats={[]}
-                            onSelectChat={(chatId) => {
-                                console.log("Selected chat:", chatId)
-                                // Handle chat selection
-                            }}
-                        />
+                        <div>
+                            <Button variant="ghost" size="icon">
+                                <Plus className="h-5 w-5"/>
+                            </Button>
+                            <ChatHistory/>
+                        </div>
                     </header>
 
                     <div ref={chatRef} className="flex-1 overflow-y-auto p-4 space-y-4">
@@ -375,24 +378,6 @@ export function WritePage() {
                                 <header className="h-14 border-b flex items-center justify-between px-4">
                                     <span className="font-medium">文件列表</span>
                                     <div className="flex gap-2">
-                                        {/*<Dialog open={isNewFolderDialogOpen} onOpenChange={setIsNewFolderDialogOpen}>*/}
-                                        {/*    <DialogTrigger asChild>*/}
-                                        {/*        <Button variant="outline" size="icon">*/}
-                                        {/*            <Folder className="h-4 w-4"/>*/}
-                                        {/*        </Button>*/}
-                                        {/*    </DialogTrigger>*/}
-                                        {/*    <DialogContent>*/}
-                                        {/*        <DialogHeader>*/}
-                                        {/*            <DialogTitle>新建文件夹</DialogTitle>*/}
-                                        {/*        </DialogHeader>*/}
-                                        {/*        <Input*/}
-                                        {/*            value={newItemName}*/}
-                                        {/*            onChange={(e) => setNewItemName(e.target.value)}*/}
-                                        {/*            placeholder="输入文件夹名称"*/}
-                                        {/*        />*/}
-                                        {/*        <Button onClick={() => createNewItem("folder")}>创建</Button>*/}
-                                        {/*    </DialogContent>*/}
-                                        {/*</Dialog>*/}
                                         <Dialog open={isNewFileDialogOpen} onOpenChange={setIsNewFileDialogOpen}>
                                             <DialogTrigger asChild>
                                                 <Button variant="outline" size="icon">
