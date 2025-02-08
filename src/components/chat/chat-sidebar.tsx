@@ -22,12 +22,12 @@ import {Input} from "@/components/ui/input.tsx";
 import {useApiQuery} from "@/hooks/useApi.ts";
 import {ChatSession} from "@/utils/self_type.ts";
 import {groupItemsByPeriod} from "@/utils/sort.ts";
-import {chatStore, kbStore} from "@/utils/self-state";
+import {kbStore} from "@/utils/self-state";
 
 export function ChatSidebar() {
     const selectedKbUID = kbStore((state) => state.selectedKbUID);
-    const selectedChatUID = chatStore((state) => state.selectedChatUID);
-    const setSelectedChatUID = chatStore((state) => state.setSelectedChatUID)
+    const selectedChatUID = kbStore((state) => state.selectedChatUID);
+    const setSelectedChatUID = kbStore((state) => state.setSelectedChatUID)
 
     const [hoveredChat, setHoveredChat] = useState<string | null>(null);
     const [openMenuId, setOpenMenuId] = useState<string | null>(null);

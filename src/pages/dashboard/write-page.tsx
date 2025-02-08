@@ -185,44 +185,7 @@ export function WritePage() {
     const chatRef = useRef<HTMLDivElement>(null)
     const editorRef = useRef<HTMLDivElement>(null)
 
-    const createNewItem = (type: "file" | "folder") => {
-        if (newItemName) {
-            const newItem: FileStructure = {
-                id: Date.now().toString(),
-                name: newItemName + (type === "file" ? ".txt" : ""),
-                type: type,
-                children: type === "folder" ? [] : undefined,
-            }
-            setFileStructure((prev) => [...prev, newItem])
-            setNewItemName("")
-            setIsNewFileDialogOpen(false)
-        }
-    }
 
-    const renderFileTree = (items: FileStructure[]) => {
-        return items.map((item) => (
-            <div key={item.id} className="ml-4">
-                {item.type === "folder" ? (
-                    <Collapsible>
-                        <CollapsibleTrigger className="flex items-center gap-1 hover:bg-muted/50 w-full p-1 rounded transition-colors">
-                            <ChevronRight className="h-4 w-4 transition-transform duration-200"/>
-                            <FolderOpen className="h-4 w-4"/>
-                            <span>{item.name}</span>
-                        </CollapsibleTrigger>
-                        <CollapsibleContent>{item.children && renderFileTree(item.children)}</CollapsibleContent>
-                    </Collapsible>
-                ) : (
-                    <button
-                        className={`flex items-center gap-1 hover:bg-muted/50 w-full p-1 rounded transition-colors ${currentFile === item.name ? "bg-muted text-primary" : ""}`}
-                        onClick={() => setCurrentFile(item.name)}
-                    >
-                        <File className="h-4 w-4"/>
-                        <span>{item.name}</span>
-                    </button>
-                )}
-            </div>
-        ))
-    }
 
     const handleSave = () => {
         // Handle save functionality
@@ -368,40 +331,6 @@ export function WritePage() {
 
                 {/* Editor Section */}
                 <div className="flex h-full overflow-hidden bg-background">
-                    <Collapsible className="relative border-r">
-                        <CollapsibleTrigger
-                            className="absolute -right-3 top-1/2 -translate-y-1/2 z-10 flex h-8 w-8 items-center justify-center rounded-full border bg-background shadow-md transition-transform hover:bg-muted focus:outline-none focus:ring-2 focus:ring-muted focus:ring-offset-2 data-[state=open]:rotate-180">
-                            <ChevronLeft className="h-4 w-4"/>
-                        </CollapsibleTrigger>
-                        <CollapsibleContent>
-                            <div className="w-64 h-full flex flex-col bg-muted/10">
-                                <header className="h-14 border-b flex items-center justify-between px-4">
-                                    <span className="font-medium">文件列表</span>
-                                    <div className="flex gap-2">
-                                        <Dialog open={isNewFileDialogOpen} onOpenChange={setIsNewFileDialogOpen}>
-                                            <DialogTrigger asChild>
-                                                <Button variant="outline" size="icon">
-                                                    <Plus className="h-4 w-4"/>
-                                                </Button>
-                                            </DialogTrigger>
-                                            <DialogContent>
-                                                <DialogHeader>
-                                                    <DialogTitle>新建文件</DialogTitle>
-                                                </DialogHeader>
-                                                <Input
-                                                    value={newItemName}
-                                                    onChange={(e) => setNewItemName(e.target.value)}
-                                                    placeholder="输入文件名称"
-                                                />
-                                                <Button onClick={() => createNewItem("file")}>创建</Button>
-                                            </DialogContent>
-                                        </Dialog>
-                                    </div>
-                                </header>
-                                <div className="flex-1 overflow-auto p-2">{renderFileTree(fileStructure)}</div>
-                            </div>
-                        </CollapsibleContent>
-                    </Collapsible>
                     <div className="flex-1 flex flex-col">
                         <header className="h-14 border-b flex items-center justify-between px-4">
                             <div className="flex items-center gap-2">

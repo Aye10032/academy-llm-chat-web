@@ -33,7 +33,7 @@ import rehypeKatex from 'rehype-katex'
 import remarkMath from 'remark-math'
 import 'katex/dist/katex.min.css'
 import React, {useState, useRef, useEffect, useCallback} from "react";
-import {chatStore, kbStore} from "@/utils/self-state.tsx";
+import {kbStore} from "@/utils/self-state.tsx";
 import {useApiQuery, useSseQuery, useApiMutation} from "@/hooks/useApi.ts";
 import {KnowledgeBase, Message, Document, UserProfile} from "@/utils/self_type.ts";
 import {ChevronDownIcon, Mic} from "lucide-react";
@@ -45,7 +45,7 @@ interface ChatPageProps {
 
 export function ChatPage({user}: ChatPageProps) {
     const setSelectedKbUID = kbStore((state) => state.setSelectedKbUID)
-    const selectedChatUID = chatStore((state) => state.selectedChatUID)
+    const selectedChatUID = kbStore((state) => state.selectedChatUID)
 
     const [selectedKb, setSelectedKb] = useState<KnowledgeBase | null>(null);
 

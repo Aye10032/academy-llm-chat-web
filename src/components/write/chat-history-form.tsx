@@ -6,13 +6,13 @@ import {format} from "date-fns"
 import {Tooltip, TooltipContent, TooltipProvider, TooltipTrigger} from "@/components/ui/tooltip"
 import {groupItemsByPeriod} from "@/utils/sort.ts";
 import {ChatSession} from "@/utils/self_type.ts";
-import {chatStore, projectStore} from "@/utils/self-state.tsx";
+import {projectStore} from "@/utils/self-state.tsx";
 import {useApiQuery} from "@/hooks/useApi.ts";
 
 
 export function ChatHistory() {
     const selectProjectUID = projectStore((state) => state.selectProjectUID)
-    const setSelectedChatUID = chatStore((state) => state.setSelectedChatUID)
+    const setSelectedChatUID = projectStore((state) => state.setSelectedChatUID)
 
     // 获取聊天列表
     const {data: chats, isLoading} = useApiQuery<ChatSession[]>(
