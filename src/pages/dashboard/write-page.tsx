@@ -1,16 +1,12 @@
 "use client"
 
-import {useState, useRef, useEffect} from "react"
+import React, {useState, useRef, useEffect} from "react"
 import {
     Bot,
     MessageSquare,
     Check,
     Undo,
-    ChevronLeft,
-    FolderOpen,
-    File,
     Plus,
-    ChevronRight,
     Copy,
 } from "lucide-react"
 import {Button} from "@/components/ui/button"
@@ -32,92 +28,57 @@ import {Separator} from "@/components/ui/separator.tsx";
 import {ChatHistory} from "@/components/write/chat-history-form.tsx";
 import {FileTreeForm} from "@/components/write/file-tree-form.tsx";
 import {projectStore} from "@/utils/self-state.tsx";
-import {useApiQuery} from "@/hooks/useApi.ts";
-import {Manuscript} from "@/utils/self_type.ts";
-
-interface Material {
-    id: string
-    title: string
-    timestamp: string
-    summary: string
-    source: string
-    type: "pdf" | "web"
-    isHidden: boolean
-}
+import {useApiMutation, useApiQuery, useSseQuery} from "@/hooks/useApi.ts";
+import {Manuscript, Message} from "@/utils/self_type.ts";
 
 
 export function WritePage() {
+    const selectProjectUID = projectStore((state) => state.selectProjectUID)
+    const selectedChatUID = projectStore((state) => state.selectedChatUID)
+    const setSelectedChatUID = projectStore((state) => state.setSelectedChatUID)
     const selectManuscriptUID = projectStore((state) => state.selectManuscriptUID)
 
     const [currentFile, setCurrentFile] = useState<string>("")
+    const [input, setInput] = useState('')
+    const [files, setFiles] = useState<File[]>([])
     const [editorContent, setEditorContent] = useState<string>("")
 
-    const [materials, setMaterials] = useState<Material[]>([
+    const [status, setStatus] = useState<string>('')
+    const [messages, setMessages] = useState<Message[]>([
         {
-            id: "1",
-            title: "AI在企业中的应用",
-            timestamp: "2023-05-15 14:30",
-            summary: "本文探讨了人工智能在现代企业中的广泛应用，以及它如何提高效率和生产力。",
-            source: "https://example.com/ai-in-business",
-            type: "web",
-            isHidden: false,
-        },
-        {
-            id: "2",
-            title: "人工智能的未来展望",
-            timestamp: "2023-05-16 10:15",
-            summary: "这份报告详细分析了人工智能技术的发展趋势，并预测了未来可能的突破。",
-            source: "AI_Future_Report.pdf",
-            type: "pdf",
-            isHidden: false,
-        },
-        {
-            id: "3",
-            title: "AI伦理问题探讨",
-            timestamp: "2023-05-17 09:45",
-            summary: "本文讨论了人工智能发展中面临的各种伦理问题，包括隐私、就业和决策偏见等。",
-            source: "https://example.com/ai-ethics",
-            type: "web",
-            isHidden: true,
-        },
-    ])
-    const [messages] = useState([
-        {
-            role: "assistant",
+            id:"",
+            type: "ai",
             content: "你好！我是你的AI写作助手。请在右侧编辑区域输入你想要优化的文字，我会帮你改进它。",
         },
         {
-            role: "user",
+            id:"",
+            type: "human",
             content:
                 "请帮我修改这段文字：\n\n在当今快速发展的世界中，人工智能技术的应用越来越广泛。很多公司都在使用AI来提高效率。这不仅让工作更简单，还能省很多时间。",
         },
         {
-            role: "assistant",
+            id:"",
+            type: "ai",
             content: [
                 {
-                    type: "text",
                     content: "我已经分析了你的文字，下面是修改建议：",
                 },
                 {
-                    type: "modification",
                     original: "在当今快速发展的世界中，人工智能技术的应用越来越广泛。",
                     modified: "在这个日新月异的时代，人工智能技术正在各个领域蓬勃发展。",
                     explanation: "使用更生动的描述，突出发展的迅速性和广泛性。",
                 },
                 {
-                    type: "modification",
                     original: "很多公司都在使用AI来提高效率。",
                     modified: "众多企业纷纷导入AI技术以提升运营效能。",
                     explanation: "使用更专业的措辞，强调企业的主动性。",
                 },
                 {
-                    type: "modification",
                     original: "这不仅让工作更简单，还能省很多时间。",
                     modified: "这不仅简化了工作流程，还显著提高了时间效益。",
                     explanation: "更准确地描述AI带来的具体好处。",
                 },
                 {
-                    type: "text",
                     content:
                         "修改后的完整文段：\n\n在这个日新月异的时代，人工智能技术正在各个领域蓬勃发展。众多企业纷纷导入AI技术以提升运营效能。这不仅简化了工作流程，还显著提高了时间效益。",
                 },
@@ -156,23 +117,6 @@ export function WritePage() {
         setEditorContent((prev) => prev.replace(modified, original))
     }
 
-    const handleDeleteMaterial = (id: string) => {
-        setMaterials((prevMaterials) => prevMaterials.filter((material) => material.id !== id))
-    }
-
-    const handleToggleMaterialVisibility = (id: string) => {
-        setMaterials((prevMaterials) =>
-            prevMaterials.map((material) => (material.id === id ? {...material, isHidden: !material.isHidden} : material)),
-        )
-    }
-
-    const handlePreviewMaterial = (id: string) => {
-        const material = materials.find((m) => m.id === id)
-        if (material && material.type === "web") {
-            window.open(material.source, "_blank")
-        }
-    }
-
     const chatRef = useRef<HTMLDivElement>(null)
     const editorRef = useRef<HTMLDivElement>(null)
 
@@ -182,14 +126,112 @@ export function WritePage() {
         console.log("Saving changes...")
     }
 
-    const handleSendMessage = (message: string) => {
-        // Handle sending message
-        console.log("Sending message:", message)
-    }
+    // 新建对话请求
+    const newChatMutation = useApiMutation<string, void>(
+        `/write/new_chat?project_uid=${selectProjectUID}`,
+        'PATCH'
+    )
 
-    const handleFileUpload = (files: File[]) => {
-        // Handle file upload
-        console.log("Uploading files:", files)
+    // 对话 SSE mutation
+    const chatMutation = useSseQuery<FormData>('/write/chat')
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault()
+        if (!input.trim() ||isLoading || !selectProjectUID) return;
+
+        const userMessage: Message = {
+            id: Date.now().toString(),
+            type: 'human',
+            content: input.trim()
+        };
+
+        let newChatUID = selectedChatUID
+
+        // 如果没有选中的对话，先创建新对话
+        if (!selectedChatUID) {
+            try {
+                newChatUID = await newChatMutation.mutateAsync();
+                setSelectedChatUID(newChatUID)
+            } catch (error) {
+                console.error('Failed to create new chat:', error);
+                setStatus('创建新对话失败');
+                return;
+            }
+        }
+
+        // 设置消息
+        setMessages(prev => [...prev, userMessage]);
+
+        const formData = new FormData()
+        formData.append('project_uid', selectProjectUID)
+        formData.append('chat_uid', selectedChatUID)
+        
+        // 可选参数
+        if (input.trim()) {
+            formData.append('message', input)
+        }
+        if (editorContent) {
+            formData.append('current_text', editorContent)
+        }
+        
+        // 文件处理 - 只在有文件时才添加
+        if (files.length > 0) {
+            files.forEach(file => {
+                formData.append('files', file)
+            })
+        }
+
+        try {
+            const response = await chatMutation.mutateAsync(formData)
+            const reader = response.body?.getReader()
+            const decoder = new TextDecoder()
+
+            while (reader) {
+                const {done, value} = await reader.read()
+                if (done) break
+
+                const chunk = decoder.decode(value)
+                const events = chunk.split('\n\n').filter(Boolean)
+
+                for (const eventText of events) {
+                    const [eventLine, dataLine] = eventText.split('\n')
+                    const eventType = eventLine.replace('event: ', '')
+                    const data = JSON.parse(dataLine.replace('data: ', ''))
+
+                    switch (eventType) {
+                        case 'status':
+                            // 更新状态信息
+                            setStatus(data);
+                            break
+                        case 'answer':
+                            // 更新对话内容
+
+                            break
+                        case 'modify':
+                            // 处理修改建议
+
+                            break
+                        case 'write':
+                            // 更新编辑器内容
+                            setEditorContent(data)
+                            break
+                        case 'error':
+                            // 处理错误
+                            console.error('Error from server:', data)
+                            // 可以添加错误提示UI
+                            break
+                    }
+                }
+            }
+
+            // 清理状态
+            setInput("")
+            setFiles([])
+
+        } catch (error) {
+            console.error('Error in chat:', error)
+            setStatus('发送失败，请重试') // 使用状态显示错误
+        }
     }
 
     return (
@@ -210,12 +252,7 @@ export function WritePage() {
                         </BreadcrumbList>
                     </Breadcrumb>
                 </div>
-                <MaterialsManager
-                    materials={materials}
-                    onDeleteMaterial={handleDeleteMaterial}
-                    onToggleMaterialVisibility={handleToggleMaterialVisibility}
-                    onPreviewMaterial={handlePreviewMaterial}
-                />
+                <MaterialsManager/>
             </header>
 
             <div className="flex-1 grid overflow-hidden" style={{gridTemplateColumns: "1fr 3fr"}}>
@@ -238,19 +275,19 @@ export function WritePage() {
                         {messages.map((message, index) => (
                             <div
                                 key={index}
-                                className={`mb-6 flex ${message.role === "assistant" ? "justify-start" : "justify-end"}`}
+                                className={`mb-6 flex ${message.type === "ai" ? "justify-start" : "justify-end"}`}
                             >
                                 <div className={`max-w-[90%] space-y-4`}>
                                     {Array.isArray(message.content) ? (
                                         message.content.map((item, i) => {
-                                            if (item.type === "text") {
+                                            if ('content' in item) {
                                                 return (
                                                     <div key={i} className="bg-muted rounded-lg px-4 py-2">
                                                         <pre className="whitespace-pre-wrap font-sans">{item.content}</pre>
                                                     </div>
                                                 )
                                             }
-                                            if (item.type === "modification") {
+                                            if ("modified" in item) {
                                                 return (
                                                     <Accordion type="single" collapsible className="w-full" key={i}>
                                                         <AccordionItem value={`item-${i}`}>
@@ -305,7 +342,7 @@ export function WritePage() {
                                     ) : (
                                         <div
                                             className={`rounded-lg px-4 py-2 ${
-                                                message.role === "assistant" ? "bg-muted" : "bg-primary text-primary-foreground"
+                                                message.type === "ai" ? "bg-muted" : "bg-primary text-primary-foreground"
                                             }`}
                                         >
                                             <pre className="whitespace-pre-wrap font-sans">{message.content}</pre>
@@ -314,9 +351,25 @@ export function WritePage() {
                                 </div>
                             </div>
                         ))}
+                        {/* 显示状态信息 */}
+                        {(status) && (
+                            <div className="flex justify-center">
+                                            <span
+                                                className="inline-flex items-center px-4 py-2 rounded-full text-sm bg-gray-100 text-gray-700"
+                                            >
+                                                {status}
+                                            </span>
+                            </div>
+                        )}
                     </div>
 
-                    <ChatInput onSendMessage={handleSendMessage} onFileUpload={handleFileUpload}/>
+                    <ChatInput
+                        handleSubmit={handleSubmit}
+                        input={input}
+                        setInput={setInput}
+                        files={files}
+                        setFiles={setFiles}
+                    />
                 </div>
 
                 {/* Editor Section */}

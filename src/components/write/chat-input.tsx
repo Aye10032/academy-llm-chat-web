@@ -5,138 +5,67 @@ import {Textarea} from "@/components/ui/textarea"
 import {FileUploadIndicator} from "./file-upload-indicator"
 
 interface ChatInputProps {
-    onSendMessage: (message: string) => void
-    onFileUpload: (files: File[]) => void
+    handleSubmit: (e: React.FormEvent) => Promise<void>;
+    input: string;
+    setInput: (input: string) => void;
+    files: File[];
+    setFiles: (files: File[]) => void;
 }
 
-interface UploadingFile {
-    id: string
-    file: File
-    status: "uploading" | "complete" | "error"
-    progress: number
-}
-
-export function ChatInput({onSendMessage, onFileUpload}: ChatInputProps) {
-    const [message, setMessage] = useState("")
+export function ChatInput({handleSubmit, input, setInput, files, setFiles}: ChatInputProps) {
     const [isDragging, setIsDragging] = useState(false)
-    const [uploadingFiles, setUploadingFiles] = useState<UploadingFile[]>([])
     const fileInputRef = useRef<HTMLInputElement>(null)
     const dragCounterRef = useRef(0)
-    const dragTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+
+    const handleFiles = useCallback((newFiles: File[]) => {
+        setFiles(prev => [...prev, ...newFiles])
+    }, [setFiles])
 
     const handleDragEnter = useCallback((e: React.DragEvent) => {
         e.preventDefault()
         dragCounterRef.current++
-
-        if (dragTimeoutRef.current) {
-            clearTimeout(dragTimeoutRef.current)
-        }
-
-        dragTimeoutRef.current = setTimeout(() => {
-            if (dragCounterRef.current > 0) {
-                setIsDragging(true)
-            }
-        }, 100)
+        setIsDragging(true)
     }, [])
 
     const handleDragLeave = useCallback((e: React.DragEvent) => {
         e.preventDefault()
         dragCounterRef.current--
-
-        if (dragTimeoutRef.current) {
-            clearTimeout(dragTimeoutRef.current)
+        if (dragCounterRef.current === 0) {
+            setIsDragging(false)
         }
-
-        dragTimeoutRef.current = setTimeout(() => {
-            if (dragCounterRef.current === 0) {
-                setIsDragging(false)
-            }
-        }, 100)
     }, [])
-
-    const handleDragOver = useCallback((e: React.DragEvent) => {
-        e.preventDefault()
-    }, [])
-
-    const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const files = e.target.files ? Array.from(e.target.files) : []
-        handleFiles(files)
-        if (fileInputRef.current) {
-            fileInputRef.current.value = ""
-        }
-    }
-
-    const handleFiles = useCallback((files: File[]) => {
-        const newUploadingFiles = files.map((file) => ({
-            id: Math.random().toString(36).substring(7),
-            file,
-            status: "uploading" as const,
-            progress: 0,
-        }))
-
-        setUploadingFiles((prev) => [...prev, ...newUploadingFiles])
-        onFileUpload(files)
-
-        // Simulate upload progress
-        newUploadingFiles.forEach((file) => {
-            const intervalId = setInterval(() => {
-                setUploadingFiles((prev) =>
-                    prev.map((f) => {
-                        if (f.id === file.id) {
-                            const newProgress = Math.min(f.progress + 10, 100)
-                            if (newProgress === 100) {
-                                clearInterval(intervalId)
-                                return {...f, status: "complete" as const, progress: newProgress}
-                            }
-                            return {...f, progress: newProgress}
-                        }
-                        return f
-                    }),
-                )
-            }, 500)
-        })
-    }, [onFileUpload])
 
     const handleDrop = useCallback((e: React.DragEvent) => {
         e.preventDefault()
         setIsDragging(false)
         dragCounterRef.current = 0
-        const files = Array.from(e.dataTransfer.files)
-        handleFiles(files)
+        const newFiles = Array.from(e.dataTransfer.files)
+        handleFiles(newFiles)
     }, [handleFiles])
 
-    const handleDeleteFile = (fileId: string) => {
-        setUploadingFiles((prev) => prev.filter((f) => f.id !== fileId))
-    }
-
-    const handleSend = () => {
-        if (message.trim() || uploadingFiles.length > 0) {
-            onSendMessage(message)
-            setMessage("")
-            setUploadingFiles([])
+    const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const newFiles = e.target.files ? Array.from(e.target.files) : []
+        handleFiles(newFiles)
+        if (fileInputRef.current) {
+            fileInputRef.current.value = ""
         }
     }
 
-    const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-        if (e.key === "Enter" && !e.shiftKey) {
-            e.preventDefault()
-            handleSend()
-        }
+    const handleDeleteFile = (fileName: string) => {
+        setFiles(prev => prev.filter(f => f.name !== fileName))
     }
 
     return (
-        <div className="border-t p-4">
+        <form onSubmit={handleSubmit} className="border-t p-4">
             <div className="space-y-4">
-                {uploadingFiles.length > 0 && (
+                {files.length > 0 && (
                     <div className="space-y-2 max-h-[120px] overflow-y-auto pr-2">
-                        {uploadingFiles.map((file) => (
+                        {files.map((file) => (
                             <FileUploadIndicator
-                                key={file.id}
-                                fileName={file.file.name}
-                                fileSize={file.file.size}
-                                status={file.status}
-                                progress={file.progress}
-                                onDelete={() => handleDeleteFile(file.id)}
+                                key={file.name}
+                                fileName={file.name}
+                                fileSize={file.size}
+                                onDelete={() => handleDeleteFile(file.name)}
                             />
                         ))}
                     </div>
@@ -145,34 +74,47 @@ export function ChatInput({onSendMessage, onFileUpload}: ChatInputProps) {
                     className="relative"
                     onDragEnter={handleDragEnter}
                     onDragLeave={handleDragLeave}
-                    onDragOver={handleDragOver}
+                    onDragOver={(e) => e.preventDefault()}
                     onDrop={handleDrop}
                 >
-                    <input type="file" ref={fileInputRef} onChange={handleFileSelect} className="hidden" multiple/>
+                    <input
+                        type="file"
+                        ref={fileInputRef}
+                        onChange={handleFileSelect}
+                        className="hidden"
+                        multiple
+                    />
                     <Textarea
-                        value={message}
-                        onChange={(e) => setMessage(e.target.value)}
-                        onKeyDown={handleKeyDown}
+                        value={input}
+                        onChange={(e) => setInput(e.target.value)}
                         placeholder="输入消息或拖拽文件到此处..."
                         className="min-h-[80px] pr-24 resize-none"
                     />
                     <div className="absolute bottom-3 right-3 flex gap-2">
-                        <Button size="icon" variant="ghost" onClick={() => fileInputRef.current?.click()}>
+                        <Button
+                            type="button"
+                            size="icon"
+                            variant="ghost"
+                            onClick={() => fileInputRef.current?.click()}
+                        >
                             <Paperclip className="h-4 w-4"/>
                         </Button>
-                        <Button size="icon" onClick={handleSend} disabled={!message.trim() && uploadingFiles.length === 0}>
+                        <Button
+                            type="submit"
+                            size="icon"
+                            disabled={!input.trim()}
+                        >
                             <Send className="h-4 w-4"/>
                         </Button>
                     </div>
                     {isDragging && (
-                        <div
-                            className="absolute inset-0 border-2 border-dashed border-primary rounded-lg flex items-center justify-center bg-background/80">
+                        <div className="absolute inset-0 border-2 border-dashed border-primary rounded-lg flex items-center justify-center bg-background/80">
                             <p className="text-primary">释放以上传文件</p>
                         </div>
                     )}
                 </div>
             </div>
-        </div>
+        </form>
     )
 }
 

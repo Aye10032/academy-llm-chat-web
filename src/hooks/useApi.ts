@@ -48,10 +48,9 @@ export function useSseQuery<TVariables>(
             const response = await fetch(`${API_BASE_URL}${endpoint}`, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
                 },
-                body: JSON.stringify(variables)
+                body: variables instanceof FormData ? variables : JSON.stringify(variables)
             });
 
             if (!response.ok) {

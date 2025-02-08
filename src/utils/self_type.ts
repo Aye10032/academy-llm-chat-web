@@ -22,7 +22,17 @@ export interface UserProfile {
 export interface Message {
     id: string
     type: 'human' | 'ai'
+    content: string | Array<TextMessage | Modify>
+}
+
+export interface TextMessage {
     content: string
+}
+
+export interface Modify {
+    original: string
+    modified: string
+    explanation: string
 }
 
 export interface Document {

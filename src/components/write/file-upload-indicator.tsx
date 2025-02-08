@@ -1,4 +1,3 @@
-import { useState, useEffect } from "react"
 import { X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
@@ -13,8 +12,6 @@ import {
 interface FileUploadIndicatorProps {
     fileName: string
     fileSize: number
-    status: "uploading" | "complete" | "error"
-    progress: number
     onDelete?: () => void
 }
 
@@ -50,55 +47,17 @@ function getFileIcon(fileName: string) {
     }
 }
 
-export function FileUploadIndicator({ fileName, fileSize, status, progress, onDelete }: FileUploadIndicatorProps) {
-    const [showProgress, setShowProgress] = useState(true)
-
-    useEffect(() => {
-        if (status === "complete") {
-            const timer = setTimeout(() => setShowProgress(false), 1000)
-            return () => clearTimeout(timer)
-        }
-    }, [status])
-
+export function FileUploadIndicator({ fileName, fileSize, onDelete }: FileUploadIndicatorProps) {
     return (
         <div className="flex items-center gap-3 rounded-lg border bg-muted/50 p-2">
             <div className="relative">
                 {getFileIcon(fileName)}
-                {showProgress && (
-                    <svg className="absolute -top-1 -left-1 h-8 w-8 -rotate-90">
-                        <circle
-                            cx="16"
-                            cy="16"
-                            r="14"
-                            stroke="currentColor"
-                            strokeWidth="3"
-                            fill="none"
-                            className="text-muted-foreground"
-                        />
-                        <circle
-                            cx="16"
-                            cy="16"
-                            r="14"
-                            stroke="currentColor"
-                            strokeWidth="3"
-                            fill="none"
-                            strokeDasharray="87.96"
-                            strokeDashoffset={87.96 - (87.96 * progress) / 100}
-                            className="text-primary"
-                        />
-                    </svg>
-                )}
             </div>
             <div className="flex flex-1 flex-col gap-0.5 min-w-0">
                 <div className="flex items-center justify-between gap-2">
                     <span className="text-sm font-medium truncate">{fileName}</span>
                     <span className="text-xs text-muted-foreground whitespace-nowrap">{formatFileSize(fileSize)}</span>
                 </div>
-                <span className="text-xs text-muted-foreground">
-          {status === "uploading" && `上传中... ${progress}%`}
-                    {status === "complete" && "上传完成"}
-                    {status === "error" && "上传失败"}
-        </span>
             </div>
             {onDelete && (
                 <Button variant="ghost" size="icon" className="h-6 w-6" onClick={onDelete}>
