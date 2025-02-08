@@ -71,3 +71,13 @@ export interface WriteProject {
     create_time: string
     update_time: string
 }
+
+export interface Manuscript {
+    uid: string
+    project_uid: string
+    title: string
+    content?: string
+    version: number
+    is_draft: boolean
+}
+

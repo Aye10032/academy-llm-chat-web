@@ -1,6 +1,6 @@
 "use client"
 
-import {useState, useRef} from "react"
+import {useState, useRef, useEffect} from "react"
 import {
     Bot,
     MessageSquare,
@@ -24,22 +24,16 @@ import {
     BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
 import {Accordion, AccordionContent, AccordionItem, AccordionTrigger} from "@/components/ui/accordion"
-import {Collapsible, CollapsibleContent, CollapsibleTrigger} from "@/components/ui/collapsible"
-import {Input} from "@/components/ui/input"
-import {Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger} from "@/components/ui/dialog"
 import {ChatInput} from "@/components/write/chat-input.tsx";
 import {MaterialsManager} from "@/components/write/materials-manager.tsx";
 import {FloatingActions} from "@/components/write/floating-actions.tsx";
 import {SidebarTrigger} from "@/components/ui/sidebar.tsx";
 import {Separator} from "@/components/ui/separator.tsx";
 import {ChatHistory} from "@/components/write/chat-history-form.tsx";
-
-interface FileStructure {
-    id: string
-    name: string
-    type: "file" | "folder"
-    children?: FileStructure[]
-}
+import {FileTreeForm} from "@/components/write/file-tree-form.tsx";
+import {projectStore} from "@/utils/self-state.tsx";
+import {useApiQuery} from "@/hooks/useApi.ts";
+import {Manuscript} from "@/utils/self_type.ts";
 
 interface Material {
     id: string
@@ -53,9 +47,11 @@ interface Material {
 
 
 export function WritePage() {
-    const [editorContent, setEditorContent] = useState<string>(
-        "在当今快速发展的世界中，人工智能技术的应用越来越广泛。很多公司都在使用AI来提高效率。这不仅让工作更简单，还能省很多时间。",
-    )
+    const selectManuscriptUID = projectStore((state) => state.selectManuscriptUID)
+
+    const [currentFile, setCurrentFile] = useState<string>("")
+    const [editorContent, setEditorContent] = useState<string>("")
+
     const [materials, setMaterials] = useState<Material[]>([
         {
             id: "1",
@@ -85,7 +81,6 @@ export function WritePage() {
             isHidden: true,
         },
     ])
-
     const [messages] = useState([
         {
             role: "assistant",
@@ -130,32 +125,28 @@ export function WritePage() {
         },
     ])
 
-    const [fileStructure, setFileStructure] = useState<FileStructure[]>([
+    const {data: manuscript, isLoading} = useApiQuery<Manuscript>(
+        ['manuscript', selectManuscriptUID],
+        `/write/manuscript?uid=${selectManuscriptUID}`,
         {
-            id: "1",
-            name: "项目文件夹",
-            type: "folder",
-            children: [
-                {id: "2", name: "主文档.txt", type: "file"},
-                {id: "3", name: "参考资料.txt", type: "file"},
-                {
-                    id: "4",
-                    name: "草稿",
-                    type: "folder",
-                    children: [
-                        {id: "5", name: "草稿1.txt", type: "file"},
-                        {id: "6", name: "草稿2.txt", type: "file"},
-                    ],
-                },
-            ],
-        },
-    ])
+            enabled: !!selectManuscriptUID,
+            refetchOnWindowFocus: false,
+            retry: false,
+        }
+    );
 
+    useEffect(() => {
+        if (!manuscript) {
+            setCurrentFile("未命名文件")
+            setEditorContent("")
+        } else {
+            setCurrentFile(manuscript.title)
+            if (manuscript.content) {
+                setEditorContent(manuscript.content)
+            }
+        }
 
-    const [currentFile, setCurrentFile] = useState<string>("主文档.txt")
-    const [newItemName, setNewItemName] = useState<string>("")
-    const [isNewFileDialogOpen, setIsNewFileDialogOpen] = useState<boolean>(false)
-
+    }, [manuscript]);
 
     const applyModification = (original: string, modified: string) => {
         setEditorContent((prev) => prev.replace(original, modified))
@@ -184,7 +175,6 @@ export function WritePage() {
 
     const chatRef = useRef<HTMLDivElement>(null)
     const editorRef = useRef<HTMLDivElement>(null)
-
 
 
     const handleSave = () => {
@@ -331,6 +321,7 @@ export function WritePage() {
 
                 {/* Editor Section */}
                 <div className="flex h-full overflow-hidden bg-background">
+                    <FileTreeForm/>
                     <div className="flex-1 flex flex-col">
                         <header className="h-14 border-b flex items-center justify-between px-4">
                             <div className="flex items-center gap-2">
@@ -362,6 +353,7 @@ export function WritePage() {
                                     lineHeight: "1.5",
                                     tabSize: 2,
                                 }}
+                                disabled={!selectManuscriptUID || isLoading}
                             />
                         </div>
                     </div>
