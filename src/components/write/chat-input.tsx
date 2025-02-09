@@ -18,6 +18,7 @@ export function ChatInput({handleSubmit, input, setInput, files, setFiles}: Chat
     const dragCounterRef = useRef(0)
 
     const handleFiles = useCallback((newFiles: File[]) => {
+        // @ts-expect-error no need
         setFiles(prev => [...prev, ...newFiles])
     }, [setFiles])
 
@@ -52,6 +53,7 @@ export function ChatInput({handleSubmit, input, setInput, files, setFiles}: Chat
     }
 
     const handleDeleteFile = (fileName: string) => {
+        // @ts-expect-error no need
         setFiles(prev => prev.filter(f => f.name !== fileName))
     }
 

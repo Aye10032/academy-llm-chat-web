@@ -29,7 +29,7 @@ import {ChatHistory} from "@/components/write/chat-history-form.tsx";
 import {FileTreeForm} from "@/components/write/file-tree-form.tsx";
 import {projectStore} from "@/utils/self-state.tsx";
 import {useApiMutation, useApiQuery, useSseQuery} from "@/hooks/useApi.ts";
-import {Manuscript, Message} from "@/utils/self_type.ts";
+import {Manuscript, Message, Modify} from "@/utils/self_type.ts";
 
 
 export function WritePage() {
@@ -42,22 +42,23 @@ export function WritePage() {
     const [input, setInput] = useState('')
     const [files, setFiles] = useState<File[]>([])
     const [editorContent, setEditorContent] = useState<string>("")
+    const [isGenerate, setIsGenerate] = useState<boolean>(false)
 
     const [status, setStatus] = useState<string>('')
     const [messages, setMessages] = useState<Message[]>([
         {
-            id:"",
+            id: "",
             type: "ai",
             content: "你好！我是你的AI写作助手。请在右侧编辑区域输入你想要优化的文字，我会帮你改进它。",
         },
         {
-            id:"",
+            id: "",
             type: "human",
             content:
                 "请帮我修改这段文字：\n\n在当今快速发展的世界中，人工智能技术的应用越来越广泛。很多公司都在使用AI来提高效率。这不仅让工作更简单，还能省很多时间。",
         },
         {
-            id:"",
+            id: "",
             type: "ai",
             content: [
                 {
@@ -132,12 +133,17 @@ export function WritePage() {
         'PATCH'
     )
 
+    const clearState = () => {
+        setInput('');
+        setStatus('');
+    }
+
     // 对话 SSE mutation
     const chatMutation = useSseQuery<FormData>('/write/chat')
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
-        if (!input.trim() ||isLoading || !selectProjectUID) return;
+        if (!input.trim() || isLoading || !selectProjectUID) return;
 
         const userMessage: Message = {
             id: Date.now().toString(),
@@ -145,92 +151,176 @@ export function WritePage() {
             content: input.trim()
         };
 
-        let newChatUID = selectedChatUID
-
-        // 如果没有选中的对话，先创建新对话
-        if (!selectedChatUID) {
-            try {
-                newChatUID = await newChatMutation.mutateAsync();
-                setSelectedChatUID(newChatUID)
-            } catch (error) {
-                console.error('Failed to create new chat:', error);
-                setStatus('创建新对话失败');
-                return;
-            }
-        }
-
-        // 设置消息
-        setMessages(prev => [...prev, userMessage]);
-
-        const formData = new FormData()
-        formData.append('project_uid', selectProjectUID)
-        formData.append('chat_uid', selectedChatUID)
-        
-        // 可选参数
-        if (input.trim()) {
-            formData.append('message', input)
-        }
-        if (editorContent) {
-            formData.append('current_text', editorContent)
-        }
-        
-        // 文件处理 - 只在有文件时才添加
-        if (files.length > 0) {
-            files.forEach(file => {
-                formData.append('files', file)
-            })
-        }
+        clearState()
 
         try {
+            let newChatUID = selectedChatUID
+
+            // 如果没有选中的对话，先创建新对话
+            if (!selectedChatUID) {
+                try {
+                    newChatUID = await newChatMutation.mutateAsync();
+                    setSelectedChatUID(newChatUID)
+                } catch (error) {
+                    console.error('Failed to create new chat:', error);
+                    setStatus('创建新对话失败');
+                    return;
+                }
+            }
+
+            // 设置消息
+            setMessages(prev => [...prev, userMessage]);
+
+            const formData = new FormData()
+            formData.append('project_uid', selectProjectUID)
+            formData.append('chat_uid', selectedChatUID)
+            formData.append('message', input)
+            formData.append('current_text', editorContent)
+
+            // 文件处理 - 只在有文件时才添加
+            if (files.length > 0) {
+                files.forEach(file => {
+                    formData.append('files', file)
+                })
+            }
+
             const response = await chatMutation.mutateAsync(formData)
             const reader = response.body?.getReader()
             const decoder = new TextDecoder()
 
-            while (reader) {
-                const {done, value} = await reader.read()
-                if (done) break
+            let aiMessageContent = '';
+            let aiMessageCreated = false;
+            let isGettingAnswer = false
+            let buffer = ''; // 添加缓冲区处理不完整的消息
 
-                const chunk = decoder.decode(value)
-                const events = chunk.split('\n\n').filter(Boolean)
+            const processSSEMessage = (message: string) => {
+                const [eventLine, dataLine] = message.split('\n')
+                const eventType = eventLine.replace('event: ', '')
+                const data = JSON.parse(dataLine.replace('data: ', ''))
 
-                for (const eventText of events) {
-                    const [eventLine, dataLine] = eventText.split('\n')
-                    const eventType = eventLine.replace('event: ', '')
-                    const data = JSON.parse(dataLine.replace('data: ', ''))
-
+                if (eventType && data) {
                     switch (eventType) {
                         case 'status':
-                            // 更新状态信息
-                            setStatus(data);
-                            break
-                        case 'answer':
-                            // 更新对话内容
+                            if (data === "chat end") {
+                                isGettingAnswer = false
+                                aiMessageContent = ''
+                            }else {
+                                setStatus(data);
+                            }
+                            break;
+                        case 'docs': {
+                            // 处理文本
+                            break;
+                        }
+                        case 'answer': {
+                            if (!aiMessageCreated) {
+                                setMessages(prev => [...prev, {
+                                    id: (Date.now() + 1).toString(),
+                                    type: 'ai',
+                                    content: [{
+                                        content: ''
+                                    }]
+                                }]);
+                                aiMessageCreated = true;
+                                isGettingAnswer = true
+                            }
 
-                            break
-                        case 'modify':
-                            // 处理修改建议
+                            aiMessageContent += data;
+                            if (!isGettingAnswer) {
+                                setMessages(prev => {
+                                    const newMessages = [...prev];
+                                    const lastMessage = newMessages[newMessages.length - 1];
+                                    if (lastMessage.type === 'ai' && Array.isArray(lastMessage.content)) {
+                                        const newContent = lastMessage.content
+                                        lastMessage.content = [...newContent, {content: aiMessageContent}]
+                                    }
+                                    return newMessages;
+                                });
+                                isGettingAnswer = true;
+                            } else {
+                                setMessages(prev => {
+                                    const newMessages = [...prev];
+                                    const lastMessage = newMessages[newMessages.length - 1];
+                                    if (Array.isArray(lastMessage.content)) {
+                                        const lastContent = lastMessage.content[lastMessage.content.length - 1];
+                                        if (lastContent && "content" in lastContent) {
+                                            lastContent.content = aiMessageContent
+                                        }
+                                    }
+                                    return newMessages;
+                                });
+                            }
+                            break;
+                        }
+                        case 'modify': {
+                            const modifies = data.modifies.map((modify: Modify) => ({
+                                original: modify.original,
+                                modified: modify.modified,
+                                explanation: modify.explanation
+                            }));
 
-                            break
-                        case 'write':
-                            // 更新编辑器内容
-                            setEditorContent(data)
-                            break
-                        case 'error':
-                            // 处理错误
-                            console.error('Error from server:', data)
-                            // 可以添加错误提示UI
-                            break
+                            if (!aiMessageCreated) {
+                                setMessages(prev => [...prev, {
+                                    id: (Date.now() + 1).toString(),
+                                    type: 'ai',
+                                    content: modifies
+                                }]);
+                                aiMessageCreated = true;
+                            } else {
+                                setMessages(prev => {
+                                    const newMessages = [...prev];
+                                    const lastMessage = newMessages[newMessages.length - 1];
+                                    if (lastMessage.type === 'ai' && Array.isArray(lastMessage.content)) {
+                                        lastMessage.content = [...lastMessage.content, ...modifies];
+                                    }
+                                    return newMessages;
+                                });
+                            }
+
+                            break;
+                        }
+                    }
+                }
+            };
+
+            while (reader) {
+                const {done, value} = await reader.read();
+                if (done) {
+                    if (buffer.trim()) {
+                        processSSEMessage(buffer);
+                    }
+                    setIsGenerate(false);
+                    setStatus('');
+                    break;
+                }
+
+                const chunk = decoder.decode(value);
+                buffer += chunk;
+
+                // 查找完整的消息
+                const messages = buffer.split('\n\n');
+                // 保留最后一个可能不完整的消息
+                buffer = messages.pop() || '';
+
+                // 处理完整的消息
+                for (const message of messages) {
+                    if (message.trim()) {
+                        processSSEMessage(message);
+                        // 使用 requestAnimationFrame 控制渲染频率
+                        await new Promise(resolve => requestAnimationFrame(resolve));
                     }
                 }
             }
 
-            // 清理状态
-            setInput("")
-            setFiles([])
-
         } catch (error) {
             console.error('Error in chat:', error)
-            setStatus('发送失败，请重试') // 使用状态显示错误
+            setStatus('发生错误，请重试');
+            // 如果是新建的对话失败了，清空消息
+            if (!selectedChatUID) {
+                setMessages([]);
+            }
+        } finally {
+            setIsGenerate(false);
         }
     }
 
