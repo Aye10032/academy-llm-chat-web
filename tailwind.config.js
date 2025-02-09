@@ -85,7 +85,11 @@ module.exports = {
   		animation: {
   			'accordion-down': 'accordion-down 0.2s ease-out',
   			'accordion-up': 'accordion-up 0.2s ease-out'
-  		}
+  		},
+		fontFamily: {
+			sans: ['Geist', 'sans-serif'],
+			mono: ['Geist Mono', 'ui-monospace', 'SFMono-Regular', 'Roboto Mono', 'Menlo, Monaco', 'Liberation Mono', 'DejaVu Sans Mono', 'Courier New', 'monospace'],
+		},
   	}
   },
   plugins: [require("tailwindcss-animate")],
