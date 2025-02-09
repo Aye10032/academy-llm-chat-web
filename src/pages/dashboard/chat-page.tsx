@@ -44,8 +44,10 @@ interface ChatPageProps {
 }
 
 export function ChatPage({user}: ChatPageProps) {
+    const selectedKbUID = kbStore((state) => state.selectedKbUID)
     const setSelectedKbUID = kbStore((state) => state.setSelectedKbUID)
     const selectedChatUID = kbStore((state) => state.selectedChatUID)
+    const setSelectedChatUID = kbStore((state) => state.setSelectedChatUID)
 
     const [selectedKb, setSelectedKb] = useState<KnowledgeBase | null>(null);
 
@@ -83,11 +85,7 @@ export function ChatPage({user}: ChatPageProps) {
     )
 
     // 对话 SSE mutation
-    const chatMutation = useSseQuery<{
-        message: string,
-        knowledge_base_uid: string,
-        chat_uid: string
-    }>('/rag/chat')
+    const chatMutation = useSseQuery<FormData>('/rag/chat')
 
     // 初始化知识库
     useEffect(() => {
@@ -156,12 +154,13 @@ export function ChatPage({user}: ChatPageProps) {
         clearState();
 
         try {
-            let currentHistoryId = selectedChatUID;
+            let currentChatUid = selectedChatUID;
 
             // 如果没有选中的对话，先创建新对话
             if (!selectedChatUID) {
                 try {
-                    currentHistoryId = await newChatMutation.mutateAsync();
+                    currentChatUid = await newChatMutation.mutateAsync();
+                    setSelectedChatUID(currentChatUid);
                 } catch (error) {
                     console.error('Failed to create new chat:', error);
                     setStatus('创建新对话失败');
@@ -172,12 +171,13 @@ export function ChatPage({user}: ChatPageProps) {
             // 设置消息
             setMessages(prev => [...prev, userMessage]);
 
+            const formData = new FormData()
+            formData.append('knowledge_base_uid', selectedKbUID)
+            formData.append('chat_uid', selectedChatUID)
+            formData.append('message', input)
+
             // 发送聊天请求
-            const response = await chatMutation.mutateAsync({
-                message: userMessage.content,
-                knowledge_base_uid: selectedKb.uid,
-                chat_uid: currentHistoryId || ''
-            });
+            const response = await chatMutation.mutateAsync(formData);
 
             const reader = response.body?.getReader();
             if (!reader) throw new Error('No reader available');
