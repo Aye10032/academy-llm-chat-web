@@ -27,6 +27,7 @@ export function WriteSidebar() {
     const selectProjectUID = projectStore((state) => state.selectProjectUID)
     const setSelectProjectUID = projectStore((state) => state.setSelectProjectUID)
     const setSelectProjectTitle = projectStore((state) => state.setSelectProjectTitle)
+    const setSelectManuscriptUID = projectStore((state) => state.setSelectManuscriptUID)
 
     const [isNewProjectDialogOpen, setIsNewProjectDialogOpen] = useState<boolean>(false)
     const [hoveredProject, setHoveredProject] = useState<string | null>(null);
@@ -48,6 +49,7 @@ export function WriteSidebar() {
     const handleProjectClick = (project: WriteProject) => {
         setSelectProjectUID(project.uid);
         setSelectProjectTitle(project.description);
+        setSelectManuscriptUID(project.last_manuscript);
         setHoveredProject(null); // 清除悬停状态
         setOpenMenuId(null);  // 关闭下拉菜单
     };

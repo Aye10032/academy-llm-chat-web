@@ -30,7 +30,12 @@ export const projectStore = create<ProjectState>((set) => ({
     selectProjectTitle: '',
     selectedChatUID: '',
     selectManuscriptUID: '',
-    setSelectProjectUID: (uid: string) => set({selectProjectUID: uid}),
+    setSelectProjectUID: (uid: string) => {
+        if (!uid) {
+            set({selectProjectTitle: ''})
+        }
+        set({selectProjectUID: uid})
+    },
     setSelectProjectTitle: (title: string) => set({selectProjectTitle: title}),
     setSelectedChatUID: (uid: string) => set({selectedChatUID: uid}),
     setSelectManuscriptUID: (uid: string) => set({selectManuscriptUID: uid})
