@@ -1,21 +1,22 @@
 'use client'
 
 import * as React from 'react'
-import { Save, Languages, Timer, History, MoreVertical } from 'lucide-react'
+import {Save, Languages, Timer, History, MoreVertical} from 'lucide-react'
 import {
     Tooltip,
     TooltipContent,
     TooltipProvider,
     TooltipTrigger,
 } from "@/components/ui/tooltip"
-import { Button } from "@/components/ui/button"
-import { cn } from "@/lib/utils"
+import {Button} from "@/components/ui/button"
+import {cn} from "@/lib/utils"
 
 interface FloatingActionsProps {
-    onSave: () => void
+    onSave: () => void,
+    disabled: boolean
 }
 
-export function FloatingActions({ onSave }: FloatingActionsProps) {
+export function FloatingActions({onSave, disabled}: FloatingActionsProps) {
     const [isOpen, setIsOpen] = React.useState(false)
     const menuRef = React.useRef<HTMLDivElement>(null)
 
@@ -57,7 +58,7 @@ export function FloatingActions({ onSave }: FloatingActionsProps) {
                     )}
                     onClick={toggleMenu}
                 >
-                    <MoreVertical className="h-5 w-5" />
+                    <MoreVertical className="h-5 w-5"/>
                 </Button>
                 {isOpen && (
                     <div className="absolute bottom-full right-0 mb-2 flex flex-col items-end space-y-2">
@@ -70,7 +71,7 @@ export function FloatingActions({ onSave }: FloatingActionsProps) {
                                         className="h-10 w-10 rounded-full bg-background shadow-md"
                                         onClick={() => handleAction(() => console.log('Language action'))}
                                     >
-                                        <Languages className="h-4 w-4" />
+                                        <Languages className="h-4 w-4"/>
                                     </Button>
                                 </TooltipTrigger>
                                 <TooltipContent side="left">
@@ -85,7 +86,7 @@ export function FloatingActions({ onSave }: FloatingActionsProps) {
                                         className="h-10 w-10 rounded-full bg-background shadow-md"
                                         onClick={() => handleAction(() => console.log('Timer action'))}
                                     >
-                                        <Timer className="h-4 w-4" />
+                                        <Timer className="h-4 w-4"/>
                                     </Button>
                                 </TooltipTrigger>
                                 <TooltipContent side="left">
@@ -100,7 +101,7 @@ export function FloatingActions({ onSave }: FloatingActionsProps) {
                                         className="h-10 w-10 rounded-full bg-background shadow-md"
                                         onClick={() => handleAction(() => console.log('History action'))}
                                     >
-                                        <History className="h-4 w-4" />
+                                        <History className="h-4 w-4"/>
                                     </Button>
                                 </TooltipTrigger>
                                 <TooltipContent side="left">
@@ -119,8 +120,9 @@ export function FloatingActions({ onSave }: FloatingActionsProps) {
                             variant="outline"
                             className="h-12 w-12 rounded-full bg-background shadow-lg hover:bg-muted/50"
                             onClick={onSave}
+                            disabled={disabled}
                         >
-                            <Save className="h-5 w-5" />
+                            <Save className="h-5 w-5"/>
                         </Button>
                     </TooltipTrigger>
                     <TooltipContent side="left">

@@ -6,6 +6,7 @@ import {LoginPage} from "@/pages/login/login-page.tsx";
 import {RegisterPage} from "@/pages/login/register-page.tsx";
 import {ForgotPswPage} from "@/pages/login/forgot-psw-page.tsx";
 import {MainPage} from "@/pages/dashboard/dashboard.tsx";
+import {Toaster} from "@/components/ui/toaster.tsx";
 
 // 受保护的路由组件
 const ProtectedRoute = ({children}: { children: React.ReactNode }) => {
@@ -107,13 +108,17 @@ export default function App() {
     )
 
     return (
-        <QueryClientProvider client={queryClient}>
-            <RouterProvider
-                router={router}
-                future={{
-                    v7_startTransition: true
-                }}
-            />
-        </QueryClientProvider>
+        <div>
+            <QueryClientProvider client={queryClient}>
+                <RouterProvider
+                    router={router}
+                    future={{
+                        v7_startTransition: true
+                    }}
+                />
+            </QueryClientProvider>
+            <Toaster />
+        </div>
+
     )
 }

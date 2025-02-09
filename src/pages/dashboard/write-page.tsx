@@ -31,6 +31,7 @@ import {projectStore} from "@/utils/self-state.tsx";
 import {useApiMutation, useApiQuery, useSseQuery} from "@/hooks/useApi.ts";
 import {Manuscript, Message, Modify} from "@/utils/self_type.ts";
 import {useNavigate} from "react-router-dom";
+import {toast} from "@/hooks/use-toast.ts";
 
 
 export function WritePage() {
@@ -45,50 +46,16 @@ export function WritePage() {
     const [input, setInput] = useState('')
     const [files, setFiles] = useState<File[]>([])
     const [editorContent, setEditorContent] = useState<string>("")
+    const [editorChanged, setEditorChanged] = useState<boolean>(false)
     const [isGenerate, setIsGenerate] = useState<boolean>(false)
 
     const [status, setStatus] = useState<string>('')
-    const [messages, setMessages] = useState<Message[]>([
-        {
-            id: "",
-            type: "ai",
-            content: "你好！我是你的AI写作助手。请在右侧编辑区域输入你想要优化的文字，我会帮你改进它。",
-        },
-        {
-            id: "",
-            type: "human",
-            content:
-                "请帮我修改这段文字：\n\n在当今快速发展的世界中，人工智能技术的应用越来越广泛。很多公司都在使用AI来提高效率。这不仅让工作更简单，还能省很多时间。",
-        },
-        {
-            id: "",
-            type: "ai",
-            content: [
-                {
-                    content: "我已经分析了你的文字，下面是修改建议：",
-                },
-                {
-                    original: "在当今快速发展的世界中，人工智能技术的应用越来越广泛。",
-                    modified: "在这个日新月异的时代，人工智能技术正在各个领域蓬勃发展。",
-                    explanation: "使用更生动的描述，突出发展的迅速性和广泛性。",
-                },
-                {
-                    original: "很多公司都在使用AI来提高效率。",
-                    modified: "众多企业纷纷导入AI技术以提升运营效能。",
-                    explanation: "使用更专业的措辞，强调企业的主动性。",
-                },
-                {
-                    original: "这不仅让工作更简单，还能省很多时间。",
-                    modified: "这不仅简化了工作流程，还显著提高了时间效益。",
-                    explanation: "更准确地描述AI带来的具体好处。",
-                },
-                {
-                    content:
-                        "修改后的完整文段：\n\n在这个日新月异的时代，人工智能技术正在各个领域蓬勃发展。众多企业纷纷导入AI技术以提升运营效能。这不仅简化了工作流程，还显著提高了时间效益。",
-                },
-            ],
-        },
-    ])
+    const [messages, setMessages] = useState<Message[]>([])
+
+    const saveMutation = useApiMutation<string, void>(
+        `/write/save_manuscript?uid=${selectManuscriptUID}&content=${editorContent}`,
+        'POST'
+    )
 
     const {data: manuscript, isLoading} = useApiQuery<Manuscript>(
         ['get_manuscript', selectManuscriptUID],
@@ -98,6 +65,15 @@ export function WritePage() {
         }
     );
 
+    // 新建对话请求
+    const newChatMutation = useApiMutation<string, void>(
+        `/write/new_chat?project_uid=${selectProjectUID}`,
+        'PATCH'
+    )
+
+    // 对话 SSE mutation
+    const chatMutation = useSseQuery<FormData>('/write/chat')
+
     useEffect(() => {
         if (!manuscript) {
             setEditorContent("")
@@ -106,7 +82,7 @@ export function WritePage() {
                 setEditorContent(manuscript.content)
             }
         }
-
+        setEditorChanged(false)
     }, [manuscript]);
 
     const applyModification = (original: string, modified: string) => {
@@ -122,8 +98,10 @@ export function WritePage() {
 
 
     const handleSave = () => {
-        // Handle save functionality
-        console.log("Saving changes...")
+        saveMutation.mutate()
+        toast({
+            description: "编辑保存完毕"
+        })
     }
 
     const handleNewChat = () => {
@@ -131,19 +109,12 @@ export function WritePage() {
         navigate(`/dashboard/write`);
     }
 
-    // 新建对话请求
-    const newChatMutation = useApiMutation<string, void>(
-        `/write/new_chat?project_uid=${selectProjectUID}`,
-        'PATCH'
-    )
 
     const clearState = () => {
         setInput('');
         setStatus('');
     }
 
-    // 对话 SSE mutation
-    const chatMutation = useSseQuery<FormData>('/write/chat')
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -506,21 +477,24 @@ export function WritePage() {
                         <div ref={editorRef} className="relative flex-1">
                             <textarea
                                 value={editorContent}
-                                onChange={(e) => setEditorContent(e.target.value)}
+                                onChange={(e) => {
+                                    setEditorContent(e.target.value)
+                                    setEditorChanged(true)
+                                }}
                                 placeholder="在这里输入或粘贴你想要修改的文字..."
                                 className="w-full h-full p-4 resize-none focus:outline-none font-mono text-sm"
                                 style={{
                                     lineHeight: "1.5",
                                     tabSize: 2,
                                 }}
-                                disabled={!selectManuscriptUID || isLoading}
+                                disabled={!selectManuscriptUID || isLoading || isGenerate}
                             />
                         </div>
                     </div>
                 </div>
             </div>
 
-            <FloatingActions onSave={handleSave}/>
+            <FloatingActions onSave={handleSave} disabled={!selectManuscriptUID || isLoading || isGenerate || !editorChanged}/>
         </div>
     )
 }
