@@ -57,6 +57,17 @@ export function ChatInput({handleSubmit, input, setInput, files, setFiles}: Chat
         setFiles(prev => prev.filter(f => f.name !== fileName))
     }
 
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            // 普通回车：提交表单
+            e.preventDefault();
+            const form = e.currentTarget.form;
+            if (form && input.trim()) {
+                form.requestSubmit();
+            }
+        }
+    }
+
     return (
         <form onSubmit={handleSubmit} className="border-t p-4">
             <div className="space-y-4">
@@ -89,6 +100,7 @@ export function ChatInput({handleSubmit, input, setInput, files, setFiles}: Chat
                     <Textarea
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
+                        onKeyDown={handleKeyDown}
                         placeholder="输入消息或拖拽文件到此处..."
                         className="min-h-[80px] pr-24 resize-none"
                     />
