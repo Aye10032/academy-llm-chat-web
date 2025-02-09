@@ -9,7 +9,7 @@ import {
     SidebarMenuItem,
     SidebarMenuButton,
 } from "@/components/ui/sidebar.tsx"
-import React, {useState} from "react";
+import React, {useState, useEffect} from "react";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -23,16 +23,25 @@ import {useApiQuery} from "@/hooks/useApi.ts";
 import {ChatSession} from "@/utils/self_type.ts";
 import {groupItemsByPeriod} from "@/utils/sort.ts";
 import {kbStore} from "@/utils/self-state";
+import {Link, useNavigate, useParams} from "react-router-dom";
 
 export function ChatSidebar() {
     const selectedKbUID = kbStore((state) => state.selectedKbUID);
     const selectedChatUID = kbStore((state) => state.selectedChatUID);
-    const setSelectedChatUID = kbStore((state) => state.setSelectedChatUID)
+    const setSelectedChatUID = kbStore((state) => state.setSelectedChatUID);
+    const navigate = useNavigate();
+    const {chatId} = useParams();
 
     const [hoveredChat, setHoveredChat] = useState<string | null>(null);
     const [openMenuId, setOpenMenuId] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
 
+    // 当URL中的chatId变化时，更新selectedChatUID
+    useEffect(() => {
+        if (chatId) {
+            setSelectedChatUID(chatId);
+        }
+    }, [chatId, setSelectedChatUID]);
 
     // 获取聊天列表
     const {data: chats, isLoading} = useApiQuery<ChatSession[]>(
@@ -45,8 +54,8 @@ export function ChatSidebar() {
 
     // 这里实际上是清空当前对话记录
     const handleNewChat = () => {
-        // 清除当前选中的对话
         setSelectedChatUID('');
+        navigate(`/dashboard/chat`);
     }
 
     const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -62,8 +71,8 @@ export function ChatSidebar() {
 
     const handleChatClick = (chat: ChatSession) => {
         setSelectedChatUID(chat.chat_uid);
-        setHoveredChat(null); // 清除悬停状态
-        setOpenMenuId(null);  // 关闭下拉菜单
+        setHoveredChat(null);
+        setOpenMenuId(null);
     };
 
     // 如果没有选择知识库，显示占位内容
@@ -147,17 +156,20 @@ export function ChatSidebar() {
                                     key={chat.chat_uid}
                                     onMouseEnter={() => setHoveredChat(chat.chat_uid)}
                                     onMouseLeave={() => setHoveredChat(null)}
-                                    onClick={() => handleChatClick(chat)}
                                     className={chat.chat_uid === selectedChatUID ? 'bg-accent' : ''}
                                 >
                                     <SidebarMenuButton asChild className="h-auto py-3 px-2 text-sm font-medium w-full text-left">
                                         <div className="flex items-center justify-between">
-                                            <a href="#" className="flex flex-col items-start gap-1 flex-grow min-w-0">
+                                            <Link 
+                                                to={`/dashboard/chat/${chat.chat_uid}`}
+                                                className="flex flex-col items-start gap-1 flex-grow min-w-0"
+                                                onClick={() => handleChatClick(chat)}
+                                            >
                                                 <span className="truncate w-full pr-4">{chat.description}</span>
                                                 <span className="text-[10px] text-muted-foreground">
                                                     {format(new Date(chat.update_time), "MM月dd日 HH:mm", {locale: zhCN})}
                                                 </span>
-                                            </a>
+                                            </Link>
                                             {(hoveredChat === chat.chat_uid || openMenuId === chat.chat_uid) && (
                                                 <DropdownMenu open={openMenuId === chat.chat_uid}>
                                                     <DropdownMenuTrigger asChild>

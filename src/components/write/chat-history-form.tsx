@@ -8,11 +8,20 @@ import {groupItemsByPeriod} from "@/utils/sort.ts";
 import {ChatSession} from "@/utils/self_type.ts";
 import {projectStore} from "@/utils/self-state.tsx";
 import {useApiQuery} from "@/hooks/useApi.ts";
+import {Link, useParams} from "react-router-dom";
+import {useEffect} from "react";
 
 
 export function ChatHistory() {
     const selectProjectUID = projectStore((state) => state.selectProjectUID)
     const setSelectedChatUID = projectStore((state) => state.setSelectedChatUID)
+    const {chatId} = useParams();
+
+    useEffect(() => {
+        if (chatId) {
+            setSelectedChatUID(chatId);
+        }
+    }, [chatId, setSelectedChatUID]);
 
     // 获取聊天列表
     const {data: chats, isLoading} = useApiQuery<ChatSession[]>(
@@ -58,8 +67,12 @@ export function ChatHistory() {
                                         onClick={() => setSelectedChatUID(chat.chat_uid)}
                                         className="w-full text-left px-2 py-1 rounded-md hover:bg-muted/50 transition-colors"
                                     >
-                                        <div className="text-sm font-medium truncate">{chat.description}</div>
-                                        <div className="text-xs text-muted-foreground">{format(new Date(chat.update_time), "HH:mm")}</div>
+                                        <Link to={`/dashboard/write/${chat.chat_uid}`}>
+                                            <div className="text-sm font-medium truncate">{chat.description}</div>
+                                            <div
+                                                className="text-xs text-muted-foreground">{format(new Date(chat.update_time), "HH:mm")}
+                                            </div>
+                                        </Link>
                                     </button>
                                 ))}
                             </div>

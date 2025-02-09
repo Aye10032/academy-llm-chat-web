@@ -42,14 +42,11 @@ export function MainPage({defaultPage}: MainPageProps) {
 
         setActivePage(page)
         if (page === 'chat') {
-            navigate('/c')
+            navigate('/dashboard/chat')
         } else if (page === 'write') {
-            navigate('/w')
+            navigate('/dashboard/write')
         }
     }, [activePage, navigate])
-
-
-    // ======================写作界面相关======================
 
 
     if (isLoading) {

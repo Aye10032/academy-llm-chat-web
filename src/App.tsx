@@ -66,19 +66,33 @@ export default function App() {
             },
             {
                 path: "/",
-                element: <Navigate to="/c" replace/>,
+                element: <Navigate to="/dashboard/chat" replace/>,
             },
             {
-                path: "/c",
+                path: "/dashboard",
                 element: <ProtectedRoute><MainPage defaultPage="chat"/></ProtectedRoute>,
-            },
-            {
-                path: "/w",
-                element: <ProtectedRoute><MainPage defaultPage="write"/></ProtectedRoute>,
+                children: [
+                    {
+                        path: "chat",
+                        element: <ProtectedRoute><MainPage defaultPage="chat"/></ProtectedRoute>,
+                    },
+                    {
+                        path: "chat/:chatId",
+                        element: <ProtectedRoute><MainPage defaultPage="chat"/></ProtectedRoute>,
+                    },
+                    {
+                        path: "write",
+                        element: <ProtectedRoute><MainPage defaultPage="write"/></ProtectedRoute>,
+                    },
+                    {
+                        path: "write/:chatId",
+                        element: <ProtectedRoute><MainPage defaultPage="write"/></ProtectedRoute>,
+                    }
+                ]
             },
             {
                 path: "*",
-                element: <Navigate to="/c" replace/>,
+                element: <Navigate to="/dashboard/chat" replace/>,
             }
         ],
         {

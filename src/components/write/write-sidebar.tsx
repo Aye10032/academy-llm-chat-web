@@ -26,6 +26,7 @@ import {Button} from "@/components/ui/button.tsx";
 export function WriteSidebar() {
     const selectProjectUID = projectStore((state) => state.selectProjectUID)
     const setSelectProjectUID = projectStore((state) => state.setSelectProjectUID)
+    const setSelectProjectTitle = projectStore((state) => state.setSelectProjectTitle)
 
     const [isNewProjectDialogOpen, setIsNewProjectDialogOpen] = useState<boolean>(false)
     const [hoveredProject, setHoveredProject] = useState<string | null>(null);
@@ -46,6 +47,7 @@ export function WriteSidebar() {
 
     const handleProjectClick = (project: WriteProject) => {
         setSelectProjectUID(project.uid);
+        setSelectProjectTitle(project.description);
         setHoveredProject(null); // 清除悬停状态
         setOpenMenuId(null);  // 关闭下拉菜单
     };
@@ -121,12 +123,12 @@ export function WriteSidebar() {
                                 >
                                     <SidebarMenuButton asChild className="h-auto py-3 px-2 text-sm font-medium w-full text-left">
                                         <div className="flex items-center justify-between">
-                                            <a href="#" className="flex flex-col items-start gap-1 flex-grow min-w-0">
+                                            <div className="flex flex-col items-start gap-1 flex-grow min-w-0">
                                                 <span className="truncate w-full pr-4">{project.description}</span>
                                                 <span className="text-[10px] text-muted-foreground">
                                                     {format(new Date(project.update_time), "MM月dd日 HH:mm", {locale: zhCN})}
                                                 </span>
-                                            </a>
+                                            </div>
                                             {(hoveredProject === project.uid || openMenuId === project.uid) && (
                                                 <DropdownMenu open={openMenuId === project.uid}>
                                                     <DropdownMenuTrigger asChild>

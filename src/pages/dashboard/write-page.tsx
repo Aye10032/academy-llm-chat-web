@@ -30,15 +30,18 @@ import {FileTreeForm} from "@/components/write/file-tree-form.tsx";
 import {projectStore} from "@/utils/self-state.tsx";
 import {useApiMutation, useApiQuery, useSseQuery} from "@/hooks/useApi.ts";
 import {Manuscript, Message, Modify} from "@/utils/self_type.ts";
+import {useNavigate} from "react-router-dom";
 
 
 export function WritePage() {
     const selectProjectUID = projectStore((state) => state.selectProjectUID)
+    const selectProjectTitle = projectStore((state) => state.selectProjectTitle)
     const selectedChatUID = projectStore((state) => state.selectedChatUID)
     const setSelectedChatUID = projectStore((state) => state.setSelectedChatUID)
     const selectManuscriptUID = projectStore((state) => state.selectManuscriptUID)
+    const navigate = useNavigate();
 
-    const [currentFile, setCurrentFile] = useState<string>("")
+    // const [currentFile, setCurrentFile] = useState<string>("")
     const [input, setInput] = useState('')
     const [files, setFiles] = useState<File[]>([])
     const [editorContent, setEditorContent] = useState<string>("")
@@ -88,21 +91,17 @@ export function WritePage() {
     ])
 
     const {data: manuscript, isLoading} = useApiQuery<Manuscript>(
-        ['manuscript', selectManuscriptUID],
+        ['get_manuscript', selectManuscriptUID],
         `/write/manuscript?uid=${selectManuscriptUID}`,
         {
             enabled: !!selectManuscriptUID,
-            refetchOnWindowFocus: false,
-            retry: false,
         }
     );
 
     useEffect(() => {
         if (!manuscript) {
-            setCurrentFile("未命名文件")
             setEditorContent("")
         } else {
-            setCurrentFile(manuscript.title)
             if (manuscript.content) {
                 setEditorContent(manuscript.content)
             }
@@ -125,6 +124,11 @@ export function WritePage() {
     const handleSave = () => {
         // Handle save functionality
         console.log("Saving changes...")
+    }
+
+    const handleNewChat = () => {
+        setSelectedChatUID('');
+        navigate(`/dashboard/write`);
     }
 
     // 新建对话请求
@@ -204,7 +208,7 @@ export function WritePage() {
                             if (data === "chat end") {
                                 isGettingAnswer = false
                                 aiMessageContent = ''
-                            }else {
+                            } else {
                                 setStatus(data);
                             }
                             break;
@@ -333,12 +337,20 @@ export function WritePage() {
                     <Breadcrumb>
                         <BreadcrumbList>
                             <BreadcrumbItem>
-                                <BreadcrumbLink href="#">主页</BreadcrumbLink>
+                                <BreadcrumbLink>主页</BreadcrumbLink>
                             </BreadcrumbItem>
                             <BreadcrumbSeparator/>
                             <BreadcrumbItem>
                                 <BreadcrumbPage>写作助手</BreadcrumbPage>
                             </BreadcrumbItem>
+                            {(selectProjectUID) && (
+                                <>
+                                    <BreadcrumbSeparator/>
+                                    <BreadcrumbItem>
+                                        <BreadcrumbPage>{selectProjectTitle}</BreadcrumbPage>
+                                    </BreadcrumbItem>
+                                </>
+                            )}
                         </BreadcrumbList>
                     </Breadcrumb>
                 </div>
@@ -354,7 +366,12 @@ export function WritePage() {
                             <span className="font-medium">AI写作助手</span>
                         </div>
                         <div>
-                            <Button variant="ghost" size="icon">
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                disabled={!selectProjectUID}
+                                onClick={handleNewChat}
+                            >
                                 <Plus className="h-5 w-5"/>
                             </Button>
                             <ChatHistory/>
@@ -469,7 +486,7 @@ export function WritePage() {
                         <header className="h-14 border-b flex items-center justify-between px-4">
                             <div className="flex items-center gap-2">
                                 <MessageSquare className="h-5 w-5"/>
-                                <span className="font-medium">写作编辑区 - {currentFile}</span>
+                                <span className="font-medium">写作编辑区 - {manuscript ? manuscript.title : "未选择文件"}</span>
                             </div>
                             <div className="flex items-center gap-2">
                                 <Button
