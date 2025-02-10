@@ -37,6 +37,7 @@ import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
+import {StatusCard} from "@/components/chat-status.tsx";
 
 
 export function WritePage() {
@@ -54,7 +55,7 @@ export function WritePage() {
     const [isGenerate, setIsGenerate] = useState<boolean>(false)
     const [isDraft, setIsDraft] = useState<boolean>(false)
 
-    const [status, setStatus] = useState<string>('')
+    const [status, setStatus] = useState<string[]>([])
     const [messages, setMessages] = useState<Message[]>([])
 
     const saveMutation = useApiMutation<string, void>(
@@ -134,7 +135,8 @@ export function WritePage() {
 
     const clearState = () => {
         setInput('');
-        setStatus('');
+        setStatus([]);
+        setIsGenerate(true)
     }
 
     // 历史对话加载
@@ -209,11 +211,11 @@ export function WritePage() {
                 if (eventType && data) {
                     switch (eventType) {
                         case 'status':
-                            if (data === "chat end") {
+                            if (data === "chat_end") {
                                 isGettingAnswer = false
                                 aiMessageContent = ''
                             } else {
-                                setStatus(data);
+                                setStatus(prevState => [...prevState, data]);
                             }
                             break;
                         case 'docs': {
@@ -287,6 +289,9 @@ export function WritePage() {
 
                             break;
                         }
+                        case 'write':{
+                            setEditorContent(prevState => `${prevState}${data}`)
+                        }
                     }
                 }
             };
@@ -298,7 +303,6 @@ export function WritePage() {
                         processSSEMessage(buffer);
                     }
                     setIsGenerate(false);
-                    setStatus('');
                     break;
                 }
 
@@ -322,7 +326,7 @@ export function WritePage() {
 
         } catch (error) {
             console.error('Error in chat:', error)
-            setStatus('发生错误，请重试');
+            setStatus(prevState => [...prevState, '发生错误，请重试']);
             // 如果是新建的对话失败了，清空消息
             if (!selectedChatUID) {
                 setMessages([]);
@@ -348,7 +352,7 @@ export function WritePage() {
     }, [messages, status]);
 
     return (
-        <div className="flex flex-col h-screen overflow-hidden">
+        <div className="flex flex-col h-screen bg-white">
             <header className="sticky top-0 flex shrink-0 items-center justify-between gap-2 border-b bg-background p-4">
                 <div className="flex items-center gap-2">
                     <SidebarTrigger className="-ml-1"/>
@@ -378,8 +382,8 @@ export function WritePage() {
 
             <div className="flex-1 grid overflow-hidden" style={{gridTemplateColumns: "1.5fr 3fr"}}>
                 {/* Chat Section */}
-                <div className="flex flex-col border-r h-full overflow-hidden bg-muted/30">
-                    <header className="h-14 border-b flex items-center justify-between px-4">
+                <div className="flex flex-col border-r h-full overflow-hidden">
+                    <header className="h-14 border-b flex items-center justify-between px-4 bg-muted/60">
                         <div className="flex items-center gap-2">
                             <Bot className="h-5 w-5"/>
                             <span className="font-medium">AI写作助手</span>
@@ -399,7 +403,8 @@ export function WritePage() {
 
                     <div
                         ref={chatRef}
-                        className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:w-2
+                        className="flex-1 overflow-y-auto
+                            [&::-webkit-scrollbar]:w-2
                             [&::-webkit-scrollbar-track]:bg-transparent
                             [&::-webkit-scrollbar-thumb]:bg-gray-200
                             [&::-webkit-scrollbar-thumb]:rounded-full
@@ -409,14 +414,24 @@ export function WritePage() {
                         {messages.map((message, index) => (
                             <div
                                 key={index}
-                                className={`mb-6 flex ${message.type === "ai" ? "justify-start" : "justify-end"}`}
+                                className={`mb-6 flex ${message.type === "human" ? 'justify-end' : 'justify-start'}`}
                             >
-                                <div className={`max-w-[90%] space-y-4`}>
+                                {message.type === 'ai' && (
+                                    <Avatar>
+                                        <AvatarFallback>AI</AvatarFallback>
+                                    </Avatar>
+                                )}
+                                <div className={`max-w-[90%] space-y-4 mt-4`}>
                                     {Array.isArray(message.content) ? (
                                         message.content.map((item, i) => {
                                             if ("modified" in item) {
                                                 return (
-                                                    <Accordion type="single" collapsible className="w-full" key={i}>
+                                                    <Accordion
+                                                        type="single"
+                                                        collapsible
+                                                        className="w-full px-4"
+                                                        key={i}
+                                                    >
                                                         <AccordionItem value={`item-${i}`}>
                                                             <AccordionTrigger className="text-sm">修改建议 {i + 1}</AccordionTrigger>
                                                             <AccordionContent>
@@ -467,7 +482,7 @@ export function WritePage() {
                                             } else if ('content' in item) {
                                                 return (
                                                     <div key={i}
-                                                         className="inline-block p-3 rounded-lg max-w-[90%] bg-white text-black rounded-tl-none"
+                                                         className="inline-block rounded-lg px-4 bg-white text-black rounded-tl-none"
                                                     >
                                                         <Markdown
                                                             className="prose prose-sm max-w-none dark:prose-invert"
@@ -482,10 +497,10 @@ export function WritePage() {
                                         })
                                     ) : (
                                         <div
-                                            className={`inline-block p-3 rounded-lg max-w-[90%] ${
+                                            className={`rounded-lg max-w-[97%] ${
                                                 message.type === 'human'
-                                                    ? 'bg-blue-500 text-white rounded-tr-none'
-                                                    : 'bg-white text-black rounded-tl-none'
+                                                    ? 'bg-blue-500 text-white rounded-tr-none p-3'
+                                                    : 'bg-white text-black rounded-tl-none px-3'
                                             }`}
                                         >
                                             <Markdown
@@ -498,18 +513,19 @@ export function WritePage() {
                                         </div>
                                     )}
                                 </div>
+                                {message.type === 'human' && (
+                                    <Avatar>
+                                        <AvatarFallback>U</AvatarFallback>
+                                    </Avatar>
+                                )}
                             </div>
                         ))}
                         {/* 显示状态信息 */}
-                        {(status) && (
-                            <div className="flex justify-center">
-                                            <span
-                                                className="inline-flex items-center px-4 py-2 rounded-full text-sm bg-gray-100 text-gray-700"
-                                            >
-                                                {status}
-                                            </span>
-                            </div>
+                        {(status.length > 0) && (
+                            <StatusCard isProcessing={isGenerate} items={status}/>
                         )}
+
+
                     </div>
 
                     <ChatInput
@@ -522,10 +538,10 @@ export function WritePage() {
                 </div>
 
                 {/* Editor Section */}
-                <div className="flex h-full overflow-hidden bg-background">
+                <div className="flex h-full overflow-hidden">
                     <FileTreeForm/>
                     <div className="flex-1 flex flex-col">
-                        <header className="h-14 border-b flex items-center justify-between px-4">
+                        <header className="h-14 border-b flex items-center justify-between px-4 bg-muted/60">
                             <div className="flex items-center gap-2">
                                 <MessageSquare className="h-5 w-5"/>
                                 <span className="font-medium">写作编辑区 - {manuscript ? manuscript.title : "未选择文件"}</span>

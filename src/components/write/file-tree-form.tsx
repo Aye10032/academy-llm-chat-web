@@ -134,8 +134,8 @@ export function FileTreeForm() {
                 <ChevronRight className="h-4 w-4 duration-500"/>
             </CollapsibleTrigger>
             <CollapsibleContent>
-                <div className="w-64 h-full flex flex-col bg-muted/10">
-                    <header className="h-14 border-b flex items-center justify-between px-4">
+                <div className="w-64 h-full flex flex-col">
+                    <header className="h-14 border-b flex items-center justify-between px-4 bg-muted/60">
                         <span className="font-medium">文件列表</span>
                         <div className="flex gap-2">
                             <Dialog open={isNewFileDialogOpen} onOpenChange={setIsNewFileDialogOpen}>

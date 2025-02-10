@@ -71,10 +71,17 @@ export function ChatInput({handleSubmit, input, setInput, files, setFiles}: Chat
     }
 
     return (
-        <form onSubmit={handleSubmit} className="border-t p-4">
+        <form onSubmit={handleSubmit} className="border-none p-4">
             <div className="space-y-4">
                 {files.length > 0 && (
-                    <div className="space-y-2 max-h-[120px] overflow-y-auto pr-2">
+                    <div className="space-y-2 max-h-[120px] overflow-y-auto
+                            [&::-webkit-scrollbar]:w-2
+                            [&::-webkit-scrollbar-track]:bg-transparent
+                            [&::-webkit-scrollbar-thumb]:bg-gray-200
+                            [&::-webkit-scrollbar-thumb]:rounded-full
+                            hover:[&::-webkit-scrollbar-thumb]:bg-gray-300
+                            transition-all duration-300 px-4"
+                    >
                         {files.map((file) => (
                             <FileUploadIndicator
                                 key={file.name}
@@ -104,7 +111,7 @@ export function ChatInput({handleSubmit, input, setInput, files, setFiles}: Chat
                         onChange={(e) => setInput(e.target.value)}
                         onKeyDown={handleKeyDown}
                         placeholder="输入消息或拖拽文件到此处..."
-                        className="min-h-[80px] pr-24 resize-none"
+                        className="min-h-[80px] pr-24 resize-none border-gray-400"
                         disabled={!selectedChatUID}
                     />
                     <div className="absolute bottom-3 right-3 flex gap-2">
