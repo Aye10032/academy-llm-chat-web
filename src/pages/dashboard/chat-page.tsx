@@ -1,3 +1,5 @@
+import {SimpleStatus} from "@/components/chat-status.tsx";
+
 declare global {
     interface Window {
         handleFootnoteClick?: (index: number) => void;
@@ -34,7 +36,7 @@ import remarkMath from 'remark-math'
 import 'katex/dist/katex.min.css'
 import React, {useState, useRef, useEffect, useCallback} from "react";
 import {kbStore} from "@/utils/self-state.tsx";
-import {useApiQuery, useSseQuery, useApiMutation} from "@/hooks/useApi.ts";
+import {useApiQuery, useSseQuery} from "@/hooks/useApi.ts";
 import {KnowledgeBase, Message, Document, UserProfile} from "@/utils/self_type.ts";
 import {ChevronDownIcon, Mic} from "lucide-react";
 import {DocumentSidebar} from "@/components/chat/document-sidebar.tsx";
@@ -47,7 +49,7 @@ export function ChatPage({user}: ChatPageProps) {
     const selectedKbUID = kbStore((state) => state.selectedKbUID)
     const setSelectedKbUID = kbStore((state) => state.setSelectedKbUID)
     const selectedChatUID = kbStore((state) => state.selectedChatUID)
-    const setSelectedChatUID = kbStore((state) => state.setSelectedChatUID)
+    const setCanCreateChat = kbStore((state) => state.setCanCreateChat)
 
     const [selectedKb, setSelectedKb] = useState<KnowledgeBase | null>(null);
 
@@ -76,12 +78,6 @@ export function ChatPage({user}: ChatPageProps) {
         {
             enabled: !!selectedChatUID,
         }
-    )
-
-    // 新建对话请求
-    const newChatMutation = useApiMutation<string, void>(
-        `/rag/new_chat/${selectedKb?.uid || ''}`,
-        'PATCH'
     )
 
     // 对话 SSE mutation
@@ -119,7 +115,7 @@ export function ChatPage({user}: ChatPageProps) {
 
     // 历史对话加载
     useEffect(() => {
-        // 当 selectedHistoryId 为空时，直接返回
+        // 当 selectedChatUID 为空时，直接返回
         if (!selectedChatUID) {
             setMessages([]);
             return;
@@ -135,6 +131,17 @@ export function ChatPage({user}: ChatPageProps) {
             setMessages(formattedMessages);
         }
     }, [selectedChatUID, chatHistoryData]);
+
+    //处理新建对话可用性
+    useEffect(() => {
+        console.log(messages.length)
+        console.log(selectedKbUID)
+        if (messages.length > 0 && selectedKbUID) {
+            setCanCreateChat(true)
+        } else {
+            setCanCreateChat(false)
+        }
+    }, [messages, setCanCreateChat, selectedKbUID]);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setInput(e.target.value);
@@ -154,20 +161,6 @@ export function ChatPage({user}: ChatPageProps) {
         clearState();
 
         try {
-            let currentChatUid = selectedChatUID;
-
-            // 如果没有选中的对话，先创建新对话
-            if (!selectedChatUID) {
-                try {
-                    currentChatUid = await newChatMutation.mutateAsync();
-                    setSelectedChatUID(currentChatUid);
-                } catch (error) {
-                    console.error('Failed to create new chat:', error);
-                    setStatus('创建新对话失败');
-                    return;
-                }
-            }
-
             // 设置消息
             setMessages(prev => [...prev, userMessage]);
 
@@ -498,11 +491,12 @@ export function ChatPage({user}: ChatPageProps) {
 
                         {/* 显示状态信息 */}
                         {(status || isGenerating) && (
-                            <div className="flex justify-center">
-                                <span className="inline-flex items-center px-4 py-2 rounded-full text-sm bg-gray-100 text-gray-700">
-                                    {isGenerating ? '正在生成回答...' : status}
-                                </span>
-                            </div>
+                            <SimpleStatus status={isGenerating ? '正在生成回答...' : status}/>
+                            // <div className="flex justify-center">
+                            //     <span className="inline-flex items-center px-4 py-2 rounded-full text-sm bg-gray-100 text-gray-700">
+                            //         {isGenerating ? '正在生成回答...' : status}
+                            //     </span>
+                            // </div>
                         )}
                     </div>
                 </div>

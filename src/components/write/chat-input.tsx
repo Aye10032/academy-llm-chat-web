@@ -3,6 +3,7 @@ import {Paperclip, Send} from "lucide-react"
 import {Button} from "@/components/ui/button"
 import {Textarea} from "@/components/ui/textarea"
 import {FileUploadIndicator} from "./file-upload-indicator"
+import {projectStore} from "@/utils/self-state.tsx";
 
 interface ChatInputProps {
     handleSubmit: (e: React.FormEvent) => Promise<void>;
@@ -13,6 +14,7 @@ interface ChatInputProps {
 }
 
 export function ChatInput({handleSubmit, input, setInput, files, setFiles}: ChatInputProps) {
+    const selectedChatUID = projectStore((state)=>state.selectedChatUID)
     const [isDragging, setIsDragging] = useState(false)
     const fileInputRef = useRef<HTMLInputElement>(null)
     const dragCounterRef = useRef(0)
@@ -103,6 +105,7 @@ export function ChatInput({handleSubmit, input, setInput, files, setFiles}: Chat
                         onKeyDown={handleKeyDown}
                         placeholder="输入消息或拖拽文件到此处..."
                         className="min-h-[80px] pr-24 resize-none"
+                        disabled={!selectedChatUID}
                     />
                     <div className="absolute bottom-3 right-3 flex gap-2">
                         <Button

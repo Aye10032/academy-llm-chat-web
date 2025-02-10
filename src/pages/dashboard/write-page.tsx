@@ -32,13 +32,17 @@ import {useApiMutation, useApiQuery, useSseQuery} from "@/hooks/useApi.ts";
 import {Manuscript, Message, Modify} from "@/utils/self_type.ts";
 import {useNavigate} from "react-router-dom";
 import {toast} from "@/hooks/use-toast.ts";
+import {Avatar, AvatarFallback} from "@/components/ui/avatar.tsx";
+import Markdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import remarkMath from "remark-math";
+import rehypeKatex from "rehype-katex";
 
 
 export function WritePage() {
     const selectProjectUID = projectStore((state) => state.selectProjectUID)
     const selectProjectTitle = projectStore((state) => state.selectProjectTitle)
     const selectedChatUID = projectStore((state) => state.selectedChatUID)
-    const setSelectedChatUID = projectStore((state) => state.setSelectedChatUID)
     const selectManuscriptUID = projectStore((state) => state.selectManuscriptUID)
     const navigate = useNavigate();
 
@@ -48,6 +52,7 @@ export function WritePage() {
     const [editorContent, setEditorContent] = useState<string>("")
     const [editorChanged, setEditorChanged] = useState<boolean>(false)
     const [isGenerate, setIsGenerate] = useState<boolean>(false)
+    const [isDraft, setIsDraft] = useState<boolean>(false)
 
     const [status, setStatus] = useState<string>('')
     const [messages, setMessages] = useState<Message[]>([])
@@ -71,6 +76,15 @@ export function WritePage() {
         'PATCH'
     )
 
+    // 获取历史对话请求
+    const {data: chatHistoryData} = useApiQuery<Message[]>(
+        ['chatHistory', selectedChatUID],
+        `/write/chat/${selectedChatUID}`,
+        {
+            enabled: !!selectedChatUID,
+        }
+    )
+
     // 对话 SSE mutation
     const chatMutation = useSseQuery<FormData>('/write/chat')
 
@@ -81,6 +95,7 @@ export function WritePage() {
             if (manuscript.content) {
                 setEditorContent(manuscript.content)
             }
+            setIsDraft(manuscript.is_draft);
         }
         setEditorChanged(false)
     }, [manuscript]);
@@ -104,9 +119,16 @@ export function WritePage() {
         })
     }
 
-    const handleNewChat = () => {
-        setSelectedChatUID('');
-        navigate(`/dashboard/write`);
+    const handleNewChat = async () => {
+        if (!selectProjectUID) return;
+
+        try {
+            const newChatUid = await newChatMutation.mutateAsync();
+            navigate(`/dashboard/write/${newChatUid}`);
+        } catch (error) {
+            console.error('Failed to create new chat:', error);
+            // 如果需要，这里可以添加错误提示
+        }
     }
 
 
@@ -114,6 +136,31 @@ export function WritePage() {
         setInput('');
         setStatus('');
     }
+
+    // 历史对话加载
+    useEffect(() => {
+        // 当 selectedHistoryId 为空时，直接返回
+        if (!selectedChatUID || !selectProjectUID) {
+            setMessages([]);
+            return;
+        }
+
+        // 如果有新的历史数据，则设置
+        if (chatHistoryData) {
+            const formattedMessages = chatHistoryData.map((msg, index) => ({
+                id: index.toString(),
+                type: msg.type,
+                content: msg.content
+            }));
+            setMessages(formattedMessages);
+        } else {
+            setMessages([{
+                id: '',
+                type: 'ai',
+                content: '你好！我是你的AI写作助手。请在右侧编辑区域输入你想要优化的文字，我会帮你改进它。'
+            }])
+        }
+    }, [selectedChatUID, chatHistoryData, selectProjectUID]);
 
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -129,20 +176,6 @@ export function WritePage() {
         clearState()
 
         try {
-            let newChatUID = selectedChatUID
-
-            // 如果没有选中的对话，先创建新对话
-            if (!selectedChatUID) {
-                try {
-                    newChatUID = await newChatMutation.mutateAsync();
-                    setSelectedChatUID(newChatUID)
-                } catch (error) {
-                    console.error('Failed to create new chat:', error);
-                    setStatus('创建新对话失败');
-                    return;
-                }
-            }
-
             // 设置消息
             setMessages(prev => [...prev, userMessage]);
 
@@ -299,6 +332,21 @@ export function WritePage() {
         }
     }
 
+    // 自动滚动到底部
+    const scrollToBottom = () => {
+        if (chatRef.current) {
+            const scrollContainer = chatRef.current;
+            scrollContainer.scrollTo({
+                top: scrollContainer.scrollHeight,
+                behavior: 'smooth'
+            });
+        }
+    };
+
+    useEffect(() => {
+        scrollToBottom();
+    }, [messages, status]);
+
     return (
         <div className="flex flex-col h-screen overflow-hidden">
             <header className="sticky top-0 flex shrink-0 items-center justify-between gap-2 border-b bg-background p-4">
@@ -328,7 +376,7 @@ export function WritePage() {
                 <MaterialsManager/>
             </header>
 
-            <div className="flex-1 grid overflow-hidden" style={{gridTemplateColumns: "1fr 3fr"}}>
+            <div className="flex-1 grid overflow-hidden" style={{gridTemplateColumns: "1.5fr 3fr"}}>
                 {/* Chat Section */}
                 <div className="flex flex-col border-r h-full overflow-hidden bg-muted/30">
                     <header className="h-14 border-b flex items-center justify-between px-4">
@@ -340,7 +388,7 @@ export function WritePage() {
                             <Button
                                 variant="ghost"
                                 size="icon"
-                                disabled={!selectProjectUID}
+                                disabled={!selectProjectUID || (messages.length <= 1 && !!selectedChatUID)}
                                 onClick={handleNewChat}
                             >
                                 <Plus className="h-5 w-5"/>
@@ -349,7 +397,15 @@ export function WritePage() {
                         </div>
                     </header>
 
-                    <div ref={chatRef} className="flex-1 overflow-y-auto p-4 space-y-4">
+                    <div
+                        ref={chatRef}
+                        className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:w-2
+                            [&::-webkit-scrollbar-track]:bg-transparent
+                            [&::-webkit-scrollbar-thumb]:bg-gray-200
+                            [&::-webkit-scrollbar-thumb]:rounded-full
+                            hover:[&::-webkit-scrollbar-thumb]:bg-gray-300
+                            transition-all duration-300 p-4 space-y-4"
+                    >
                         {messages.map((message, index) => (
                             <div
                                 key={index}
@@ -358,13 +414,6 @@ export function WritePage() {
                                 <div className={`max-w-[90%] space-y-4`}>
                                     {Array.isArray(message.content) ? (
                                         message.content.map((item, i) => {
-                                            if ('content' in item) {
-                                                return (
-                                                    <div key={i} className="bg-muted rounded-lg px-4 py-2">
-                                                        <pre className="whitespace-pre-wrap font-sans">{item.content}</pre>
-                                                    </div>
-                                                )
-                                            }
                                             if ("modified" in item) {
                                                 return (
                                                     <Accordion type="single" collapsible className="w-full" key={i}>
@@ -415,15 +464,37 @@ export function WritePage() {
                                                         </AccordionItem>
                                                     </Accordion>
                                                 )
+                                            } else if ('content' in item) {
+                                                return (
+                                                    <div key={i}
+                                                         className="inline-block p-3 rounded-lg max-w-[90%] bg-white text-black rounded-tl-none"
+                                                    >
+                                                        <Markdown
+                                                            className="prose prose-sm max-w-none dark:prose-invert"
+                                                            remarkPlugins={[remarkGfm, remarkMath]}
+                                                            rehypePlugins={[rehypeKatex]}
+                                                        >
+                                                            {item.content}
+                                                        </Markdown>
+                                                    </div>
+                                                )
                                             }
                                         })
                                     ) : (
                                         <div
-                                            className={`rounded-lg px-4 py-2 ${
-                                                message.type === "ai" ? "bg-muted" : "bg-primary text-primary-foreground"
+                                            className={`inline-block p-3 rounded-lg max-w-[90%] ${
+                                                message.type === 'human'
+                                                    ? 'bg-blue-500 text-white rounded-tr-none'
+                                                    : 'bg-white text-black rounded-tl-none'
                                             }`}
                                         >
-                                            <pre className="whitespace-pre-wrap font-sans">{message.content}</pre>
+                                            <Markdown
+                                                className="prose prose-sm max-w-none dark:prose-invert"
+                                                remarkPlugins={[remarkGfm, remarkMath]}
+                                                rehypePlugins={[rehypeKatex]}
+                                            >
+                                                {message.content}
+                                            </Markdown>
                                         </div>
                                     )}
                                 </div>
@@ -474,21 +545,41 @@ export function WritePage() {
                             </div>
                         </header>
 
-                        <div ref={editorRef} className="relative flex-1">
-                            <textarea
-                                value={editorContent}
-                                onChange={(e) => {
-                                    setEditorContent(e.target.value)
-                                    setEditorChanged(true)
-                                }}
-                                placeholder="在这里输入或粘贴你想要修改的文字..."
-                                className="w-full h-full p-4 resize-none focus:outline-none font-mono text-sm"
-                                style={{
-                                    lineHeight: "1.5",
-                                    tabSize: 2,
-                                }}
-                                disabled={!selectManuscriptUID || isLoading || isGenerate}
-                            />
+                        <div
+                            ref={editorRef}
+                            className="relative flex-1"
+                        >
+                            {(!isDraft) ? (
+                                <textarea
+                                    value={editorContent}
+                                    onChange={(e) => {
+                                        setEditorContent(e.target.value)
+                                        setEditorChanged(true)
+                                    }}
+                                    placeholder="在这里输入或粘贴你想要修改的文字..."
+                                    className="w-full h-full p-4 resize-none focus:outline-none font-light
+                                    [&::-webkit-scrollbar]:w-2
+                                    [&::-webkit-scrollbar-track]:bg-transparent
+                                    [&::-webkit-scrollbar-thumb]:bg-gray-200
+                                    [&::-webkit-scrollbar-thumb]:rounded-full
+                                    hover:[&::-webkit-scrollbar-thumb]:bg-gray-300
+                                    transition-all duration-300"
+                                    style={{
+                                        lineHeight: "2",
+                                        tabSize: 4,
+                                    }}
+                                    disabled={!selectManuscriptUID || isLoading || isGenerate}
+                                />
+                            ) : (
+                                <Markdown
+                                    className="p-4 leading-8"
+                                    remarkPlugins={[remarkGfm, remarkMath]}
+                                    rehypePlugins={[rehypeKatex]}
+                                    children={editorContent}
+                                >
+                                </Markdown>
+                            )}
+
                         </div>
                     </div>
                 </div>

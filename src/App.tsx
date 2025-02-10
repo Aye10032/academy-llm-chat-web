@@ -66,12 +66,7 @@ export default function App() {
                 element: <PublicRoute><ForgotPswPage/></PublicRoute>,
             },
             {
-                path: "/",
-                element: <Navigate to="/dashboard/chat" replace/>,
-            },
-            {
                 path: "/dashboard",
-                element: <ProtectedRoute><MainPage defaultPage="chat"/></ProtectedRoute>,
                 children: [
                     {
                         path: "chat",
@@ -90,6 +85,14 @@ export default function App() {
                         element: <ProtectedRoute><MainPage defaultPage="write"/></ProtectedRoute>,
                     }
                 ]
+            },
+            {
+                path: "/",
+                element: <Navigate to="/dashboard/chat" replace/>,
+            },
+            {
+                path: "/dashboard",
+                element: <Navigate to="/dashboard/chat" replace/>,
             },
             {
                 path: "*",

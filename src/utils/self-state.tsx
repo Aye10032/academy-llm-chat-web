@@ -3,15 +3,19 @@ import {create} from 'zustand'
 interface KbState {
     selectedKbUID: string
     selectedChatUID: string
+    canCreateChat: boolean
     setSelectedKbUID: (uid: string) => void
     setSelectedChatUID: (uid: string) => void
+    setCanCreateChat: (flag: boolean) => void
 }
 
 export const kbStore = create<KbState>((set) => ({
     selectedKbUID: '',
     selectedChatUID: '',
+    canCreateChat: true,
     setSelectedKbUID: (uid: string) => set({selectedKbUID: uid}),
-    setSelectedChatUID: (uid: string) => set({selectedChatUID: uid})
+    setSelectedChatUID: (uid: string) => set({selectedChatUID: uid}),
+    setCanCreateChat: (flag: boolean) => set({canCreateChat: flag})
 }));
 
 interface ProjectState {

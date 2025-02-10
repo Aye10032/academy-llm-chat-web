@@ -1,5 +1,5 @@
 import {Collapsible, CollapsibleContent, CollapsibleTrigger} from "@/components/ui/collapsible.tsx";
-import { ChevronRight, File, FolderOpen, Plus} from "lucide-react";
+import {ChevronRight, File, FolderOpen, Plus, RefreshCcw} from "lucide-react";
 import {Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger} from "@/components/ui/dialog.tsx";
 import {Button} from "@/components/ui/button.tsx";
 import {Input} from "@/components/ui/input.tsx";
@@ -104,9 +104,10 @@ export function FileTreeForm() {
             <div key={item.id} className="ml-4">
                 {item.type === "folder" ? (
                     <Collapsible>
-                        <CollapsibleTrigger className="flex items-center gap-1 hover:bg-muted/50 w-full p-1 rounded transition-colors group">
-                            <ChevronRight className="h-4 w-4 transition-transform duration-200 group-data-[state=open]:rotate-90" />
-                            <FolderOpen className="h-4 w-4" />
+                        <CollapsibleTrigger
+                            className="flex items-center gap-1 hover:bg-muted/50 w-full p-1 rounded transition-colors group">
+                            <ChevronRight className="h-4 w-4 transition-transform duration-200 group-data-[state=open]:rotate-90"/>
+                            <FolderOpen className="h-4 w-4"/>
                             <span>{item.name}</span>
                         </CollapsibleTrigger>
                         <CollapsibleContent>{item.children && renderFileTree(item.children)}</CollapsibleContent>
@@ -151,7 +152,7 @@ export function FileTreeForm() {
                                     <DialogHeader>
                                         <DialogTitle>新建文件</DialogTitle>
                                     </DialogHeader>
-                                    <DialogDescription>新建文件夹</DialogDescription>
+                                    <DialogDescription>创建新的待编辑文档</DialogDescription>
                                     <Input
                                         value={newFileName}
                                         onChange={(e) => setNewFileName(e.target.value)}
@@ -160,6 +161,12 @@ export function FileTreeForm() {
                                     <Button onClick={() => createNewFile()}>创建</Button>
                                 </DialogContent>
                             </Dialog>
+                            <Button
+                                variant="outline"
+                                size="icon"
+                            >
+                                <RefreshCcw className="h-4 w-4"/>
+                            </Button>
                         </div>
                     </header>
                     <div className="flex-1 overflow-auto p-2">{renderFileTree(fileStructure)}</div>

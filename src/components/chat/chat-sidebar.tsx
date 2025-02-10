@@ -19,7 +19,7 @@ import {
 import {Button} from "@/components/ui/button.tsx"
 import {EllipsisVertical, Search, Plus} from "lucide-react";
 import {Input} from "@/components/ui/input.tsx";
-import {useApiQuery} from "@/hooks/useApi.ts";
+import {useApiQuery, useApiMutation} from "@/hooks/useApi.ts";
 import {ChatSession} from "@/utils/self_type.ts";
 import {groupItemsByPeriod} from "@/utils/sort.ts";
 import {kbStore} from "@/utils/self-state";
@@ -29,6 +29,7 @@ export function ChatSidebar() {
     const selectedKbUID = kbStore((state) => state.selectedKbUID);
     const selectedChatUID = kbStore((state) => state.selectedChatUID);
     const setSelectedChatUID = kbStore((state) => state.setSelectedChatUID);
+    const canCreateChat = kbStore((state) => state.canCreateChat);
     const navigate = useNavigate();
     const {chatId} = useParams();
 
@@ -52,10 +53,24 @@ export function ChatSidebar() {
         }
     );
 
-    // 这里实际上是清空当前对话记录
-    const handleNewChat = () => {
-        setSelectedChatUID('');
-        navigate(`/dashboard/chat`);
+    // 新建对话请求
+    const newChatMutation = useApiMutation<string, void>(
+        `/rag/new_chat/${selectedKbUID || ''}`,
+        'PATCH'
+    )
+
+    // 修改handleNewChat函数
+    const handleNewChat = async () => {
+        if (!selectedKbUID) return;
+
+        try {
+            const newChatUid = await newChatMutation.mutateAsync();
+            // setSelectedChatUID(newChatUid);
+            navigate(`/dashboard/chat/${newChatUid}`);
+        } catch (error) {
+            console.error('Failed to create new chat:', error);
+            // 如果需要，这里可以添加错误提示
+        }
     }
 
     const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -97,7 +112,7 @@ export function ChatSidebar() {
                             size="icon"
                             variant="outline"
                             className="rounded-full"
-                            disabled={!selectedKbUID} // 如果没有选择知识库则禁用
+                            disabled={!canCreateChat}
                         >
                             <Plus className="h-4 w-4"/>
                             <span className="sr-only">新建聊天</span>
@@ -137,7 +152,7 @@ export function ChatSidebar() {
                         size="icon"
                         variant="outline"
                         className="rounded-full"
-                        disabled={!selectedKbUID} // 如果没有选择知识库则禁用
+                        disabled={!canCreateChat}
                     >
                         <Plus className="h-4 w-4"/>
                         <span className="sr-only">新建聊天</span>
@@ -160,7 +175,7 @@ export function ChatSidebar() {
                                 >
                                     <SidebarMenuButton asChild className="h-auto py-3 px-2 text-sm font-medium w-full text-left">
                                         <div className="flex items-center justify-between">
-                                            <Link 
+                                            <Link
                                                 to={`/dashboard/chat/${chat.chat_uid}`}
                                                 className="flex flex-col items-start gap-1 flex-grow min-w-0"
                                                 onClick={() => handleChatClick(chat)}
