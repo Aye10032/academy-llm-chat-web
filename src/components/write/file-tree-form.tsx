@@ -7,6 +7,7 @@ import {useState, useMemo} from "react";
 import {projectStore} from "@/utils/self-state.tsx";
 import {useApiMutation, useApiQuery} from "@/hooks/useApi.ts";
 import {Manuscript} from "@/utils/self_type.ts";
+import {Tooltip, TooltipContent, TooltipProvider, TooltipTrigger} from "@/components/ui/tooltip.tsx";
 
 interface FileStructure {
     id: string
@@ -23,7 +24,7 @@ export function FileTreeForm() {
     const setSelectManuscriptUID = projectStore((state) => state.setSelectManuscriptUID)
     const selectManuscriptUID = projectStore((state) => state.selectManuscriptUID)
 
-    const {data: manuscripts, isLoading} = useApiQuery<Manuscript[]>(
+    const {data: manuscripts, isLoading, refetch} = useApiQuery<Manuscript[]>(
         ['manuscripts', selectProjectUID],
         `/write/manuscripts?project_uid=${selectProjectUID}`,
         {
@@ -113,15 +114,24 @@ export function FileTreeForm() {
                         <CollapsibleContent>{item.children && renderFileTree(item.children)}</CollapsibleContent>
                     </Collapsible>
                 ) : (
-                    <button
-                        className={`flex items-center gap-1 hover:bg-muted/50 w-full p-1 rounded transition-colors ${
-                            selectManuscriptUID === item.manuscriptUid ? "bg-muted text-primary" : ""
-                        }`}
-                        onClick={() => item.manuscriptUid && setSelectManuscriptUID(item.manuscriptUid)}
-                    >
-                        <File className="h-4 w-4"/>
-                        <span>{item.name}</span>
-                    </button>
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <button
+                                    className={`flex items-center gap-1 hover:bg-muted/50 w-full p-1 rounded transition-colors ${
+                                        selectManuscriptUID === item.manuscriptUid ? "bg-muted text-primary" : ""
+                                    }`}
+                                    onClick={() => item.manuscriptUid && setSelectManuscriptUID(item.manuscriptUid)}
+                                >
+                                    <File className="h-4 w-4"/>
+                                    <span className="truncate max-w-[10em]">{item.name}</span>
+                                </button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                <p>{item.name}</p>
+                            </TooltipContent>
+                        </Tooltip>
+                    </TooltipProvider>
                 )}
             </div>
         ))
@@ -130,7 +140,15 @@ export function FileTreeForm() {
     return (
         <Collapsible className="relative border-r">
             <CollapsibleTrigger
-                className="absolute -right-10 bottom-2 -translate-y-1/2 z-10 flex h-8 w-8 items-center justify-center rounded-full border bg-background shadow-md transition-transform hover:bg-muted focus:outline-none focus:ring-2 focus:ring-muted focus:ring-offset-2  data-[state=open]:rotate-180">
+                className="absolute -right-10 bottom-2 -translate-y-1/2 z-10
+                flex h-8 w-8 items-center justify-center
+                rounded-full border bg-background
+                shadow-md transition-transform
+                hover:bg-muted focus:outline-none
+                focus:ring-2 focus:ring-muted
+                focus:ring-offset-2
+                data-[state=open]:rotate-180"
+            >
                 <ChevronRight className="h-4 w-4 duration-500"/>
             </CollapsibleTrigger>
             <CollapsibleContent>
@@ -141,7 +159,7 @@ export function FileTreeForm() {
                             <Dialog open={isNewFileDialogOpen} onOpenChange={setIsNewFileDialogOpen}>
                                 <DialogTrigger asChild>
                                     <Button
-                                        variant="outline"
+                                        variant="ghost"
                                         size="icon"
                                         disabled={!selectProjectUID || isLoading}
                                     >
@@ -162,8 +180,10 @@ export function FileTreeForm() {
                                 </DialogContent>
                             </Dialog>
                             <Button
-                                variant="outline"
+                                variant="ghost"
                                 size="icon"
+                                onClick={() => refetch()}
+                                disabled={!selectProjectUID || isLoading}
                             >
                                 <RefreshCcw className="h-4 w-4"/>
                             </Button>
