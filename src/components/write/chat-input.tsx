@@ -14,7 +14,7 @@ interface ChatInputProps {
 }
 
 export function ChatInput({handleSubmit, input, setInput, files, setFiles}: ChatInputProps) {
-    const selectedChatUID = projectStore((state)=>state.selectedChatUID)
+    const prChatUID = projectStore((state)=>state.prChatUID)
     const [isDragging, setIsDragging] = useState(false)
     const fileInputRef = useRef<HTMLInputElement>(null)
     const dragCounterRef = useRef(0)
@@ -112,7 +112,7 @@ export function ChatInput({handleSubmit, input, setInput, files, setFiles}: Chat
                         onKeyDown={handleKeyDown}
                         placeholder="输入消息或拖拽文件到此处..."
                         className="min-h-[80px] pr-24 resize-none border-gray-400"
-                        disabled={!selectedChatUID}
+                        disabled={!prChatUID}
                     />
                     <div className="absolute bottom-3 right-3 flex gap-2">
                         <Button

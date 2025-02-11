@@ -1,5 +1,5 @@
-import {LoginCredentials, TokenResponse, UserProfile} from './self_type'
-import {isTokenExpired, useAuth} from "@/utils/auth.ts";
+import {LoginCredentials, TokenResponse, UserProfile} from './self_type.tsx'
+import {isTokenExpired, useAuth} from "@/utils/auth.tsx";
 
 export const API_BASE_URL = '/api/v1'
 

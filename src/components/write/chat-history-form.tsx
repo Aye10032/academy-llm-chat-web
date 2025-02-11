@@ -4,8 +4,8 @@ import {Popover, PopoverContent, PopoverTrigger} from "@/components/ui/popover"
 import {History} from "lucide-react"
 import {format} from "date-fns"
 import {Tooltip, TooltipContent, TooltipProvider, TooltipTrigger} from "@/components/ui/tooltip"
-import {groupItemsByPeriod} from "@/utils/sort.ts";
-import {ChatSession} from "@/utils/self_type.ts";
+import {groupItemsByPeriod} from "@/utils/sort.tsx";
+import {ChatSession} from "@/utils/self_type.tsx";
 import {projectStore} from "@/utils/self-state.tsx";
 import {useApiQuery} from "@/hooks/useApi.ts";
 import {Link, useParams} from "react-router-dom";
@@ -13,22 +13,22 @@ import {useEffect} from "react";
 
 
 export function ChatHistory() {
-    const selectProjectUID = projectStore((state) => state.selectProjectUID)
-    const setSelectedChatUID = projectStore((state) => state.setSelectedChatUID)
+    const selectedPrUID = projectStore((state) => state.selectedPrUID)
+    const setPrChatUID = projectStore((state) => state.setPrChatUID)
     const {chatId} = useParams();
 
     useEffect(() => {
         if (chatId) {
-            setSelectedChatUID(chatId);
+            setPrChatUID(chatId);
         }
-    }, [chatId, setSelectedChatUID]);
+    }, [chatId, setPrChatUID]);
 
     // 获取聊天列表
     const {data: chats, isLoading} = useApiQuery<ChatSession[]>(
-        ['write', selectProjectUID],
-        `/write/chats?project_uid=${selectProjectUID}`,
+        ['write', selectedPrUID],
+        `/write/chats?project_uid=${selectedPrUID}`,
         {
-            enabled: !!selectProjectUID,
+            enabled: !!selectedPrUID,
         }
     );
     const groupedChats = chats ? groupItemsByPeriod(chats) : {};
@@ -64,7 +64,7 @@ export function ChatHistory() {
                                 {chats.map((chat) => (
                                     <button
                                         key={chat.chat_uid}
-                                        onClick={() => setSelectedChatUID(chat.chat_uid)}
+                                        onClick={() => setPrChatUID(chat.chat_uid)}
                                         className="w-full text-left px-2 py-1 rounded-md hover:bg-muted/50 transition-colors"
                                     >
                                         <Link to={`/dashboard/write/${chat.chat_uid}`}>

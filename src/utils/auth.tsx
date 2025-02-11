@@ -1,5 +1,5 @@
 import {create} from 'zustand'
-import {UserProfile} from './self_type'
+import {UserProfile} from './self_type.tsx'
 
 interface AuthState {
     token: string | null

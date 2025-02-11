@@ -17,7 +17,7 @@ export function NewProjectDialog(
         onNewProjectDialogOpen
     }: NewProjectDialogProps
 ) {
-    const setSelectProjectUID = projectStore((state) => state.setSelectProjectUID)
+    const setSelectedPrUID = projectStore((state) => state.setSelectedPrUID)
     const [projectName, setProjectName] = useState<string>("")
 
     const newProjectMutation = useApiMutation<string, void>(
@@ -30,7 +30,7 @@ export function NewProjectDialog(
         
         newProjectMutation.mutate(undefined, {
             onSuccess: (data) => {
-                setSelectProjectUID(data);
+                setSelectedPrUID(data);
                 onNewProjectDialogOpen(false);
                 setProjectName("");
             }

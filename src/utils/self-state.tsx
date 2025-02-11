@@ -1,46 +1,57 @@
 import {create} from 'zustand'
+import {WriteProject} from "@/utils/self_type.tsx";
 
 interface KbState {
     selectedKbUID: string
-    selectedChatUID: string
+    kbChatUID: string
     canCreateChat: boolean
     setSelectedKbUID: (uid: string) => void
-    setSelectedChatUID: (uid: string) => void
+    setKBChatUID: (uid: string) => void
     setCanCreateChat: (flag: boolean) => void
 }
 
 export const kbStore = create<KbState>((set) => ({
     selectedKbUID: '',
-    selectedChatUID: '',
+    kbChatUID: '',
     canCreateChat: true,
     setSelectedKbUID: (uid: string) => set({selectedKbUID: uid}),
-    setSelectedChatUID: (uid: string) => set({selectedChatUID: uid}),
+    setKBChatUID: (uid: string) => set({kbChatUID: uid}),
     setCanCreateChat: (flag: boolean) => set({canCreateChat: flag})
 }));
 
 interface ProjectState {
-    selectProjectUID: string
-    selectProjectTitle: string
-    selectedChatUID: string
-    selectManuscriptUID: string
-    setSelectProjectUID: (uid: string) => void
-    setSelectProjectTitle: (uid: string) => void
-    setSelectedChatUID: (uid: string) => void
-    setSelectManuscriptUID: (uid: string) => void
+    selectedPrUID: string
+    selectedPrTitle: string
+    selectedPrCheckpoint: string
+    prChatUID: string
+    selectedManuscriptUID: string
+    setSelectedPrUID: (uid: string) => void
+    setSelectedProject: (project: WriteProject) => void
+    setPrChatUID: (uid: string) => void
+    setSelectedManuscriptUID: (uid: string) => void
 }
 
 export const projectStore = create<ProjectState>((set) => ({
-    selectProjectUID: '',
-    selectProjectTitle: '',
-    selectedChatUID: '',
-    selectManuscriptUID: '',
-    setSelectProjectUID: (uid: string) => {
+    selectedPrUID: '',
+    selectedPrTitle: '',
+    selectedPrCheckpoint: '',
+    prChatUID: '',
+    selectedManuscriptUID: '',
+    setSelectedPrUID: (uid: string) => {
         if (!uid) {
-            set({selectProjectTitle: ''})
+            set({selectedPrUID: ''})
+            set({selectedPrTitle: ''})
+            set({selectedPrCheckpoint: ''})
+            set({selectedManuscriptUID: ''})
         }
-        set({selectProjectUID: uid})
+        set({selectedPrUID: uid})
     },
-    setSelectProjectTitle: (title: string) => set({selectProjectTitle: title}),
-    setSelectedChatUID: (uid: string) => set({selectedChatUID: uid}),
-    setSelectManuscriptUID: (uid: string) => set({selectManuscriptUID: uid})
+    setSelectedProject: (project: WriteProject) => {
+        set({selectedPrUID: project.uid})
+        set({selectedPrTitle: project.description})
+        set({selectedPrCheckpoint: project.graph_checkpoint})
+        set({selectedManuscriptUID: project.last_manuscript})
+    },
+    setPrChatUID: (uid: string) => set({prChatUID: uid}),
+    setSelectedManuscriptUID: (uid: string) => set({selectedManuscriptUID: uid})
 }))

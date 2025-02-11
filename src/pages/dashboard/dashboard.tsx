@@ -3,10 +3,10 @@ import {
     SidebarInset,
     SidebarProvider,
 } from "@/components/ui/sidebar"
-import {useAuth} from "@/utils/auth.ts";
+import {useAuth} from "@/utils/auth.tsx";
 import {useQuery} from "@tanstack/react-query";
-import {UserProfile} from "@/utils/self_type.ts";
-import {authApi} from "@/utils/api.ts";
+import {UserProfile} from "@/utils/self_type.tsx";
+import {authApi} from "@/utils/api.tsx";
 import {useNavigate} from "react-router-dom";
 import React, {useState, useCallback} from "react";
 import {ChatPage} from "@/pages/dashboard/chat-page.tsx";

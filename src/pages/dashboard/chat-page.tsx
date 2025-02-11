@@ -37,7 +37,7 @@ import 'katex/dist/katex.min.css'
 import React, {useState, useRef, useEffect, useCallback} from "react";
 import {kbStore} from "@/utils/self-state.tsx";
 import {useApiQuery, useSseQuery} from "@/hooks/useApi.ts";
-import {KnowledgeBase, Message, Document, UserProfile} from "@/utils/self_type.ts";
+import {KnowledgeBase, Message, Document, UserProfile} from "@/utils/self_type.tsx";
 import {ChevronDownIcon, Mic} from "lucide-react";
 import {DocumentSidebar} from "@/components/chat/document-sidebar.tsx";
 
@@ -47,8 +47,8 @@ interface ChatPageProps {
 
 export function ChatPage({user}: ChatPageProps) {
     const selectedKbUID = kbStore((state) => state.selectedKbUID)
+    const kbChatUID = kbStore((state) => state.kbChatUID)
     const setSelectedKbUID = kbStore((state) => state.setSelectedKbUID)
-    const selectedChatUID = kbStore((state) => state.selectedChatUID)
     const setCanCreateChat = kbStore((state) => state.setCanCreateChat)
 
     const [selectedKb, setSelectedKb] = useState<KnowledgeBase | null>(null);
@@ -73,10 +73,10 @@ export function ChatPage({user}: ChatPageProps) {
 
     // 获取历史对话请求
     const {data: chatHistoryData} = useApiQuery<Message[]>(
-        ['chatHistory', selectedChatUID],
-        `/rag/chat/${selectedChatUID}`,
+        ['chatHistory', kbChatUID],
+        `/rag/chat/${kbChatUID}`,
         {
-            enabled: !!selectedChatUID,
+            enabled: !!kbChatUID,
         }
     )
 
@@ -116,7 +116,7 @@ export function ChatPage({user}: ChatPageProps) {
     // 历史对话加载
     useEffect(() => {
         // 当 selectedChatUID 为空时，直接返回
-        if (!selectedChatUID) {
+        if (!kbChatUID) {
             setMessages([]);
             return;
         }
@@ -130,7 +130,7 @@ export function ChatPage({user}: ChatPageProps) {
             }));
             setMessages(formattedMessages);
         }
-    }, [selectedChatUID, chatHistoryData]);
+    }, [kbChatUID, chatHistoryData]);
 
     //处理新建对话可用性
     useEffect(() => {
@@ -166,7 +166,7 @@ export function ChatPage({user}: ChatPageProps) {
 
             const formData = new FormData()
             formData.append('knowledge_base_uid', selectedKbUID)
-            formData.append('chat_uid', selectedChatUID)
+            formData.append('chat_uid', kbChatUID)
             formData.append('message', input)
 
             // 发送聊天请求
@@ -281,7 +281,7 @@ export function ChatPage({user}: ChatPageProps) {
             console.error('Error:', error);
             setStatus('发生错误，请重试');
             // 如果是新建的对话失败了，清空消息
-            if (!selectedChatUID) {
+            if (!kbChatUID) {
                 setMessages([]);
             }
         } finally {
@@ -427,76 +427,73 @@ export function ChatPage({user}: ChatPageProps) {
                 <div className="max-w-3xl mx-auto px-4">
                     <div className="space-y-6 py-8">
                         {messages.map((message, index) => (
-                            <div
-                                key={index}
-                                className={`flex items-start gap-3 ${
-                                    message.type === 'human' ? 'flex-row-reverse' : 'flex-row'
-                                }`}
-                            >
-                                <Avatar className={`flex-shrink-0 ${
-                                    message.type === 'human' ? 'ml-2' : 'mr-2'
-                                }`}>
-                                    <AvatarFallback>
-                                        {message.type === 'human' ? 'U' : 'AI'}
-                                    </AvatarFallback>
-                                </Avatar>
+                            (!Array.isArray(message.content)) && (
                                 <div
-                                    className={`inline-block p-3 rounded-lg max-w-[80%] ${
-                                        message.type === 'human'
-                                            ? 'bg-blue-500 text-white rounded-tr-none'
-                                            : 'bg-white text-black rounded-tl-none'
+                                    key={index}
+                                    className={`flex items-start gap-3 ${
+                                        message.type === 'human' ? 'flex-row-reverse' : 'flex-row'
                                     }`}
                                 >
-                                    <Markdown
-                                        className="prose prose-sm max-w-none dark:prose-invert"
-                                        components={{
-                                            code(props) {
-                                                const {children, className, ...rest} = props
-                                                const match = /language-(\w+)/.exec(className || '')
-                                                return match ? (
-                                                    <SyntaxHighlighter
-                                                        {...rest}
-                                                        PreTag="div"
-                                                        children={String(children).replace(/\n$/, '')}
-                                                        language={match[1]}
-                                                        style={darcula}
-                                                    />
-                                                ) : (
-                                                    <code {...rest} className={className}>
-                                                        {children}
-                                                    </code>
-                                                )
-                                            },
-                                            p(props) {
-                                                return <ProcessContent as="p">{props.children}</ProcessContent>;
-                                            },
-                                            li(props) {
-                                                return <ProcessContent as="li">{props.children}</ProcessContent>;
-                                            },
-                                            strong(props) {
-                                                return <ProcessContent as="strong">{props.children}</ProcessContent>;
-                                            },
-                                            em(props) {
-                                                return <ProcessContent as="em">{props.children}</ProcessContent>;
-                                            }
-                                        }}
-                                        remarkPlugins={[remarkGfm, remarkMath]}
-                                        rehypePlugins={[rehypeKatex]}
+                                    <Avatar className={`flex-shrink-0 ${
+                                        message.type === 'human' ? 'ml-2' : 'mr-2'
+                                    }`}>
+                                        <AvatarFallback>
+                                            {message.type === 'human' ? 'U' : 'AI'}
+                                        </AvatarFallback>
+                                    </Avatar>
+                                    <div
+                                        className={`inline-block p-3 rounded-lg max-w-[80%] ${
+                                            message.type === 'human'
+                                                ? 'bg-blue-500 text-white rounded-tr-none'
+                                                : 'bg-white text-black rounded-tl-none'
+                                        }`}
                                     >
-                                        {message.content}
-                                    </Markdown>
+                                        <Markdown
+                                            className="prose prose-sm max-w-none dark:prose-invert"
+                                            components={{
+                                                code(props) {
+                                                    const {children, className, ...rest} = props
+                                                    const match = /language-(\w+)/.exec(className || '')
+                                                    return match ? (
+                                                        <SyntaxHighlighter
+                                                            {...rest}
+                                                            PreTag="div"
+                                                            children={String(children).replace(/\n$/, '')}
+                                                            language={match[1]}
+                                                            style={darcula}
+                                                        />
+                                                    ) : (
+                                                        <code {...rest} className={className}>
+                                                            {children}
+                                                        </code>
+                                                    )
+                                                },
+                                                p(props) {
+                                                    return <ProcessContent as="p">{props.children}</ProcessContent>;
+                                                },
+                                                li(props) {
+                                                    return <ProcessContent as="li">{props.children}</ProcessContent>;
+                                                },
+                                                strong(props) {
+                                                    return <ProcessContent as="strong">{props.children}</ProcessContent>;
+                                                },
+                                                em(props) {
+                                                    return <ProcessContent as="em">{props.children}</ProcessContent>;
+                                                }
+                                            }}
+                                            remarkPlugins={[remarkGfm, remarkMath]}
+                                            rehypePlugins={[rehypeKatex]}
+                                        >
+                                            {message.content}
+                                        </Markdown>
+                                    </div>
                                 </div>
-                            </div>
+                            )
                         ))}
 
                         {/* 显示状态信息 */}
                         {(status || isGenerating) && (
                             <SimpleStatus status={isGenerating ? '正在生成回答...' : status}/>
-                            // <div className="flex justify-center">
-                            //     <span className="inline-flex items-center px-4 py-2 rounded-full text-sm bg-gray-100 text-gray-700">
-                            //         {isGenerating ? '正在生成回答...' : status}
-                            //     </span>
-                            // </div>
                         )}
                     </div>
                 </div>

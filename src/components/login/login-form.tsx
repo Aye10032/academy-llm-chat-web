@@ -11,8 +11,8 @@ import {
 } from "@/components/ui/card.tsx"
 import {EyeIcon, EyeOffIcon} from 'lucide-react'
 import {Link, useNavigate} from "react-router-dom"
-import {useAuth} from '@/utils/auth.ts'
-import {authApi} from "@/utils/api.ts";
+import {useAuth} from '@/utils/auth.tsx'
+import {authApi} from "@/utils/api.tsx";
 
 export default function LoginForm() {
     const [showPassword, setShowPassword] = useState(false)

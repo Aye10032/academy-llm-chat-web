@@ -1,7 +1,7 @@
 import {useQuery, useMutation, UseQueryOptions, UseMutationOptions} from '@tanstack/react-query'
-import {apiClient} from '@/utils/api'
-import {useAuth} from "@/utils/auth";
-import {API_BASE_URL} from "@/utils/api";
+import {apiClient} from '@/utils/api.tsx'
+import {useAuth} from "@/utils/auth.tsx";
+import {API_BASE_URL} from "@/utils/api.tsx";
 
 // 用于 GET 请求的 hook
 export function useApiQuery<T>(
@@ -45,11 +45,18 @@ export function useSseQuery<TVariables>(
                 throw new Error('No authentication token');
             }
 
+            const headers: Record<string, string> = {
+                'Authorization': `Bearer ${token}`
+            };
+            
+            // 只有当不是 FormData 时才设置 Content-Type
+            if (!(variables instanceof FormData)) {
+                headers['Content-Type'] = 'application/json';
+            }
+
             const response = await fetch(`${API_BASE_URL}${endpoint}`, {
                 method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                },
+                headers,
                 body: variables instanceof FormData ? variables : JSON.stringify(variables)
             });
 

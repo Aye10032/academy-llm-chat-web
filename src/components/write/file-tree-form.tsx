@@ -6,7 +6,7 @@ import {Input} from "@/components/ui/input.tsx";
 import {useState, useMemo} from "react";
 import {projectStore} from "@/utils/self-state.tsx";
 import {useApiMutation, useApiQuery} from "@/hooks/useApi.ts";
-import {Manuscript} from "@/utils/self_type.ts";
+import {Manuscript} from "@/utils/self_type.tsx";
 import {Tooltip, TooltipContent, TooltipProvider, TooltipTrigger} from "@/components/ui/tooltip.tsx";
 
 interface FileStructure {
@@ -20,15 +20,15 @@ interface FileStructure {
 export function FileTreeForm() {
     const [newFileName, setNewFileName] = useState<string>('')
     const [isNewFileDialogOpen, setIsNewFileDialogOpen] = useState<boolean>(false)
-    const selectProjectUID = projectStore((state) => state.selectProjectUID)
-    const setSelectManuscriptUID = projectStore((state) => state.setSelectManuscriptUID)
-    const selectManuscriptUID = projectStore((state) => state.selectManuscriptUID)
+    const selectedPrUID = projectStore((state) => state.selectedPrUID)
+    const setSelectedManuscriptUID = projectStore((state) => state.setSelectedManuscriptUID)
+    const selectedManuscriptUID = projectStore((state) => state.selectedManuscriptUID)
 
     const {data: manuscripts, isLoading, refetch} = useApiQuery<Manuscript[]>(
-        ['manuscripts', selectProjectUID],
-        `/write/manuscripts?project_uid=${selectProjectUID}`,
+        ['manuscripts', selectedPrUID],
+        `/write/manuscripts?project_uid=${selectedPrUID}`,
         {
-            enabled: !!selectProjectUID,
+            enabled: !!selectedPrUID,
             refetchOnWindowFocus: false,
             retry: false,
         }
@@ -36,7 +36,7 @@ export function FileTreeForm() {
 
     // 构建文件树结构
     const fileStructure = useMemo<FileStructure[]>(() => {
-        if (!selectProjectUID) return [];
+        if (!selectedPrUID) return [];
 
         console.log(manuscripts)
         if (!manuscripts) return [];
@@ -81,10 +81,10 @@ export function FileTreeForm() {
             });
         }
         return folders;
-    }, [manuscripts, selectProjectUID]);
+    }, [manuscripts, selectedPrUID]);
 
     const newFileMutation = useApiMutation<string, void>(
-        `/write/new_manuscript?project_uid=${selectProjectUID}&title=${newFileName}`,
+        `/write/new_manuscript?project_uid=${selectedPrUID}&title=${newFileName}`,
         'PATCH'
     );
 
@@ -93,7 +93,7 @@ export function FileTreeForm() {
 
         newFileMutation.mutate(undefined, {
             onSuccess: (data) => {
-                setSelectManuscriptUID(data);
+                setSelectedManuscriptUID(data);
                 setIsNewFileDialogOpen(false)
                 setNewFileName("");
             }
@@ -119,9 +119,9 @@ export function FileTreeForm() {
                             <TooltipTrigger asChild>
                                 <button
                                     className={`flex items-center gap-1 hover:bg-muted/50 w-full p-1 rounded transition-colors ${
-                                        selectManuscriptUID === item.manuscriptUid ? "bg-muted text-primary" : ""
+                                        selectedManuscriptUID === item.manuscriptUid ? "bg-muted text-primary" : ""
                                     }`}
-                                    onClick={() => item.manuscriptUid && setSelectManuscriptUID(item.manuscriptUid)}
+                                    onClick={() => item.manuscriptUid && setSelectedManuscriptUID(item.manuscriptUid)}
                                 >
                                     <File className="h-4 w-4"/>
                                     <span className="truncate max-w-[10em]">{item.name}</span>
@@ -161,7 +161,7 @@ export function FileTreeForm() {
                                     <Button
                                         variant="ghost"
                                         size="icon"
-                                        disabled={!selectProjectUID || isLoading}
+                                        disabled={!selectedPrUID || isLoading}
                                     >
                                         <Plus className="h-4 w-4"/>
                                     </Button>
@@ -183,7 +183,7 @@ export function FileTreeForm() {
                                 variant="ghost"
                                 size="icon"
                                 onClick={() => refetch()}
-                                disabled={!selectProjectUID || isLoading}
+                                disabled={!selectedPrUID || isLoading}
                             >
                                 <RefreshCcw className="h-4 w-4"/>
                             </Button>

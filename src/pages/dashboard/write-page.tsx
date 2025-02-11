@@ -29,7 +29,7 @@ import {ChatHistory} from "@/components/write/chat-history-form.tsx";
 import {FileTreeForm} from "@/components/write/file-tree-form.tsx";
 import {projectStore} from "@/utils/self-state.tsx";
 import {useApiMutation, useApiQuery, useSseQuery} from "@/hooks/useApi.ts";
-import {Manuscript, Message, Modify} from "@/utils/self_type.ts";
+import {Manuscript, Message, Modify} from "@/utils/self_type.tsx";
 import {useNavigate} from "react-router-dom";
 import {toast} from "@/hooks/use-toast.ts";
 import {Avatar, AvatarFallback} from "@/components/ui/avatar.tsx";
@@ -41,10 +41,10 @@ import {StatusCard} from "@/components/chat-status.tsx";
 
 
 export function WritePage() {
-    const selectProjectUID = projectStore((state) => state.selectProjectUID)
-    const selectProjectTitle = projectStore((state) => state.selectProjectTitle)
-    const selectedChatUID = projectStore((state) => state.selectedChatUID)
-    const selectManuscriptUID = projectStore((state) => state.selectManuscriptUID)
+    const selectedPrUID = projectStore((state) => state.selectedPrUID)
+    const selectedPrTitle = projectStore((state) => state.selectedPrTitle)
+    const prChatUID = projectStore((state) => state.prChatUID)
+    const selectedManuscriptUID = projectStore((state) => state.selectedManuscriptUID)
     const navigate = useNavigate();
 
     // const [currentFile, setCurrentFile] = useState<string>("")
@@ -59,30 +59,30 @@ export function WritePage() {
     const [messages, setMessages] = useState<Message[]>([])
 
     const saveMutation = useApiMutation<string, void>(
-        `/write/save_manuscript?uid=${selectManuscriptUID}&content=${editorContent}`,
+        `/write/save_manuscript?uid=${selectedManuscriptUID}&content=${editorContent}`,
         'POST'
     )
 
     const {data: manuscript, isLoading} = useApiQuery<Manuscript>(
-        ['get_manuscript', selectManuscriptUID],
-        `/write/manuscript?uid=${selectManuscriptUID}`,
+        ['get_manuscript', selectedManuscriptUID],
+        `/write/manuscript?uid=${selectedManuscriptUID}`,
         {
-            enabled: !!selectManuscriptUID,
+            enabled: !!selectedManuscriptUID,
         }
     );
 
     // 新建对话请求
     const newChatMutation = useApiMutation<string, void>(
-        `/write/new_chat?project_uid=${selectProjectUID}`,
+        `/write/new_chat?project_uid=${selectedPrUID}`,
         'PATCH'
     )
 
     // 获取历史对话请求
     const {data: chatHistoryData} = useApiQuery<Message[]>(
-        ['chatHistory', selectedChatUID],
-        `/write/chat/${selectedChatUID}`,
+        ['chatHistory', prChatUID],
+        `/write/chat/${prChatUID}`,
         {
-            enabled: !!selectedChatUID,
+            enabled: !!prChatUID,
         }
     )
 
@@ -121,7 +121,7 @@ export function WritePage() {
     }
 
     const handleNewChat = async () => {
-        if (!selectProjectUID) return;
+        if (!selectedPrUID) return;
 
         try {
             const newChatUid = await newChatMutation.mutateAsync();
@@ -142,7 +142,7 @@ export function WritePage() {
     // 历史对话加载
     useEffect(() => {
         // 当 selectedHistoryId 为空时，直接返回
-        if (!selectedChatUID || !selectProjectUID) {
+        if (!selectedPrUID || !prChatUID) {
             setMessages([]);
             return;
         }
@@ -155,19 +155,13 @@ export function WritePage() {
                 content: msg.content
             }));
             setMessages(formattedMessages);
-        } else {
-            setMessages([{
-                id: '',
-                type: 'ai',
-                content: '你好！我是你的AI写作助手。请在右侧编辑区域输入你想要优化的文字，我会帮你改进它。'
-            }])
         }
-    }, [selectedChatUID, chatHistoryData, selectProjectUID]);
+    }, [selectedPrUID, chatHistoryData, prChatUID]);
 
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
-        if (!input.trim() || isLoading || !selectProjectUID) return;
+        if (!input.trim() || isLoading || !selectedPrUID) return;
 
         const userMessage: Message = {
             id: Date.now().toString(),
@@ -182,8 +176,8 @@ export function WritePage() {
             setMessages(prev => [...prev, userMessage]);
 
             const formData = new FormData()
-            formData.append('project_uid', selectProjectUID)
-            formData.append('chat_uid', selectedChatUID)
+            formData.append('project_uid', selectedPrUID)
+            formData.append('chat_uid', selectedPrUID)
             formData.append('message', input)
             formData.append('current_text', editorContent)
 
@@ -328,7 +322,7 @@ export function WritePage() {
             console.error('Error in chat:', error)
             setStatus(prevState => [...prevState, '发生错误，请重试']);
             // 如果是新建的对话失败了，清空消息
-            if (!selectedChatUID) {
+            if (!prChatUID) {
                 setMessages([]);
             }
         } finally {
@@ -366,11 +360,11 @@ export function WritePage() {
                             <BreadcrumbItem>
                                 <BreadcrumbPage>写作助手</BreadcrumbPage>
                             </BreadcrumbItem>
-                            {(selectProjectUID) && (
+                            {(selectedPrUID) && (
                                 <>
                                     <BreadcrumbSeparator/>
                                     <BreadcrumbItem>
-                                        <BreadcrumbPage>{selectProjectTitle}</BreadcrumbPage>
+                                        <BreadcrumbPage>{selectedPrTitle}</BreadcrumbPage>
                                     </BreadcrumbItem>
                                 </>
                             )}
@@ -392,7 +386,7 @@ export function WritePage() {
                             <Button
                                 variant="ghost"
                                 size="icon"
-                                disabled={!selectProjectUID || (messages.length <= 1 && !!selectedChatUID)}
+                                disabled={!selectedPrUID || (messages.length <= 1 && !!prChatUID)}
                                 onClick={handleNewChat}
                             >
                                 <Plus className="h-5 w-5"/>
@@ -584,7 +578,7 @@ export function WritePage() {
                                         lineHeight: "2",
                                         tabSize: 4,
                                     }}
-                                    disabled={!selectManuscriptUID || isLoading || isGenerate}
+                                    disabled={!selectedManuscriptUID || isLoading || isGenerate}
                                 />
                             ) : (
                                 <Markdown
@@ -601,7 +595,7 @@ export function WritePage() {
                 </div>
             </div>
 
-            <FloatingActions onSave={handleSave} disabled={!selectManuscriptUID || isLoading || isGenerate || !editorChanged}/>
+            <FloatingActions onSave={handleSave} disabled={!selectedManuscriptUID || isLoading || isGenerate || !editorChanged}/>
         </div>
     )
 }

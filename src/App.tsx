@@ -1,6 +1,6 @@
 import React, {useEffect} from 'react'
 import {createBrowserRouter, RouterProvider, Navigate} from 'react-router-dom'
-import {useAuth, isTokenExpired} from '@/utils/auth'
+import {useAuth, isTokenExpired} from '@/utils/auth.tsx'
 import {QueryClient, QueryClientProvider} from '@tanstack/react-query'
 import {LoginPage} from "@/pages/login/login-page.tsx";
 import {RegisterPage} from "@/pages/login/register-page.tsx";

@@ -5,7 +5,7 @@ import {ChevronLeft, ChevronRight, Globe} from 'lucide-react'
 import {FaRegFilePdf} from "react-icons/fa";
 import {Button} from "@/components/ui/button"
 import {ScrollArea} from "@/components/ui/scroll-area"
-import {Document} from "@/utils/self_type.ts";
+import {Document} from "@/utils/self_type.tsx";
 import {PDFPreview} from "@/components/pdf-viewer.tsx";
 
 interface DocumentSidebarProps {

@@ -8,8 +8,8 @@ import {Input} from "@/components/ui/input.tsx";
 import React, {useState} from "react";
 import {NewProjectDialog} from "@/components/write/new-project-form.tsx";
 import {useApiQuery} from "@/hooks/useApi.ts";
-import {WriteProject} from "@/utils/self_type.ts";
-import {groupItemsByPeriod} from "@/utils/sort.ts";
+import {WriteProject} from "@/utils/self_type.tsx";
+import {groupItemsByPeriod} from "@/utils/sort.tsx";
 import {projectStore} from "@/utils/self-state.tsx";
 import {format} from "date-fns";
 import {zhCN} from "date-fns/locale";
@@ -24,10 +24,8 @@ import {Button} from "@/components/ui/button.tsx";
 // ]
 
 export function WriteSidebar() {
-    const selectProjectUID = projectStore((state) => state.selectProjectUID)
-    const setSelectProjectUID = projectStore((state) => state.setSelectProjectUID)
-    const setSelectProjectTitle = projectStore((state) => state.setSelectProjectTitle)
-    const setSelectManuscriptUID = projectStore((state) => state.setSelectManuscriptUID)
+    const selectedPrUID = projectStore((state) => state.selectedPrUID)
+    const setSelectedProject = projectStore((state) => state.setSelectedProject)
 
     const [isNewProjectDialogOpen, setIsNewProjectDialogOpen] = useState<boolean>(false)
     const [hoveredProject, setHoveredProject] = useState<string | null>(null);
@@ -47,9 +45,7 @@ export function WriteSidebar() {
     }
 
     const handleProjectClick = (project: WriteProject) => {
-        setSelectProjectUID(project.uid);
-        setSelectProjectTitle(project.description);
-        setSelectManuscriptUID(project.last_manuscript);
+        setSelectedProject(project)
         setHoveredProject(null); // 清除悬停状态
         setOpenMenuId(null);  // 关闭下拉菜单
     };
@@ -121,7 +117,7 @@ export function WriteSidebar() {
                                     onMouseEnter={() => setHoveredProject(project.uid)}
                                     onMouseLeave={() => setHoveredProject(null)}
                                     onClick={() => handleProjectClick(project)}
-                                    className={project.uid === selectProjectUID ? 'bg-accent' : ''}
+                                    className={project.uid === selectedPrUID ? 'bg-accent' : ''}
                                 >
                                     <SidebarMenuButton asChild className="h-auto py-3 px-2 text-sm font-medium w-full text-left">
                                         <div className="flex items-center justify-between">

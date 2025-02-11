@@ -16,7 +16,7 @@ import llmLogo from "@/assets/llm-logo1.svg"
 import {ChatSidebar} from "@/components/chat/chat-sidebar.tsx";
 import {WriteSidebar} from "@/components/write/write-sidebar.tsx";
 import * as React from "react";
-import {UserProfile} from "@/utils/self_type.ts";
+import {UserProfile} from "@/utils/self_type.tsx";
 
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
     user: UserProfile

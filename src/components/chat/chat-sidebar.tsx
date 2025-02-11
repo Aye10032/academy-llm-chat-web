@@ -20,15 +20,15 @@ import {Button} from "@/components/ui/button.tsx"
 import {EllipsisVertical, Search, Plus} from "lucide-react";
 import {Input} from "@/components/ui/input.tsx";
 import {useApiQuery, useApiMutation} from "@/hooks/useApi.ts";
-import {ChatSession} from "@/utils/self_type.ts";
-import {groupItemsByPeriod} from "@/utils/sort.ts";
+import {ChatSession} from "@/utils/self_type.tsx";
+import {groupItemsByPeriod} from "@/utils/sort.tsx";
 import {kbStore} from "@/utils/self-state";
 import {Link, useNavigate, useParams} from "react-router-dom";
 
 export function ChatSidebar() {
     const selectedKbUID = kbStore((state) => state.selectedKbUID);
-    const selectedChatUID = kbStore((state) => state.selectedChatUID);
-    const setSelectedChatUID = kbStore((state) => state.setSelectedChatUID);
+    const kbChatUID = kbStore((state) => state.kbChatUID);
+    const setKBChatUID = kbStore((state) => state.setKBChatUID);
     const canCreateChat = kbStore((state) => state.canCreateChat);
     const navigate = useNavigate();
     const {chatId} = useParams();
@@ -40,9 +40,9 @@ export function ChatSidebar() {
     // 当URL中的chatId变化时，更新selectedChatUID
     useEffect(() => {
         if (chatId) {
-            setSelectedChatUID(chatId);
+            setKBChatUID(chatId);
         }
-    }, [chatId, setSelectedChatUID]);
+    }, [chatId, setKBChatUID]);
 
     // 获取聊天列表
     const {data: chats, isLoading} = useApiQuery<ChatSession[]>(
@@ -85,7 +85,7 @@ export function ChatSidebar() {
     }
 
     const handleChatClick = (chat: ChatSession) => {
-        setSelectedChatUID(chat.chat_uid);
+        setKBChatUID(chat.chat_uid);
         setHoveredChat(null);
         setOpenMenuId(null);
     };
@@ -171,7 +171,7 @@ export function ChatSidebar() {
                                     key={chat.chat_uid}
                                     onMouseEnter={() => setHoveredChat(chat.chat_uid)}
                                     onMouseLeave={() => setHoveredChat(null)}
-                                    className={chat.chat_uid === selectedChatUID ? 'bg-accent' : ''}
+                                    className={chat.chat_uid === kbChatUID ? 'bg-accent' : ''}
                                 >
                                     <SidebarMenuButton asChild className="h-auto py-3 px-2 text-sm font-medium w-full text-left">
                                         <div className="flex items-center justify-between">

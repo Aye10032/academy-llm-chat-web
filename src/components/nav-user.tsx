@@ -26,9 +26,9 @@ import {
     SidebarMenuButton,
     SidebarMenuItem, useSidebar,
 } from "@/components/ui/sidebar"
-import {useAuth} from "@/utils/auth.ts";
+import {useAuth} from "@/utils/auth.tsx";
 import {useNavigate} from "react-router-dom";
-import {UserProfile} from "@/utils/self_type.ts";
+import {UserProfile} from "@/utils/self_type.tsx";
 
 interface NavProps {
     user: UserProfile
