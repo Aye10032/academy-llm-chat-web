@@ -39,7 +39,7 @@ export function StatusCard({items, isProcessing}: StatusCardProps) {
                             <div className="absolute left-[3px] top-2 bottom-2 w-[1px] bg-gray-200"/>
 
                             {items.map((item, index) => (
-                                <div key={index} className="flex items-center gap-2 py-2 relative">
+                                <div key={index} className="flex items-center gap-2 py-1.5 relative">
                                     <div
                                         className={`h-2 w-2 rounded-full z-10 ${
                                             (index == items.length - 1 && isProcessing) ? "bg-green-500 animate-pulse" : "bg-gray-300"
