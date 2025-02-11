@@ -10,16 +10,22 @@ import {
     CardDescription
 } from "@/components/ui/card.tsx"
 import {EyeIcon, EyeOffIcon} from 'lucide-react'
-import {Link} from "react-router-dom";
+import {Link, useNavigate} from "react-router-dom";
 import {cn} from "@/lib/utils.ts"
+import {useApiMutation} from "@/hooks/useApi.ts";
 
 export default function RegisterForm() {
     const [showPassword, setShowPassword] = useState(false)
     const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+    const [email, setEmail] = useState('')
+    const [username, setUsername] = useState('')
     const [password, setPassword] = useState('')
-    const [confirmPassword, setConfirmPassword] = useState('') // Added confirmPassword state
-    const [passwordsMatch, setPasswordsMatch] = useState(true) // Added passwordsMatch state
+    const [confirmPassword, setConfirmPassword] = useState('')
+    const [passwordsMatch, setPasswordsMatch] = useState(true)
     const [passwordStrength, setPasswordStrength] = useState(0)
+    const [error, setError] = useState('')
+
+    const navigate = useNavigate();
 
     const togglePasswordVisibility = () => setShowPassword(!showPassword)
     const toggleConfirmPasswordVisibility = () => setShowConfirmPassword(!showConfirmPassword)
@@ -38,19 +44,37 @@ export default function RegisterForm() {
         const newPassword = e.target.value
         setPassword(newPassword)
         setPasswordStrength(calculatePasswordStrength(newPassword))
-        setPasswordsMatch(confirmPassword === newPassword) // Update passwordsMatch when password changes
+        setPasswordsMatch(confirmPassword === newPassword)
     }
 
-    const handleConfirmPasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => { // Added handleConfirmPasswordChange function
+    const handleConfirmPasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const newConfirmPassword = e.target.value
         setConfirmPassword(newConfirmPassword)
         setPasswordsMatch(newConfirmPassword === password)
     }
 
+    const registryMutation = useApiMutation<string, FormData>(
+        `/user/register`,
+        'POST',
+        {
+            onError: (error) => {
+                setError(error.message);
+            },
+            onSuccess: () => {
+                navigate('/login');
+            }
+        }
+    )
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
 
-        // TODO
+        const formData = new FormData()
+        formData.append('email', email)
+        formData.append('username', username)
+        formData.append('password', password)
+
+        registryMutation.mutate(formData)
     }
 
     return (
@@ -64,7 +88,13 @@ export default function RegisterForm() {
                     <div className="grid gap-4">
                         <div className="grid gap-2">
                             <Label className="text-left font-semibold" htmlFor="username">用户名</Label>
-                            <Input id="username" placeholder="输入您的用户名" required/>
+                            <Input 
+                                id="username" 
+                                placeholder="输入您的用户名" 
+                                required
+                                value={username}
+                                onChange={(e) => setUsername(e.target.value)}
+                            />
                         </div>
                         <div className="grid gap-2">
                             <Label className="text-left font-semibold" htmlFor="email">邮箱</Label>
@@ -73,6 +103,8 @@ export default function RegisterForm() {
                                 type="email"
                                 placeholder="your@email.com"
                                 required
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
                             />
                         </div>
                         <div className="grid gap-2">
@@ -136,10 +168,16 @@ export default function RegisterForm() {
                                     )}
                                 </button>
                             </div>
-                            {!passwordsMatch && confirmPassword !== '' && ( // Added password mismatch message
+                            {!passwordsMatch && confirmPassword !== '' && (
                                 <p className="text-sm text-red-500">密码不匹配</p>
                             )}
                         </div>
+
+                        {error && (
+                            <div className="mb-4 p-2 text-sm text-red-500 bg-red-50 rounded-md">
+                                {error}
+                            </div>
+                        )}
 
                         <Button
                             type="submit"
