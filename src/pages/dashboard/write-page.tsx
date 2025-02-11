@@ -58,8 +58,8 @@ export function WritePage() {
     const [status, setStatus] = useState<string[]>([])
     const [messages, setMessages] = useState<Message[]>([])
 
-    const saveMutation = useApiMutation<string, void>(
-        `/write/save_manuscript?uid=${selectedManuscriptUID}&content=${editorContent}`,
+    const saveMutation = useApiMutation<string, FormData>(
+        `/write/save_manuscript`,
         'POST'
     )
 
@@ -114,7 +114,11 @@ export function WritePage() {
 
 
     const handleSave = () => {
-        saveMutation.mutate()
+        const formData = new FormData()
+        formData.append('uid', selectedManuscriptUID)
+        formData.append('content', editorContent)
+        
+        saveMutation.mutate(formData)
         toast({
             description: "编辑保存完毕"
         })
@@ -177,7 +181,7 @@ export function WritePage() {
 
             const formData = new FormData()
             formData.append('project_uid', selectedPrUID)
-            formData.append('chat_uid', selectedPrUID)
+            formData.append('chat_uid', prChatUID)
             formData.append('message', input)
             formData.append('current_text', editorContent)
 

@@ -45,15 +45,23 @@ export async function apiClient<T>(endpoint: string, options: FetchOptions = {})
         throw new Error('Token has expired')
     }
 
-    const headers = {
-        'Content-Type': 'application/json',
-        ...(token ? {Authorization: `Bearer ${token}`} : {}),
-        ...options.headers,
+    const defaultHeaders: HeadersInit = token ? {
+        Authorization: `Bearer ${token}`
+    } : {}
+
+    // 如果请求体不是FormData，则添加默认的Content-Type
+    if (!(options.body instanceof FormData)) {
+        Object.assign(defaultHeaders, {
+            'Content-Type': 'application/json'
+        })
     }
 
     const response = await fetchWithTimeout(`${API_BASE_URL}${endpoint}`, {
         ...options,
-        headers,
+        headers: {
+            ...defaultHeaders,
+            ...options.headers,
+        },
     })
 
     return response.json()

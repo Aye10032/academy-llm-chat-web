@@ -11,7 +11,18 @@ export function useApiQuery<T>(
 ) {
     return useQuery<T, Error>({
         queryKey,
-        queryFn: () => apiClient<T>(endpoint),
+        queryFn: async () => {
+            const token = useAuth.getState().token;
+            const headers: Record<string, string> = {
+                'Content-Type': 'application/json'
+            };
+            
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
+            }
+            
+            return apiClient<T>(endpoint, { headers });
+        },
         ...options,
     })
 }
@@ -23,11 +34,29 @@ export function useApiMutation<TData, TVariables>(
     options?: UseMutationOptions<TData, Error, TVariables>
 ) {
     return useMutation<TData, Error, TVariables>({
-        mutationFn: (variables) =>
-            apiClient<TData>(endpoint, {
+        mutationFn: (variables) => {
+            const headers: Record<string, string> = {};
+            const token = useAuth.getState().token;
+            
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
+            }
+            
+            // 根据变量类型决定如何处理请求体和请求头
+            let body: string | FormData;
+            if (variables instanceof FormData) {
+                body = variables;
+            } else {
+                headers['Content-Type'] = 'application/json';
+                body = JSON.stringify(variables);
+            }
+            
+            return apiClient<TData>(endpoint, {
                 method,
-                body: JSON.stringify(variables),
-            }),
+                headers,
+                body,
+            });
+        },
         ...options,
     })
 }
