@@ -33,10 +33,6 @@ import {Manuscript, Message, Modify} from "@/utils/self_type.tsx";
 import {useNavigate} from "react-router-dom";
 import {toast} from "@/hooks/use-toast.ts";
 import {Avatar, AvatarFallback} from "@/components/ui/avatar.tsx";
-import Markdown from "react-markdown";
-import remarkGfm from "remark-gfm";
-import remarkMath from "remark-math";
-import rehypeKatex from "rehype-katex";
 import {StatusCard} from "@/components/chat-status.tsx";
 
 
@@ -482,13 +478,11 @@ export function WritePage() {
                                                     <div key={i}
                                                          className="inline-block rounded-lg px-4 bg-white text-black rounded-tl-none"
                                                     >
-                                                        <Markdown
+                                                        <div
                                                             className="prose prose-sm max-w-none dark:prose-invert"
-                                                            remarkPlugins={[remarkGfm, remarkMath]}
-                                                            rehypePlugins={[rehypeKatex]}
                                                         >
                                                             {item.content}
-                                                        </Markdown>
+                                                        </div>
                                                     </div>
                                                 )
                                             }
@@ -501,13 +495,11 @@ export function WritePage() {
                                                     : 'bg-white text-black rounded-tl-none px-3'
                                             }`}
                                         >
-                                            <Markdown
+                                            <div
                                                 className="prose prose-sm max-w-none dark:prose-invert"
-                                                remarkPlugins={[remarkGfm, remarkMath]}
-                                                rehypePlugins={[rehypeKatex]}
                                             >
                                                 {message.content}
-                                            </Markdown>
+                                            </div>
                                         </div>
                                     )}
                                 </div>
@@ -585,13 +577,11 @@ export function WritePage() {
                                     disabled={!selectedManuscriptUID || isLoading || isGenerate}
                                 />
                             ) : (
-                                <Markdown
+                                <div
                                     className="p-4 leading-8"
-                                    remarkPlugins={[remarkGfm, remarkMath]}
-                                    rehypePlugins={[rehypeKatex]}
-                                    children={editorContent}
                                 >
-                                </Markdown>
+                                    {editorContent}
+                                </div>
                             )}
 
                         </div>

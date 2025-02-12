@@ -1,12 +1,14 @@
 import path from "path"
-import {defineConfig} from 'vite'
-import react from '@vitejs/plugin-react-swc'
+import tailwindcss from '@tailwindcss/vite'
 import Unfonts from 'unplugin-fonts/vite'
+import react from '@vitejs/plugin-react-swc'
+import {defineConfig} from 'vite'
 
 // https://vite.dev/config/
 export default defineConfig({
     plugins: [
         react(),
+        tailwindcss(),
         Unfonts({
             custom: {
                 families: [
@@ -35,7 +37,7 @@ export default defineConfig({
             // http://localhost:5173/foo
             // -> http://localhost:4567/foo
             '/api': {
-                target: 'http://localhost:8000',
+                target: 'http://172.18.19.50:8000',
                 changeOrigin: true
             },
         },

@@ -65,7 +65,6 @@ export function ChatSidebar() {
 
         try {
             const newChatUid = await newChatMutation.mutateAsync();
-            // setSelectedChatUID(newChatUid);
             navigate(`/dashboard/chat/${newChatUid}`);
         } catch (error) {
             console.error('Failed to create new chat:', error);
@@ -101,18 +100,15 @@ export function ChatSidebar() {
                             <Input
                                 type="text"
                                 placeholder="搜索聊天"
-                                value={searchQuery}
-                                onChange={handleSearch}
                                 className="pl-8 pr-4 py-2 w-full text-sm rounded-full bg-white"
                                 disabled
                             />
                         </div>
                         <Button
-                            onClick={handleNewChat}
                             size="icon"
                             variant="outline"
                             className="rounded-full"
-                            disabled={!canCreateChat}
+                            disabled
                         >
                             <Plus className="h-4 w-4"/>
                             <span className="sr-only">新建聊天</span>
@@ -120,7 +116,7 @@ export function ChatSidebar() {
                     </div>
                 </div>
                 <div className="flex flex-1 flex-col gap-4 p-4">
-                    {Array.from({length: 24}).map((_, index) => (
+                    {Array.from({length: 12}).map((_, index) => (
                         <div
                             key={index}
                             className="aspect-video h-12 w-full rounded-lg bg-muted/50"

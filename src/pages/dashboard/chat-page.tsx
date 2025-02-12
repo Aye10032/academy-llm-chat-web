@@ -13,27 +13,18 @@ import {
     BreadcrumbList,
     BreadcrumbPage,
     BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb.tsx"
-import {SidebarTrigger} from "@/components/ui/sidebar.tsx";
-import {Separator} from "@/components/ui/separator.tsx";
-import {Input} from "@/components/ui/input.tsx";
-import {Button} from "@/components/ui/button.tsx";
-import {Avatar, AvatarFallback} from "@/components/ui/avatar.tsx";
+} from "@/components/ui/breadcrumb"
+import {SidebarTrigger} from "@/components/ui/sidebar";
+import {Separator} from "@/components/ui/separator";
+import {Input} from "@/components/ui/input";
+import {Button} from "@/components/ui/button";
+import {Avatar, AvatarFallback} from "@/components/ui/avatar";
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuTrigger
-} from "@/components/ui/dropdown-menu.tsx";
-import Markdown from 'react-markdown';
-// @ts-expect-error no need any more
-import {Prism as SyntaxHighlighter} from 'react-syntax-highlighter'
-// @ts-expect-error no need any more
-import {darcula} from 'react-syntax-highlighter/dist/esm/styles/prism';
-import remarkGfm from 'remark-gfm'
-import rehypeKatex from 'rehype-katex'
-import remarkMath from 'remark-math'
-import 'katex/dist/katex.min.css'
+} from "@/components/ui/dropdown-menu";
 import React, {useState, useRef, useEffect, useCallback} from "react";
 import {kbStore} from "@/utils/self-state.tsx";
 import {useApiQuery, useSseQuery} from "@/hooks/useApi.ts";
@@ -134,12 +125,12 @@ export function ChatPage({user}: ChatPageProps) {
 
     //处理新建对话可用性
     useEffect(() => {
-        if (messages.length > 0 && selectedKbUID) {
+        if ((messages.length > 0 || !kbChatUID) && selectedKbUID) {
             setCanCreateChat(true)
         } else {
             setCanCreateChat(false)
         }
-    }, [messages, setCanCreateChat, selectedKbUID]);
+    }, [messages, setCanCreateChat, selectedKbUID, kbChatUID]);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setInput(e.target.value);
@@ -148,7 +139,7 @@ export function ChatPage({user}: ChatPageProps) {
     // 对话提交事件处理
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!input.trim() || isLoading || !selectedKb) return;
+        if (!input.trim() || isLoading || !selectedKb || !kbChatUID) return;
 
         const userMessage: Message = {
             id: Date.now().toString(),
@@ -446,44 +437,9 @@ export function ChatPage({user}: ChatPageProps) {
                                                 : 'bg-white text-black rounded-tl-none'
                                         }`}
                                     >
-                                        <Markdown
-                                            className="prose prose-sm max-w-none dark:prose-invert"
-                                            components={{
-                                                code(props) {
-                                                    const {children, className, ...rest} = props
-                                                    const match = /language-(\w+)/.exec(className || '')
-                                                    return match ? (
-                                                        <SyntaxHighlighter
-                                                            {...rest}
-                                                            PreTag="div"
-                                                            children={String(children).replace(/\n$/, '')}
-                                                            language={match[1]}
-                                                            style={darcula}
-                                                        />
-                                                    ) : (
-                                                        <code {...rest} className={className}>
-                                                            {children}
-                                                        </code>
-                                                    )
-                                                },
-                                                p(props) {
-                                                    return <ProcessContent as="p">{props.children}</ProcessContent>;
-                                                },
-                                                li(props) {
-                                                    return <ProcessContent as="li">{props.children}</ProcessContent>;
-                                                },
-                                                strong(props) {
-                                                    return <ProcessContent as="strong">{props.children}</ProcessContent>;
-                                                },
-                                                em(props) {
-                                                    return <ProcessContent as="em">{props.children}</ProcessContent>;
-                                                }
-                                            }}
-                                            remarkPlugins={[remarkGfm, remarkMath]}
-                                            rehypePlugins={[rehypeKatex]}
-                                        >
+                                        <div>
                                             {message.content}
-                                        </Markdown>
+                                        </div>
                                     </div>
                                 </div>
                             )
@@ -510,7 +466,7 @@ export function ChatPage({user}: ChatPageProps) {
                                 placeholder="问一问 AI..."
                                 value={input}
                                 onChange={handleInputChange}
-                                disabled={isLoading}
+                                disabled={isLoading || !kbChatUID}
                             />
                             <Button
                                 type="button"

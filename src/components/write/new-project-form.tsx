@@ -1,4 +1,4 @@
-import {Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger} from "@/components/ui/dialog.tsx";
+import {Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger} from "@/components/ui/dialog";
 import {Button} from "@/components/ui/button.tsx";
 import {Plus} from "lucide-react";
 import {Input} from "@/components/ui/input.tsx";
