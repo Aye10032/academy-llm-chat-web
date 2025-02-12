@@ -41,6 +41,8 @@ export function ChatSidebar() {
     useEffect(() => {
         if (chatId) {
             setKBChatUID(chatId);
+        }else {
+            setKBChatUID("");
         }
     }, [chatId, setKBChatUID]);
 

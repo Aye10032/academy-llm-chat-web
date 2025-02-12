@@ -27,6 +27,14 @@ import {SidebarTrigger} from "@/components/ui/sidebar.tsx";
 import {Separator} from "@/components/ui/separator.tsx";
 import {ChatHistory} from "@/components/write/chat-history-form.tsx";
 import {FileTreeForm} from "@/components/write/file-tree-form.tsx";
+import Markdown from 'react-markdown';
+// @ts-expect-error no need any more
+import {Prism as SyntaxHighlighter} from 'react-syntax-highlighter'
+// @ts-expect-error no need any more
+import {darcula} from 'react-syntax-highlighter/dist/esm/styles/prism';
+import remarkGfm from 'remark-gfm'
+import rehypeKatex from 'rehype-katex'
+import remarkMath from 'remark-math'
 import {projectStore} from "@/utils/self-state.tsx";
 import {useApiMutation, useApiQuery, useSseQuery} from "@/hooks/useApi.ts";
 import {Manuscript, Message, Modify} from "@/utils/self_type.tsx";
@@ -113,7 +121,7 @@ export function WritePage() {
         const formData = new FormData()
         formData.append('uid', selectedManuscriptUID)
         formData.append('content', editorContent)
-        
+
         saveMutation.mutate(formData)
         toast({
             description: "编辑保存完毕"
@@ -283,7 +291,7 @@ export function WritePage() {
 
                             break;
                         }
-                        case 'write':{
+                        case 'write': {
                             setEditorContent(prevState => `${prevState}${data}`)
                         }
                     }
@@ -475,32 +483,46 @@ export function WritePage() {
                                                 )
                                             } else if ('content' in item) {
                                                 return (
-                                                    <div key={i}
-                                                         className="inline-block rounded-lg px-4 bg-white text-black rounded-tl-none"
+                                                    <Markdown
+                                                        key={i}
+                                                        className="prose rounded-lg px-3 bg-white text-black rounded-tl-none max-w-[97%] dark:prose-invert"
                                                     >
-                                                        <div
-                                                            className="prose prose-sm max-w-none dark:prose-invert"
-                                                        >
-                                                            {item.content}
-                                                        </div>
-                                                    </div>
+                                                        {item.content}
+                                                    </Markdown>
                                                 )
                                             }
                                         })
                                     ) : (
-                                        <div
-                                            className={`rounded-lg max-w-[97%] ${
+                                        <Markdown
+                                            className={`prose rounded-lg max-w-[97%] dark:prose-invert ${
                                                 message.type === 'human'
                                                     ? 'bg-blue-500 text-white rounded-tr-none p-3'
                                                     : 'bg-white text-black rounded-tl-none px-3'
                                             }`}
+                                            components={{
+                                                code(props) {
+                                                    const {children, className, ...rest} = props
+                                                    const match = /language-(\w+)/.exec(className || '')
+                                                    return match ? (
+                                                        <SyntaxHighlighter
+                                                            {...rest}
+                                                            PreTag="div"
+                                                            children={String(children).replace(/\n$/, '')}
+                                                            language={match[1]}
+                                                            style={darcula}
+                                                        />
+                                                    ) : (
+                                                        <code {...rest} className={className}>
+                                                            {children}
+                                                        </code>
+                                                    )
+                                                }
+                                            }}
+                                            remarkPlugins={[remarkGfm, remarkMath]}
+                                            rehypePlugins={[rehypeKatex]}
                                         >
-                                            <div
-                                                className="prose prose-sm max-w-none dark:prose-invert"
-                                            >
-                                                {message.content}
-                                            </div>
-                                        </div>
+                                            {message.content}
+                                        </Markdown>
                                     )}
                                 </div>
                                 {message.type === 'human' && (
@@ -577,11 +599,32 @@ export function WritePage() {
                                     disabled={!selectedManuscriptUID || isLoading || isGenerate}
                                 />
                             ) : (
-                                <div
-                                    className="p-4 leading-8"
+                                <Markdown
+                                    className="prose p-4 leading-8"
+                                    components={{
+                                        code(props) {
+                                            const {children, className, ...rest} = props
+                                            const match = /language-(\w+)/.exec(className || '')
+                                            return match ? (
+                                                <SyntaxHighlighter
+                                                    {...rest}
+                                                    PreTag="div"
+                                                    children={String(children).replace(/\n$/, '')}
+                                                    language={match[1]}
+                                                    style={darcula}
+                                                />
+                                            ) : (
+                                                <code {...rest} className={className}>
+                                                    {children}
+                                                </code>
+                                            )
+                                        }
+                                    }}
+                                    remarkPlugins={[remarkGfm, remarkMath]}
+                                    rehypePlugins={[rehypeKatex]}
                                 >
                                     {editorContent}
-                                </div>
+                                </Markdown>
                             )}
 
                         </div>

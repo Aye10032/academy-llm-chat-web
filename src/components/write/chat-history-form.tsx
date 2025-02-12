@@ -20,6 +20,8 @@ export function ChatHistory() {
     useEffect(() => {
         if (chatId) {
             setPrChatUID(chatId);
+        }else {
+            setPrChatUID("");
         }
     }, [chatId, setPrChatUID]);
 

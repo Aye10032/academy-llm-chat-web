@@ -25,6 +25,14 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
+import Markdown from 'react-markdown';
+// @ts-expect-error no need any more
+import {Prism as SyntaxHighlighter} from 'react-syntax-highlighter'
+// @ts-expect-error no need any more
+import {darcula} from 'react-syntax-highlighter/dist/esm/styles/prism';
+import remarkGfm from 'remark-gfm'
+import rehypeKatex from 'rehype-katex'
+import remarkMath from 'remark-math'
 import React, {useState, useRef, useEffect, useCallback} from "react";
 import {kbStore} from "@/utils/self-state.tsx";
 import {useApiQuery, useSseQuery} from "@/hooks/useApi.ts";
@@ -279,52 +287,6 @@ export function ChatPage({user}: ChatPageProps) {
         }
     };
 
-    // 修改 processFootnotes 函数使其能够递归处理嵌套的HTML内容
-    const processFootnotes = (content: string | React.ReactNode): string | React.ReactNode => {
-        if (typeof content !== 'string') {
-            return content;
-        }
-
-        // 处理已经转义的方括号
-        let processed = content.replace(/\\\[\\\^(\d+)\\\]/g, (_, num) => {
-            const index = parseInt(num) - 1;
-            return `<sup class="inline-flex justify-center items-center text-xs bg-gray-100 rounded px-1.5 py-0.5 ml-0.5 text-gray-600 hover:bg-gray-200 transition-colors cursor-pointer" onclick="window.handleFootnoteClick(${index})">${num}</sup>`;
-        });
-
-        // 处理普通的方括号
-        processed = processed.replace(/\[\^(\d+)\]/g, (_, num) => {
-            const index = parseInt(num) - 1;
-            return `<sup class="inline-flex justify-center items-center text-xs bg-gray-100 rounded px-1.5 py-0.5 ml-0.5 text-gray-600 hover:bg-gray-200 transition-colors cursor-pointer" onclick="window.handleFootnoteClick(${index})">${num}</sup>`;
-        });
-
-        return processed;
-    };
-
-    // 创建一个通用的内容处理组件
-    const ProcessContent = ({children, as: Component = 'span'}: { children: React.ReactNode, as?: keyof JSX.IntrinsicElements }) => {
-        const processChildren = (child: React.ReactNode): React.ReactNode => {
-            if (typeof child === 'string') {
-                return <span dangerouslySetInnerHTML={{__html: processFootnotes(child) as string}}/>;
-            }
-
-            if (Array.isArray(child)) {
-                return child.map((c, index) => <React.Fragment key={index}>{processChildren(c)}</React.Fragment>);
-            }
-
-            if (React.isValidElement(child)) {
-                const props = {
-                    ...child.props,
-                    children: processChildren(child.props.children)
-                };
-                return React.cloneElement(child, props);
-            }
-
-            return child;
-        };
-
-        return <Component>{processChildren(children)}</Component>;
-    };
-
     // 添加全局点击处理函数
     useEffect(() => {
         window.handleFootnoteClick = (index: number) => {
@@ -430,17 +392,36 @@ export function ChatPage({user}: ChatPageProps) {
                                             {message.type === 'human' ? 'U' : 'AI'}
                                         </AvatarFallback>
                                     </Avatar>
-                                    <div
-                                        className={`inline-block p-3 rounded-lg max-w-[80%] ${
+                                    <Markdown
+                                        className={`prose p-3 rounded-lg max-w-[80%] dark:prose-invert ${
                                             message.type === 'human'
                                                 ? 'bg-blue-500 text-white rounded-tr-none'
                                                 : 'bg-white text-black rounded-tl-none'
                                         }`}
+                                        components={{
+                                            code(props) {
+                                                const {children, className, ...rest} = props
+                                                const match = /language-(\w+)/.exec(className || '')
+                                                return match ? (
+                                                    <SyntaxHighlighter
+                                                        {...rest}
+                                                        PreTag="div"
+                                                        children={String(children).replace(/\n$/, '')}
+                                                        language={match[1]}
+                                                        style={darcula}
+                                                    />
+                                                ) : (
+                                                    <code {...rest} className={className}>
+                                                        {children}
+                                                    </code>
+                                                )
+                                            }
+                                        }}
+                                        remarkPlugins={[remarkGfm, remarkMath]}
+                                        rehypePlugins={[rehypeKatex]}
                                     >
-                                        <div>
-                                            {message.content}
-                                        </div>
-                                    </div>
+                                        {message.content}
+                                    </Markdown>
                                 </div>
                             )
                         ))}

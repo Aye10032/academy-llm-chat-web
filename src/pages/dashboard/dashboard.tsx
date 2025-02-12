@@ -11,6 +11,7 @@ import {useNavigate} from "react-router-dom";
 import React, {useState, useCallback} from "react";
 import {ChatPage} from "@/pages/dashboard/chat-page.tsx";
 import {WritePage} from "@/pages/dashboard/write-page.tsx";
+import {kbStore, projectStore} from "@/utils/self-state.tsx";
 
 interface MainPageProps {
     defaultPage: 'chat' | 'write';
@@ -18,6 +19,8 @@ interface MainPageProps {
 
 export function MainPage({defaultPage}: MainPageProps) {
     const user = useAuth((state) => state.user)
+    const kbChatUID = kbStore((state) => state.kbChatUID)
+    const prChatUID = projectStore((state)=>state.prChatUID)
     const navigate = useNavigate();
     const [activePage, setActivePage] = useState<'chat' | 'write'>(defaultPage)
 
@@ -42,11 +45,20 @@ export function MainPage({defaultPage}: MainPageProps) {
 
         setActivePage(page)
         if (page === 'chat') {
-            navigate('/dashboard/chat')
+            if (!kbChatUID) {
+                navigate('/dashboard/chat')
+            } else {
+                navigate(`/dashboard/chat/${kbChatUID}`)
+            }
         } else if (page === 'write') {
-            navigate('/dashboard/write')
+            if (!prChatUID){
+                navigate('/dashboard/write')
+            }else {
+                navigate(`/dashboard/write/${prChatUID}`)
+            }
+
         }
-    }, [activePage, navigate])
+    }, [activePage, navigate, kbChatUID,prChatUID])
 
 
     if (isLoading) {

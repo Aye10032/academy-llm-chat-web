@@ -1,6 +1,7 @@
 @import "tailwindcss";
 
 @plugin "tailwindcss-animate";
+@plugin "@tailwindcss/typography";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -134,10 +135,10 @@
     }
 }
 
-/*@theme {*/
-/*    --font-sans: 'Geist', sans-serif;*/
-/*    --font-mono: 'Geist Mono', ui-monospace, 'SFMono-Regular', 'Roboto Mono', 'Menlo, Monaco', 'Liberation Mono', 'DejaVu Sans Mono', 'Courier New', monospace;*/
-/*}*/
+@theme {
+    --font-sans: 'Geist', sans-serif;
+    --font-mono: 'Geist Mono', ui-monospace, 'SFMono-Regular', 'Roboto Mono', 'Menlo, Monaco', 'Liberation Mono', 'DejaVu Sans Mono', 'Courier New', monospace;
+}
 
 @layer base {
     * {
@@ -145,5 +146,11 @@
     }
     body {
         @apply bg-background text-foreground;
+    }
+    h1 {
+        font-size: var(--text-2xl);
+    }
+    h2 {
+        font-size: var(--text-xl);
     }
 }
