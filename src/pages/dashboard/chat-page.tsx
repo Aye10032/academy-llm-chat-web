@@ -134,8 +134,6 @@ export function ChatPage({user}: ChatPageProps) {
 
     //处理新建对话可用性
     useEffect(() => {
-        console.log(messages.length)
-        console.log(selectedKbUID)
         if (messages.length > 0 && selectedKbUID) {
             setCanCreateChat(true)
         } else {

@@ -38,7 +38,6 @@ export function FileTreeForm() {
     const fileStructure = useMemo<FileStructure[]>(() => {
         if (!selectedPrUID) return [];
 
-        console.log(manuscripts)
         if (!manuscripts) return [];
 
         // 将manuscripts按照is_draft分组并排序
