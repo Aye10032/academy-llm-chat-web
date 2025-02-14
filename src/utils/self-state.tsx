@@ -1,20 +1,34 @@
 import {create} from 'zustand'
-import {WriteProject} from "@/utils/self_type.tsx";
+import {KnowledgeBase, WriteProject} from "@/utils/self_type.tsx";
 
 interface KbState {
     selectedKbUID: string
+    selectedKbTitle: string
     kbChatUID: string
     canCreateChat: boolean
     setSelectedKbUID: (uid: string) => void
+    setSelectedKnowledgeBase: (kb: KnowledgeBase) => void
     setKBChatUID: (uid: string) => void
     setCanCreateChat: (flag: boolean) => void
 }
 
 export const kbStore = create<KbState>((set) => ({
     selectedKbUID: '',
+    selectedKbTitle: '',
     kbChatUID: '',
     canCreateChat: true,
-    setSelectedKbUID: (uid: string) => set({selectedKbUID: uid}),
+    setSelectedKbUID: (uid: string) => {
+        if (!uid) {
+            set({selectedKbUID: ''})
+            set({selectedKbTitle: ''})
+            set({kbChatUID: ''})
+        }
+        set({selectedKbUID: uid})
+    },
+    setSelectedKnowledgeBase: (kb: KnowledgeBase) => {
+        set({selectedKbUID: kb.uid})
+        set({selectedKbTitle: kb.table_title})
+    },
     setKBChatUID: (uid: string) => set({kbChatUID: uid}),
     setCanCreateChat: (flag: boolean) => set({canCreateChat: flag})
 }));

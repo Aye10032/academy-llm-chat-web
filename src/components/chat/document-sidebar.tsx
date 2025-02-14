@@ -1,6 +1,6 @@
 'use client'
 
-import {useCallback, useRef, useEffect, useState} from 'react'
+import {useCallback, useRef, useState} from 'react'
 import {ChevronLeft, ChevronRight, Globe} from 'lucide-react'
 import {FaRegFilePdf} from "react-icons/fa";
 import {Button} from "@/components/ui/button"
@@ -12,7 +12,6 @@ interface DocumentSidebarProps {
     documents: Document[]
     isOpen: boolean
     onToggle: () => void
-    activeDocIndex?: number
 }
 
 export function DocumentSidebar(
@@ -20,24 +19,10 @@ export function DocumentSidebar(
         documents,
         isOpen,
         onToggle,
-        activeDocIndex,
     }: DocumentSidebarProps
 ) {
     const scrollAreaRef = useRef<HTMLDivElement>(null);
     const [pdfPreviewUrl, setPdfPreviewUrl] = useState<string | null>(null)
-
-    useEffect(() => {
-        if (activeDocIndex !== undefined && scrollAreaRef.current) {
-            const docElement = scrollAreaRef.current.querySelector(`[data-doc-index="${activeDocIndex}"]`);
-            if (docElement) {
-                docElement.scrollIntoView({behavior: 'smooth', block: 'center'});
-                docElement.classList.add('animate-highlight');
-                setTimeout(() => {
-                    docElement.classList.remove('animate-highlight');
-                }, 2000);
-            }
-        }
-    }, [activeDocIndex]);
 
     const toggleSidebar = useCallback(() => {
         onToggle()
@@ -64,7 +49,7 @@ export function DocumentSidebar(
         <div
             className={`fixed top-0 right-0 h-full bg-gray-50 border-l border-gray-200 shadow-lg transition-all duration-300 ${
                 isOpen ? 'w-1/4' : 'w-0'
-            } flex flex-col`}
+            } flex flex-col overflow-hidden`}
         >
             <Button
                 variant="ghost"
@@ -73,15 +58,18 @@ export function DocumentSidebar(
                     isOpen ? 'left-2' : 'right-4'
                 } z-10 bg-white rounded-full shadow-md hover:bg-gray-100 transition-all duration-300`}
                 onClick={toggleSidebar}
+                disabled={!documents || documents.length == 0}
             >
                 {isOpen ? <ChevronRight className="h-4 w-4"/> : <ChevronLeft className="h-4 w-4"/>}
             </Button>
             {isOpen && (
-                <ScrollArea ref={scrollAreaRef} className="flex-1 p-6">
-                    <h2
-                        className="text-xl font-semibold mb-6 text-gray-800"
+                <ScrollArea ref={scrollAreaRef} className="flex-1 p-6 overflow-y-auto">
+                    <h1
+                        className="mb-6 text-gray-800"
                         style={{paddingLeft: '40%'}}
-                    >参考文档</h2>
+                    >
+                        参考文档
+                    </h1>
                     {documents.map((doc, index) => (
                         <div
                             key={index}
@@ -132,7 +120,7 @@ export function DocumentSidebar(
                             </div>
                             {doc.metadata.refer_sentence && doc.metadata.refer_sentence.length > 0 && (
                                 <div
-                                    className="text-sm mt-2 text-gray-700 bg-white p-2 rounded-md border border-gray-200"
+                                    className="prose prose-sm mt-2 text-gray-700 bg-white p-2 rounded-md border border-gray-200"
                                     dangerouslySetInnerHTML={{
                                         __html: highlightContent(doc.content, doc.metadata.refer_sentence)
                                     }}

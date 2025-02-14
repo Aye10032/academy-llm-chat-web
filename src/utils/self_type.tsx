@@ -52,7 +52,7 @@ export interface Document {
 }
 
 export interface ChatSession {
-    chat_uid: string
+    uid: string
     parent_uid: string
     user_email: string
     description: string

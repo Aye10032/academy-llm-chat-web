@@ -65,11 +65,11 @@ export function ChatHistory() {
                             <div className="space-y-1 p-1">
                                 {chats.map((chat) => (
                                     <button
-                                        key={chat.chat_uid}
-                                        onClick={() => setPrChatUID(chat.chat_uid)}
+                                        key={chat.uid}
+                                        onClick={() => setPrChatUID(chat.uid)}
                                         className="w-full text-left px-2 py-1 rounded-md hover:bg-muted/50 transition-colors"
                                     >
-                                        <Link to={`/dashboard/write/${chat.chat_uid}`}>
+                                        <Link to={`/dashboard/write/${chat.uid}`}>
                                             <div className="text-sm font-medium truncate">{chat.description}</div>
                                             <div
                                                 className="text-xs text-muted-foreground">{format(new Date(chat.update_time), "HH:mm")}

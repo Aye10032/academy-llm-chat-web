@@ -82,7 +82,7 @@ export function MainPage({defaultPage}: MainPageProps) {
                 activePage={activePage}
                 setActivePage={handlePageChange}
             />
-            <SidebarInset>
+            <SidebarInset className="overflow-hidden">
                 {activePage === 'chat' ? (
                     <ChatPage
                         user={userInfo}

@@ -1,11 +1,5 @@
 import {SimpleStatus} from "@/components/chat-status.tsx";
 
-declare global {
-    interface Window {
-        handleFootnoteClick?: (index: number) => void;
-    }
-}
-
 import {
     Breadcrumb,
     BreadcrumbItem,
@@ -46,11 +40,13 @@ interface ChatPageProps {
 
 export function ChatPage({user}: ChatPageProps) {
     const selectedKbUID = kbStore((state) => state.selectedKbUID)
+    const selectedKbTitle = kbStore((state) => state.selectedKbTitle)
     const kbChatUID = kbStore((state) => state.kbChatUID)
     const setSelectedKbUID = kbStore((state) => state.setSelectedKbUID)
+    const setSelectedKnowledgeBase = kbStore((state) => state.setSelectedKnowledgeBase)
     const setCanCreateChat = kbStore((state) => state.setCanCreateChat)
 
-    const [selectedKb, setSelectedKb] = useState<KnowledgeBase | null>(null);
+    // const [selectedKb, setSelectedKb] = useState<KnowledgeBase | null>(null);
 
     const [messages, setMessages] = useState<Message[]>([])
     const [input, setInput] = useState('')
@@ -61,7 +57,6 @@ export function ChatPage({user}: ChatPageProps) {
     const [documents, setDocuments] = useState<Document[]>([])
     const [isGenerating, setIsGenerating] = useState(false)
     const [isSidebarOpen, setIsSidebarOpen] = useState(false)
-    const [activeDocIndex, setActiveDocIndex] = useState<number>()
 
 
     // 获取知识库列表请求
@@ -84,33 +79,36 @@ export function ChatPage({user}: ChatPageProps) {
 
     // 初始化知识库
     useEffect(() => {
-        if (!knowledgeBasesLoading && knowledgeBases && user.last_knowledge_base) {
-            const lastKb = knowledgeBases.find(kb => kb.uid === user.last_knowledge_base);
-            if (lastKb) {
-                setSelectedKb(lastKb);
-                setSelectedKbUID(lastKb.uid);
+        if (!knowledgeBasesLoading && !selectedKbUID) {
+            if (user.last_knowledge_base) {
+                setSelectedKbUID(user.last_knowledge_base);
             }
         }
-    }, [knowledgeBasesLoading, knowledgeBases, user.last_knowledge_base, setSelectedKbUID])
+        console.log('init kb')
+    }, [knowledgeBasesLoading, user.last_knowledge_base, setSelectedKbUID, selectedKbUID])
 
     // 选择知识库事件处理
     const handleKnowledgeBaseSelect = (kb: KnowledgeBase) => {
-        if (kb.uid == selectedKb?.uid) return;
+        if (kb.uid == selectedKbUID) return;
 
         clearState();
-        setSelectedKb(kb);
-        setSelectedKbUID(kb.uid);
+        setMessages([])
+        setSelectedKnowledgeBase(kb);
         setIsLoading(false);
     };
 
     const clearState = () => {
-        setInput('');
         setIsLoading(true);
+        setInput('');
         setStatus('');
         setDocuments([]);
         setIsGenerating(false);
         setIsSidebarOpen(false);
     }
+
+    useEffect(() => {
+        setDocuments([])
+    }, [kbChatUID]);
 
     // 历史对话加载
     useEffect(() => {
@@ -147,7 +145,7 @@ export function ChatPage({user}: ChatPageProps) {
     // 对话提交事件处理
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!input.trim() || isLoading || !selectedKb || !kbChatUID) return;
+        if (!input.trim() || isLoading || !selectedKbUID || !kbChatUID) return;
 
         const userMessage: Message = {
             id: Date.now().toString(),
@@ -287,17 +285,6 @@ export function ChatPage({user}: ChatPageProps) {
         }
     };
 
-    // 添加全局点击处理函数
-    useEffect(() => {
-        window.handleFootnoteClick = (index: number) => {
-            setIsSidebarOpen(true);
-            setActiveDocIndex(index);
-        };
-
-        return () => {
-            delete window.handleFootnoteClick;
-        };
-    }, []);
 
     // 生成回答后自动打开侧边栏
     useEffect(() => {
@@ -343,7 +330,7 @@ export function ChatPage({user}: ChatPageProps) {
                         <BreadcrumbItem>
                             <DropdownMenu>
                                 <DropdownMenuTrigger className="flex items-center gap-1">
-                                    {selectedKb ? selectedKb.table_title : '选择知识库'}
+                                    {selectedKbUID ? selectedKbTitle : '选择知识库'}
                                     <ChevronDownIcon/>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="start">
@@ -467,7 +454,6 @@ export function ChatPage({user}: ChatPageProps) {
                 documents={documents}
                 isOpen={isSidebarOpen}
                 onToggle={handleSidebarToogle}
-                activeDocIndex={activeDocIndex}
             />
         </div>
     )
