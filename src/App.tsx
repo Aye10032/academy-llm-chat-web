@@ -117,7 +117,7 @@ export default function App() {
                     router={router}
                 />
             </QueryClientProvider>
-            <Toaster />
+            <Toaster richColors expand={true}/>
         </div>
 
     )

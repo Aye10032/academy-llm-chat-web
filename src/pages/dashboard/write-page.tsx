@@ -20,28 +20,28 @@ import {
     BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
 import {Accordion, AccordionContent, AccordionItem, AccordionTrigger} from "@/components/ui/accordion"
-import {ChatInput} from "@/components/write/chat-input.tsx";
-import {MaterialsManager} from "@/components/write/materials-manager.tsx";
-import {FloatingActions} from "@/components/write/floating-actions.tsx";
-import {SidebarTrigger} from "@/components/ui/sidebar.tsx";
-import {Separator} from "@/components/ui/separator.tsx";
-import {ChatHistory} from "@/components/write/chat-history-form.tsx";
-import {FileTreeForm} from "@/components/write/file-tree-form.tsx";
-import Markdown from 'react-markdown';
+import {ChatInput} from "@/components/write/chat-input.tsx"
+import {MaterialsManager} from "@/components/write/materials-manager.tsx"
+import {FloatingActions} from "@/components/write/floating-actions.tsx"
+import {SidebarTrigger} from "@/components/ui/sidebar.tsx"
+import {Separator} from "@/components/ui/separator.tsx"
+import {ChatHistory} from "@/components/write/chat-history-form.tsx"
+import {FileTreeForm} from "@/components/write/file-tree-form.tsx"
+import Markdown from 'react-markdown'
 // @ts-expect-error no need any more
 import {Prism as SyntaxHighlighter} from 'react-syntax-highlighter'
 // @ts-expect-error no need any more
-import {darcula} from 'react-syntax-highlighter/dist/esm/styles/prism';
+import {darcula} from 'react-syntax-highlighter/dist/esm/styles/prism'
 import remarkGfm from 'remark-gfm'
 import rehypeKatex from 'rehype-katex'
 import remarkMath from 'remark-math'
-import {projectStore} from "@/utils/self-state.tsx";
-import {useApiMutation, useApiQuery, useSseQuery} from "@/hooks/useApi.ts";
-import {Manuscript, Message, Modify} from "@/utils/self_type.tsx";
-import {useNavigate} from "react-router-dom";
-import {toast} from "@/hooks/use-toast.ts";
-import {Avatar, AvatarFallback} from "@/components/ui/avatar.tsx";
-import {StatusCard} from "@/components/chat-status.tsx";
+import {projectStore} from "@/utils/self-state.tsx"
+import {useApiMutation, useApiQuery, useSseQuery} from "@/hooks/useApi.ts"
+import {Manuscript, Message, Modify} from "@/utils/self_type.tsx"
+import {useNavigate} from "react-router-dom"
+import {Avatar, AvatarFallback} from "@/components/ui/avatar.tsx"
+import {StatusCard} from "@/components/chat-status.tsx"
+import {toast} from "sonner";
 
 
 export function WritePage() {
@@ -49,7 +49,7 @@ export function WritePage() {
     const selectedPrTitle = projectStore((state) => state.selectedPrTitle)
     const prChatUID = projectStore((state) => state.prChatUID)
     const selectedManuscriptUID = projectStore((state) => state.selectedManuscriptUID)
-    const navigate = useNavigate();
+    const navigate = useNavigate()
 
     // const [currentFile, setCurrentFile] = useState<string>("")
     const [input, setInput] = useState('')
@@ -62,36 +62,40 @@ export function WritePage() {
     const [status, setStatus] = useState<string[]>([])
     const [messages, setMessages] = useState<Message[]>([])
 
+    // 保存草稿
     const saveMutation = useApiMutation<string, FormData>(
-        `/write/save_manuscript`,
-        'POST'
+        `/write/projects/${selectedPrUID}/manuscripts/${selectedManuscriptUID}`,
+        'PATCH'
     )
 
+    // 读取草稿内容
     const {data: manuscript, isLoading} = useApiQuery<Manuscript>(
         ['get_manuscript', selectedManuscriptUID],
-        `/write/manuscript?uid=${selectedManuscriptUID}`,
+        `/write/projects/${selectedPrUID}/manuscripts/${selectedManuscriptUID}`,
         {
-            enabled: !!selectedManuscriptUID,
+            enabled: !!selectedManuscriptUID && !!selectedPrUID,
         }
-    );
+    )
 
     // 新建对话请求
     const newChatMutation = useApiMutation<string, void>(
-        `/write/new_chat?project_uid=${selectedPrUID}`,
-        'PATCH'
+        `/write/projects/${selectedPrUID}/chats`,
+        'POST'
     )
 
     // 获取历史对话请求
     const {data: chatHistoryData} = useApiQuery<Message[]>(
         ['chatHistory', prChatUID],
-        `/write/chat/${prChatUID}`,
+        `/write/projects/${selectedPrUID}/chats/${prChatUID}/messages`,
         {
-            enabled: !!prChatUID,
+            enabled: !!prChatUID && !!selectedPrUID,
         }
     )
 
     // 对话 SSE mutation
-    const chatMutation = useSseQuery<FormData>('/write/chat')
+    const chatMutation = useSseQuery<FormData>(
+        `/write/projects/${selectedPrUID}/chats/${prChatUID}/messages`
+    )
 
     useEffect(() => {
         if (!manuscript) {
@@ -99,11 +103,13 @@ export function WritePage() {
         } else {
             if (manuscript.content) {
                 setEditorContent(manuscript.content)
+            } else {
+                setEditorContent("")
             }
-            setIsDraft(manuscript.is_draft);
+            setIsDraft(manuscript.is_draft)
         }
         setEditorChanged(false)
-    }, [manuscript]);
+    }, [manuscript])
 
     const applyModification = (original: string, modified: string) => {
         setEditorContent((prev) => prev.replace(original, modified))
@@ -119,31 +125,31 @@ export function WritePage() {
 
     const handleSave = () => {
         const formData = new FormData()
-        formData.append('uid', selectedManuscriptUID)
         formData.append('content', editorContent)
 
         saveMutation.mutate(formData)
-        toast({
-            description: "编辑保存完毕"
+        toast.success("编辑保存完毕", {
+            position: 'top-right'
         })
+        setEditorChanged(false)
     }
 
     const handleNewChat = async () => {
-        if (!selectedPrUID) return;
+        if (!selectedPrUID) return
 
         try {
-            const newChatUid = await newChatMutation.mutateAsync();
-            navigate(`/dashboard/write/${newChatUid}`);
+            const newChatUid = await newChatMutation.mutateAsync()
+            navigate(`/dashboard/write/${newChatUid}`)
         } catch (error) {
-            console.error('Failed to create new chat:', error);
+            console.error('Failed to create new chat:', error)
             // 如果需要，这里可以添加错误提示
         }
     }
 
 
     const clearState = () => {
-        setInput('');
-        setStatus([]);
+        setInput('')
+        setStatus([])
         setIsGenerate(true)
     }
 
@@ -151,8 +157,8 @@ export function WritePage() {
     useEffect(() => {
         // 当 selectedHistoryId 为空时，直接返回
         if (!selectedPrUID || !prChatUID) {
-            setMessages([]);
-            return;
+            setMessages([])
+            return
         }
 
         // 如果有新的历史数据，则设置
@@ -161,31 +167,30 @@ export function WritePage() {
                 id: index.toString(),
                 type: msg.type,
                 content: msg.content
-            }));
-            setMessages(formattedMessages);
+            }))
+            setMessages(formattedMessages)
         }
-    }, [selectedPrUID, chatHistoryData, prChatUID]);
+    }, [selectedPrUID, chatHistoryData, prChatUID])
 
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
-        if (!input.trim() || isLoading || !selectedPrUID) return;
+        if (!input.trim() || isLoading || !selectedPrUID) return
 
         const userMessage: Message = {
             id: Date.now().toString(),
             type: 'human',
             content: input.trim()
-        };
+        }
 
         clearState()
 
         try {
             // 设置消息
-            setMessages(prev => [...prev, userMessage]);
+            setMessages(prev => [...prev, userMessage])
 
             const formData = new FormData()
-            formData.append('project_uid', selectedPrUID)
-            formData.append('chat_uid', prChatUID)
+            formData.append('graph_ckpt', '111')
             formData.append('message', input)
             formData.append('current_text', editorContent)
 
@@ -200,10 +205,10 @@ export function WritePage() {
             const reader = response.body?.getReader()
             const decoder = new TextDecoder()
 
-            let aiMessageContent = '';
-            let aiMessageCreated = false;
+            let aiMessageContent = ''
+            let aiMessageCreated = false
             let isGettingAnswer = false
-            let buffer = ''; // 添加缓冲区处理不完整的消息
+            let buffer = '' // 添加缓冲区处理不完整的消息
 
             const processSSEMessage = (message: string) => {
                 const [eventLine, dataLine] = message.split('\n')
@@ -217,12 +222,12 @@ export function WritePage() {
                                 isGettingAnswer = false
                                 aiMessageContent = ''
                             } else {
-                                setStatus(prevState => [...prevState, data]);
+                                setStatus(prevState => [...prevState, data])
                             }
-                            break;
+                            break
                         case 'docs': {
                             // 处理文本
-                            break;
+                            break
                         }
                         case 'answer': {
                             if (!aiMessageCreated) {
@@ -232,126 +237,126 @@ export function WritePage() {
                                     content: [{
                                         content: ''
                                     }]
-                                }]);
-                                aiMessageCreated = true;
+                                }])
+                                aiMessageCreated = true
                                 isGettingAnswer = true
                             }
 
-                            aiMessageContent += data;
+                            aiMessageContent += data
                             if (!isGettingAnswer) {
                                 setMessages(prev => {
-                                    const newMessages = [...prev];
-                                    const lastMessage = newMessages[newMessages.length - 1];
+                                    const newMessages = [...prev]
+                                    const lastMessage = newMessages[newMessages.length - 1]
                                     if (lastMessage.type === 'ai' && Array.isArray(lastMessage.content)) {
                                         const newContent = lastMessage.content
                                         lastMessage.content = [...newContent, {content: aiMessageContent}]
                                     }
-                                    return newMessages;
-                                });
-                                isGettingAnswer = true;
+                                    return newMessages
+                                })
+                                isGettingAnswer = true
                             } else {
                                 setMessages(prev => {
-                                    const newMessages = [...prev];
-                                    const lastMessage = newMessages[newMessages.length - 1];
+                                    const newMessages = [...prev]
+                                    const lastMessage = newMessages[newMessages.length - 1]
                                     if (Array.isArray(lastMessage.content)) {
-                                        const lastContent = lastMessage.content[lastMessage.content.length - 1];
+                                        const lastContent = lastMessage.content[lastMessage.content.length - 1]
                                         if (lastContent && "content" in lastContent) {
                                             lastContent.content = aiMessageContent
                                         }
                                     }
-                                    return newMessages;
-                                });
+                                    return newMessages
+                                })
                             }
-                            break;
+                            break
                         }
                         case 'modify': {
                             const modifies = data.modifies.map((modify: Modify) => ({
                                 original: modify.original,
                                 modified: modify.modified,
                                 explanation: modify.explanation
-                            }));
+                            }))
 
                             if (!aiMessageCreated) {
                                 setMessages(prev => [...prev, {
                                     id: (Date.now() + 1).toString(),
                                     type: 'ai',
                                     content: modifies
-                                }]);
-                                aiMessageCreated = true;
+                                }])
+                                aiMessageCreated = true
                             } else {
                                 setMessages(prev => {
-                                    const newMessages = [...prev];
-                                    const lastMessage = newMessages[newMessages.length - 1];
+                                    const newMessages = [...prev]
+                                    const lastMessage = newMessages[newMessages.length - 1]
                                     if (lastMessage.type === 'ai' && Array.isArray(lastMessage.content)) {
-                                        lastMessage.content = [...lastMessage.content, ...modifies];
+                                        lastMessage.content = [...lastMessage.content, ...modifies]
                                     }
-                                    return newMessages;
-                                });
+                                    return newMessages
+                                })
                             }
 
-                            break;
+                            break
                         }
                         case 'write': {
                             setEditorContent(prevState => `${prevState}${data}`)
                         }
                     }
                 }
-            };
+            }
 
             while (reader) {
-                const {done, value} = await reader.read();
+                const {done, value} = await reader.read()
                 if (done) {
                     if (buffer.trim()) {
-                        processSSEMessage(buffer);
+                        processSSEMessage(buffer)
                     }
-                    setIsGenerate(false);
-                    break;
+                    setIsGenerate(false)
+                    break
                 }
 
-                const chunk = decoder.decode(value);
-                buffer += chunk;
+                const chunk = decoder.decode(value)
+                buffer += chunk
 
                 // 查找完整的消息
-                const messages = buffer.split('\n\n');
+                const messages = buffer.split('\n\n')
                 // 保留最后一个可能不完整的消息
-                buffer = messages.pop() || '';
+                buffer = messages.pop() || ''
 
                 // 处理完整的消息
                 for (const message of messages) {
                     if (message.trim()) {
-                        processSSEMessage(message);
+                        processSSEMessage(message)
                         // 使用 requestAnimationFrame 控制渲染频率
-                        await new Promise(resolve => requestAnimationFrame(resolve));
+                        await new Promise(resolve => requestAnimationFrame(resolve))
                     }
                 }
             }
 
         } catch (error) {
             console.error('Error in chat:', error)
-            setStatus(prevState => [...prevState, '发生错误，请重试']);
+            setStatus(prevState => [...prevState, '发生错误，请重试'])
             // 如果是新建的对话失败了，清空消息
             if (!prChatUID) {
-                setMessages([]);
+                setMessages([])
             }
         } finally {
-            setIsGenerate(false);
+            setIsGenerate(false)
         }
     }
 
     // 自动滚动到底部
     const scrollToBottom = () => {
         if (chatRef.current) {
-            const scrollContainer = chatRef.current;
+            const scrollContainer = chatRef.current
             scrollContainer.scrollTo({
                 top: scrollContainer.scrollHeight,
                 behavior: 'smooth'
-            });
+            })
         }
-    };
+    }
 
     useEffect(() => {
-        scrollToBottom();
-    }, [messages, status]);
+        scrollToBottom()
+    }, [messages, status])
 
     return (
         <div className="flex flex-col h-screen bg-white">

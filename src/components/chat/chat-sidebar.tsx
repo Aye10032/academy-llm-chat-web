@@ -17,8 +17,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu.tsx"
 import {Button} from "@/components/ui/button.tsx"
-import {EllipsisVertical, Search, Plus} from "lucide-react"
-import {Input} from "@/components/ui/input.tsx"
+import {EllipsisVertical, Plus} from "lucide-react"
 import {useApiQuery, useApiMutation} from "@/hooks/useApi.ts"
 import {ChatSession} from "@/utils/self_type.tsx"
 import {groupItemsByPeriod} from "@/utils/sort.tsx"
@@ -37,19 +36,10 @@ export function ChatSidebar() {
     const [deleteID, setDeleteID] = useState<string | null>(null)
     const [openMenuId, setOpenMenuId] = useState<string | null>(null)
 
-    // 当URL中的chatId变化时，更新selectedChatUID
-    useEffect(() => {
-        if (chatId) {
-            setKBChatUID(chatId)
-        } else {
-            setKBChatUID("")
-        }
-    }, [chatId, setKBChatUID])
-
     // 获取聊天列表
     const {data: chats, isLoading, refetch} = useApiQuery<ChatSession[]>(
         ['chats', selectedKbUID],
-        `/rag/chats?knowledge_base_uid=${selectedKbUID}`,
+        `/rag/knowledge_bases/${selectedKbUID}/chats`,
         {
             enabled: !!selectedKbUID,
         }
@@ -57,14 +47,14 @@ export function ChatSidebar() {
 
     // 删除对话请求
     const deleteChatMutation = useApiMutation<string, void>(
-        `/rag/delete_chat/${deleteID}`,
-        'DELETE'
+        `/rag/knowledge_bases/${selectedKbUID}/chats/${deleteID}`,
+        'DELETE',
     )
 
     // 新建对话请求
     const newChatMutation = useApiMutation<string, void>(
-        `/rag/new_chat/${selectedKbUID || ''}`,
-        'PATCH'
+        `/rag/knowledge_bases/${selectedKbUID}/chats`,
+        'POST'
     )
 
     // 新建对话按钮点击事件
@@ -114,31 +104,29 @@ export function ChatSidebar() {
         }
     }
 
+    // 当URL中的chatId变化时，更新selectedChatUID
+    useEffect(() => {
+        if (chatId) {
+            setKBChatUID(chatId)
+        } else {
+            setKBChatUID("")
+        }
+    }, [chatId, setKBChatUID])
+
     // 如果没有选择知识库，显示占位内容
     if (!selectedKbUID || isLoading) {
         return (
             <SidebarContent className="px-1 py-2">
                 <div className="p-4 space-y-4">
-                    <div className="flex items-center space-x-2">
-                        <div className="relative flex-grow">
-                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4"/>
-                            <Input
-                                type="text"
-                                placeholder="搜索聊天"
-                                className="pl-8 pr-4 py-2 w-full text-sm rounded-full bg-white"
-                                disabled
-                            />
-                        </div>
-                        <Button
-                            size="icon"
-                            variant="outline"
-                            className="rounded-full"
-                            disabled
-                        >
-                            <Plus className="h-4 w-4"/>
-                            <span className="sr-only">新建聊天</span>
-                        </Button>
-                    </div>
+                    <Button
+                        size="lg"
+                        variant="outline"
+                        className="rounded-full hover:bg-muted flex items-center gap-2 pl-3 pr-4"
+                        disabled={true}
+                    >
+                        <Plus className="h-4 w-4"/>
+                        <span className="text-sm">新建聊天</span>
+                    </Button>
                 </div>
                 <div className="flex flex-1 flex-col gap-4 p-4">
                     {Array.from({length: 12}).map((_, index) => (
@@ -157,18 +145,16 @@ export function ChatSidebar() {
     return (
         <SidebarContent className="px-1 py-2">
             <div className="p-4 space-y-4">
-                <div className="flex items-center space-x-2">
-                    <Button
-                        onClick={handleNewChat}
-                        size="lg"
-                        variant="outline"
-                        className="rounded-full hover:bg-muted flex items-center gap-2 pl-3 pr-4"
-                        disabled={!canCreateChat}
-                    >
-                        <Plus className="h-4 w-4"/>
-                        <span className="text-sm">新建聊天</span>
-                    </Button>
-                </div>
+                <Button
+                    onClick={handleNewChat}
+                    size="lg"
+                    variant="outline"
+                    className="rounded-full hover:bg-muted flex items-center gap-2 pl-3 pr-4"
+                    disabled={!canCreateChat}
+                >
+                    <Plus className="h-4 w-4"/>
+                    <span className="text-sm">新建聊天</span>
+                </Button>
             </div>
             {Object.entries(groupedChats).map(([period, periodChats]) => (
                 <SidebarGroup key={period}>

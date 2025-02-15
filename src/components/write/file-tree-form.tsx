@@ -24,14 +24,21 @@ export function FileTreeForm() {
     const setSelectedManuscriptUID = projectStore((state) => state.setSelectedManuscriptUID)
     const selectedManuscriptUID = projectStore((state) => state.selectedManuscriptUID)
 
+    // 请求草稿列表
     const {data: manuscripts, isLoading, refetch} = useApiQuery<Manuscript[]>(
         ['manuscripts', selectedPrUID],
-        `/write/manuscripts?project_uid=${selectedPrUID}`,
+        `/write/projects/${selectedPrUID}/manuscripts`,
         {
             enabled: !!selectedPrUID,
             refetchOnWindowFocus: false,
             retry: false,
         }
+    );
+
+    // 新建草稿
+    const newFileMutation = useApiMutation<string, FormData>(
+        `/write/projects/${selectedPrUID}/manuscripts`,
+        'POST'
     );
 
     // 构建文件树结构
@@ -82,19 +89,22 @@ export function FileTreeForm() {
         return folders;
     }, [manuscripts, selectedPrUID]);
 
-    const newFileMutation = useApiMutation<string, void>(
-        `/write/new_manuscript?project_uid=${selectedPrUID}&title=${newFileName}`,
-        'PATCH'
-    );
 
     const createNewFile = () => {
         if (!newFileName) return;
 
-        newFileMutation.mutate(undefined, {
+        const formData = new FormData()
+        formData.append('title', newFileName)
+
+        newFileMutation.mutate(formData, {
             onSuccess: (data) => {
-                setSelectedManuscriptUID(data);
-                setIsNewFileDialogOpen(false)
-                setNewFileName("");
+                refetch().then(r => {
+                    if (r.isSuccess) {
+                        setSelectedManuscriptUID(data);
+                        setIsNewFileDialogOpen(false)
+                        setNewFileName("");
+                    }
+                })
             }
         });
     }
@@ -175,7 +185,12 @@ export function FileTreeForm() {
                                         onChange={(e) => setNewFileName(e.target.value)}
                                         placeholder="输入文件名称"
                                     />
-                                    <Button onClick={() => createNewFile()}>创建</Button>
+                                    <Button
+                                        onClick={() => createNewFile()}
+                                        disabled={!newFileName}
+                                    >
+                                        创建
+                                    </Button>
                                 </DialogContent>
                             </Dialog>
                             <Button

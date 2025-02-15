@@ -20,15 +20,19 @@ export function NewProjectDialog(
     const setSelectedPrUID = projectStore((state) => state.setSelectedPrUID)
     const [projectName, setProjectName] = useState<string>("")
 
-    const newProjectMutation = useApiMutation<string, void>(
-        `/write/new_project?description=${projectName}`,
-        'PATCH'
+    // 新建项目
+    const newProjectMutation = useApiMutation<string, FormData>(
+        `/write/projects`,
+        'POST'
     );
 
     const createNewProject = () => {
         if (!projectName) return;
-        
-        newProjectMutation.mutate(undefined, {
+
+        const formData = new FormData()
+        formData.append('title', projectName)
+
+        newProjectMutation.mutate(formData, {
             onSuccess: (data) => {
                 setSelectedPrUID(data);
                 onNewProjectDialogOpen(false);
@@ -41,12 +45,12 @@ export function NewProjectDialog(
         <Dialog open={isNewProjectDialogOpen} onOpenChange={onNewProjectDialogOpen}>
             <DialogTrigger asChild>
                 <Button
-                    size="icon"
+                    size="lg"
                     variant="outline"
-                    className="rounded-full"
+                    className="rounded-full hover:bg-muted flex items-center gap-2 pl-3 pr-4"
                 >
                     <Plus className="h-4 w-4"/>
-                    <span className="sr-only">新建聊天</span>
+                    <span className="text-sm">新建聊天</span>
                 </Button>
             </DialogTrigger>
             <DialogContent>
@@ -60,7 +64,10 @@ export function NewProjectDialog(
                 />
                 <Button
                     onClick={() => createNewProject()}
-                >创建</Button>
+                    disabled={!projectName}
+                >
+                    创建
+                </Button>
             </DialogContent>
         </Dialog>
     )

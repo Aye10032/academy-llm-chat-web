@@ -33,6 +33,7 @@ import {useApiQuery, useSseQuery} from "@/hooks/useApi.ts";
 import {KnowledgeBase, Message, Document, UserProfile} from "@/utils/self_type.tsx";
 import {ChevronDownIcon, Mic} from "lucide-react";
 import {DocumentSidebar} from "@/components/chat/document-sidebar.tsx";
+import {useNavigate} from "react-router-dom";
 
 interface ChatPageProps {
     user: UserProfile;
@@ -46,8 +47,6 @@ export function ChatPage({user}: ChatPageProps) {
     const setSelectedKnowledgeBase = kbStore((state) => state.setSelectedKnowledgeBase)
     const setCanCreateChat = kbStore((state) => state.setCanCreateChat)
 
-    // const [selectedKb, setSelectedKb] = useState<KnowledgeBase | null>(null);
-
     const [messages, setMessages] = useState<Message[]>([])
     const [input, setInput] = useState('')
     const [isLoading, setIsLoading] = useState(false)
@@ -57,6 +56,8 @@ export function ChatPage({user}: ChatPageProps) {
     const [documents, setDocuments] = useState<Document[]>([])
     const [isGenerating, setIsGenerating] = useState(false)
     const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+
+    const navigate = useNavigate()
 
 
     // 获取知识库列表请求
@@ -68,24 +69,16 @@ export function ChatPage({user}: ChatPageProps) {
     // 获取历史对话请求
     const {data: chatHistoryData} = useApiQuery<Message[]>(
         ['chatHistory', kbChatUID],
-        `/rag/chat/${kbChatUID}`,
+        `/rag/knowledge_bases/${selectedKbUID}/chats/${kbChatUID}/messages`,
         {
-            enabled: !!kbChatUID,
+            enabled: !!kbChatUID && !!selectedKbUID,
         }
     )
 
     // 对话 SSE mutation
-    const chatMutation = useSseQuery<FormData>('/rag/chat')
-
-    // 初始化知识库
-    useEffect(() => {
-        if (!knowledgeBasesLoading && !selectedKbUID) {
-            if (user.last_knowledge_base) {
-                setSelectedKbUID(user.last_knowledge_base);
-            }
-        }
-        console.log('init kb')
-    }, [knowledgeBasesLoading, user.last_knowledge_base, setSelectedKbUID, selectedKbUID])
+    const chatMutation = useSseQuery<FormData>(
+        `/rag/knowledge_bases/${selectedKbUID}/chats/${kbChatUID}/messages`
+    )
 
     // 选择知识库事件处理
     const handleKnowledgeBaseSelect = (kb: KnowledgeBase) => {
@@ -95,6 +88,7 @@ export function ChatPage({user}: ChatPageProps) {
         setMessages([])
         setSelectedKnowledgeBase(kb);
         setIsLoading(false);
+        navigate('/dashboard/chat/')
     };
 
     const clearState = () => {
@@ -105,6 +99,21 @@ export function ChatPage({user}: ChatPageProps) {
         setIsGenerating(false);
         setIsSidebarOpen(false);
     }
+
+    // 初始化知识库
+    useEffect(() => {
+        if (selectedKbUID || knowledgeBasesLoading || !user.last_knowledge_base) return
+
+        if (!knowledgeBases) {
+            setSelectedKbUID('')
+        } else {
+            const lastKb = knowledgeBases.find(kb => kb.uid === user.last_knowledge_base)
+            if (lastKb) {
+                setSelectedKnowledgeBase(lastKb)
+                console.log('init kb')
+            }
+        }
+    }, [knowledgeBasesLoading, knowledgeBases, user.last_knowledge_base, setSelectedKbUID, selectedKbUID, setSelectedKnowledgeBase])
 
     useEffect(() => {
         setDocuments([])
@@ -160,8 +169,6 @@ export function ChatPage({user}: ChatPageProps) {
             setMessages(prev => [...prev, userMessage]);
 
             const formData = new FormData()
-            formData.append('knowledge_base_uid', selectedKbUID)
-            formData.append('chat_uid', kbChatUID)
             formData.append('message', input)
 
             // 发送聊天请求
