@@ -153,4 +153,31 @@
     h2 {
         font-size: var(--text-xl);
     }
+
+    /* 自定义标签样式 */
+    doc-id {
+        @apply text-sm text-gray-600 bg-gray-100 px-3 py-1 rounded-full inline-block;
+    }
+
+    doc-title {
+        @apply block text-xl font-semibold mb-4;
+    }
+
+    doc-author {
+        @apply block text-sm text-gray-600;
+        &::before {
+            content: "作者: ";
+        }
+    }
+
+    doc-year {
+        @apply block text-sm text-gray-600 mb-4;
+        &::before {
+            content: "发表年份: ";
+        }
+    }
+
+    doc-content {
+        @apply block text-gray-700 leading-relaxed;
+    }
 }

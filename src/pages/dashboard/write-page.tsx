@@ -1,6 +1,6 @@
 "use client"
 
-import React, {useState, useRef, useEffect} from "react"
+import React, {useState, useRef, useEffect, useCallback} from "react"
 import {
     Bot,
     MessageSquare,
@@ -8,6 +8,9 @@ import {
     Undo,
     Plus,
     Copy,
+    ChevronLeft,
+    ChevronRight,
+    Globe,
 } from "lucide-react"
 import {Button} from "@/components/ui/button"
 import {Card, CardContent} from "@/components/ui/card"
@@ -35,6 +38,7 @@ import {darcula} from 'react-syntax-highlighter/dist/esm/styles/prism'
 import remarkGfm from 'remark-gfm'
 import rehypeKatex from 'rehype-katex'
 import remarkMath from 'remark-math'
+import rehypeRaw from 'rehype-raw'
 import {projectStore} from "@/utils/self-state.tsx"
 import {useApiMutation, useApiQuery, useSseQuery} from "@/hooks/useApi.ts"
 import {Manuscript, Message, Modify} from "@/utils/self_type.tsx"
@@ -42,6 +46,11 @@ import {useNavigate} from "react-router-dom"
 import {Avatar, AvatarFallback} from "@/components/ui/avatar.tsx"
 import {StatusCard} from "@/components/chat-status.tsx"
 import {toast} from "sonner";
+import {FaRegFilePdf} from "react-icons/fa";
+import {ScrollArea} from "@/components/ui/scroll-area"
+import {Document} from "@/utils/self_type.tsx";
+import {PDFPreview} from "@/components/pdf-viewer.tsx";
+import {Components} from 'react-markdown'
 
 
 export function WritePage() {
@@ -428,7 +437,7 @@ export function WritePage() {
                                         <AvatarFallback>AI</AvatarFallback>
                                     </Avatar>
                                 )}
-                                <div className={`max-w-[90%] space-y-4 mt-4`}>
+                                <div className="max-w-[90%]">
                                     {Array.isArray(message.content) ? (
                                         message.content.map((item, i) => {
                                             if ("modified" in item) {
@@ -436,7 +445,7 @@ export function WritePage() {
                                                     <Accordion
                                                         type="single"
                                                         collapsible
-                                                        className="w-full px-4"
+                                                        className="w-full"
                                                         key={i}
                                                     >
                                                         <AccordionItem value={`item-${i}`}>
@@ -446,8 +455,7 @@ export function WritePage() {
                                                                     <CardContent className="p-4 space-y-2">
                                                                         <div className="space-y-1">
                                                                             <div className="text-sm text-muted-foreground">原文：</div>
-                                                                            <div
-                                                                                className="bg-background rounded p-2 text-sm">{item.original}</div>
+                                                                            <div className="bg-background rounded p-2 text-sm">{item.original}</div>
                                                                         </div>
                                                                         <div className="space-y-1">
                                                                             <div className="text-sm text-muted-foreground">修改建议：</div>
@@ -457,8 +465,7 @@ export function WritePage() {
                                                                         </div>
                                                                         <div className="space-y-1">
                                                                             <div className="text-sm text-muted-foreground">说明：</div>
-                                                                            <div
-                                                                                className="bg-background rounded p-2 text-xs">{item.explanation}</div>
+                                                                            <div className="bg-background rounded p-2 text-xs">{item.explanation}</div>
                                                                         </div>
                                                                         <div className="flex gap-2 mt-2">
                                                                             <Button
@@ -490,7 +497,7 @@ export function WritePage() {
                                                 return (
                                                     <Markdown
                                                         key={i}
-                                                        className="prose rounded-lg px-3 bg-white text-black rounded-tl-none max-w-[97%] dark:prose-invert"
+                                                        className="prose rounded-lg bg-white text-black rounded-tl-none dark:prose-invert p-3"
                                                     >
                                                         {item.content}
                                                     </Markdown>
@@ -499,10 +506,10 @@ export function WritePage() {
                                         })
                                     ) : (
                                         <Markdown
-                                            className={`prose rounded-lg max-w-[97%] dark:prose-invert ${
+                                            className={`prose rounded-lg dark:prose-invert p-3 ${
                                                 message.type === 'human'
-                                                    ? 'bg-blue-500 text-white rounded-tr-none p-3'
-                                                    : 'bg-white text-black rounded-tl-none px-3'
+                                                    ? 'bg-blue-500 text-white rounded-tr-none mr-1.5'
+                                                    : 'bg-white text-black rounded-tl-none'
                                             }`}
                                             components={{
                                                 code(props) {
@@ -558,7 +565,7 @@ export function WritePage() {
                 <div className="flex h-full overflow-hidden">
                     <FileTreeForm/>
                     <div className="flex-1 flex flex-col">
-                        <header className="h-14 border-b flex items-center justify-between px-4 bg-muted/60">
+                        <header className="shrink-0 h-14 border-b flex items-center justify-between px-4 bg-muted/60">
                             <div className="flex items-center gap-2">
                                 <MessageSquare className="h-5 w-5"/>
                                 <span className="font-medium">写作编辑区 - {manuscript ? manuscript.title : "未选择文件"}</span>
@@ -570,7 +577,6 @@ export function WritePage() {
                                     className="h-8 w-8"
                                     onClick={async () => {
                                         await navigator.clipboard.writeText(editorContent)
-                                        // Could add a toast notification here
                                     }}
                                 >
                                     <Copy className="h-4 w-4"/>
@@ -578,10 +584,7 @@ export function WritePage() {
                             </div>
                         </header>
 
-                        <div
-                            ref={editorRef}
-                            className="relative flex-1"
-                        >
+                        <div className="flex-1 overflow-hidden">
                             {(!isDraft) ? (
                                 <textarea
                                     value={editorContent}
@@ -590,7 +593,7 @@ export function WritePage() {
                                         setEditorChanged(true)
                                     }}
                                     placeholder="在这里输入或粘贴你想要修改的文字..."
-                                    className="w-full h-full p-4 resize-none focus:outline-none font-light
+                                    className="w-full h-full p-4 resize-none focus:outline-none font-light overflow-y-auto
                                     [&::-webkit-scrollbar]:w-2
                                     [&::-webkit-scrollbar-track]:bg-transparent
                                     [&::-webkit-scrollbar-thumb]:bg-gray-200
@@ -604,34 +607,41 @@ export function WritePage() {
                                     disabled={!selectedManuscriptUID || isLoading || isGenerate}
                                 />
                             ) : (
-                                <Markdown
-                                    className="prose p-4 leading-8"
-                                    components={{
-                                        code(props) {
-                                            const {children, className, ...rest} = props
-                                            const match = /language-(\w+)/.exec(className || '')
-                                            return match ? (
-                                                <SyntaxHighlighter
-                                                    {...rest}
-                                                    PreTag="div"
-                                                    children={String(children).replace(/\n$/, '')}
-                                                    language={match[1]}
-                                                    style={darcula}
-                                                />
-                                            ) : (
-                                                <code {...rest} className={className}>
-                                                    {children}
-                                                </code>
-                                            )
-                                        }
-                                    }}
-                                    remarkPlugins={[remarkGfm, remarkMath]}
-                                    rehypePlugins={[rehypeKatex]}
-                                >
-                                    {editorContent}
-                                </Markdown>
+                                <div className="h-full overflow-y-auto
+                                    [&::-webkit-scrollbar]:w-2
+                                    [&::-webkit-scrollbar-track]:bg-transparent
+                                    [&::-webkit-scrollbar-thumb]:bg-gray-200
+                                    [&::-webkit-scrollbar-thumb]:rounded-full
+                                    hover:[&::-webkit-scrollbar-thumb]:bg-gray-300
+                                    transition-all duration-300">
+                                    <Markdown
+                                        className="prose p-4 leading-8 max-w-[97%]"
+                                        components={{
+                                            code(props) {
+                                                const {children, className, ...rest} = props
+                                                const match = /language-(\w+)/.exec(className || '')
+                                                return match ? (
+                                                    <SyntaxHighlighter
+                                                        {...rest}
+                                                        PreTag="div"
+                                                        children={String(children).replace(/\n$/, '')}
+                                                        language={match[1]}
+                                                        style={darcula}
+                                                    />
+                                                ) : (
+                                                    <code {...rest} className={className}>
+                                                        {children}
+                                                    </code>
+                                                )
+                                            }
+                                        }}
+                                        remarkPlugins={[remarkGfm, remarkMath]}
+                                        rehypePlugins={[rehypeKatex, rehypeRaw]}
+                                    >
+                                        {editorContent}
+                                    </Markdown>
+                                </div>
                             )}
-
                         </div>
                     </div>
                 </div>

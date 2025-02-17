@@ -50,7 +50,7 @@ export function NewProjectDialog(
                     className="rounded-full hover:bg-muted flex items-center gap-2 pl-3 pr-4"
                 >
                     <Plus className="h-4 w-4"/>
-                    <span className="text-sm">新建聊天</span>
+                    <span className="text-sm">新建项目</span>
                 </Button>
             </DialogTrigger>
             <DialogContent>

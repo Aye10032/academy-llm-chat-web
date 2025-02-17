@@ -53,24 +53,10 @@ export function WriteSidebar() {
     if (projectLoading) {
         return (
             <SidebarContent className="px-1 py-2">
-                <div className="p-4 space-y-4">
-                    <div className="flex items-center space-x-2">
-                        <div className="relative flex-grow">
-                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4"/>
-                            <Input
-                                type="text"
-                                placeholder="选择写作项目"
-                                // value={searchQuery}
-                                // onChange={handleSearch}
-                                className="pl-8 pr-4 py-2 w-full text-sm rounded-full bg-white"
-                            />
-                        </div>
-                        <NewProjectDialog
-                            isNewProjectDialogOpen={isNewProjectDialogOpen}
-                            onNewProjectDialogOpen={setIsNewProjectDialogOpen}
-                        />
-                    </div>
-                </div>
+                <NewProjectDialog
+                    isNewProjectDialogOpen={isNewProjectDialogOpen}
+                    onNewProjectDialogOpen={setIsNewProjectDialogOpen}
+                />
                 <div className="flex flex-1 flex-col gap-4 p-4">
                     {Array.from({length: 24}).map((_, index) => (
                         <div
