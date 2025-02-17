@@ -1,6 +1,6 @@
 "use client"
 
-import React, {useState, useRef, useEffect, useCallback} from "react"
+import React, {useState, useRef, useEffect} from "react"
 import {
     Bot,
     MessageSquare,
@@ -8,9 +8,6 @@ import {
     Undo,
     Plus,
     Copy,
-    ChevronLeft,
-    ChevronRight,
-    Globe,
 } from "lucide-react"
 import {Button} from "@/components/ui/button"
 import {Card, CardContent} from "@/components/ui/card"
@@ -46,11 +43,6 @@ import {useNavigate} from "react-router-dom"
 import {Avatar, AvatarFallback} from "@/components/ui/avatar.tsx"
 import {StatusCard} from "@/components/chat-status.tsx"
 import {toast} from "sonner";
-import {FaRegFilePdf} from "react-icons/fa";
-import {ScrollArea} from "@/components/ui/scroll-area"
-import {Document} from "@/utils/self_type.tsx";
-import {PDFPreview} from "@/components/pdf-viewer.tsx";
-import {Components} from 'react-markdown'
 
 
 export function WritePage() {
@@ -129,7 +121,6 @@ export function WritePage() {
     }
 
     const chatRef = useRef<HTMLDivElement>(null)
-    const editorRef = useRef<HTMLDivElement>(null)
 
 
     const handleSave = () => {

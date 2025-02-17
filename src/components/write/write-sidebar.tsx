@@ -3,8 +3,7 @@ import {
     SidebarGroup,
     SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem,
 } from "@/components/ui/sidebar.tsx"
-import {EllipsisVertical, Search} from "lucide-react";
-import {Input} from "@/components/ui/input.tsx";
+import {EllipsisVertical} from "lucide-react";
 import React, {useState} from "react";
 import {NewProjectDialog} from "@/components/write/new-project-form.tsx";
 import {useApiQuery} from "@/hooks/useApi.ts";
