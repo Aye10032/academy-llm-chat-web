@@ -22,7 +22,18 @@ export function DocumentSidebar(
     }: DocumentSidebarProps
 ) {
     const scrollAreaRef = useRef<HTMLDivElement>(null);
-    const [pdfPreviewUrl, setPdfPreviewUrl] = useState<string | null>(null)
+    const [selectedPdf, setSelectedPdf] = useState<string | null>(null);
+
+    const handleSourceClick = (source: { source_type: number; source_url: string }, event: React.MouseEvent) => {
+        if (source.source_type === 1) {  // PDF类型
+            event.preventDefault();
+            setSelectedPdf(source.source_url);
+        }
+    }
+
+    const handlePdfClose = useCallback(() => {
+        setSelectedPdf(null);
+    }, []);
 
     const toggleSidebar = useCallback(() => {
         onToggle()
@@ -108,6 +119,7 @@ export function DocumentSidebar(
                                             target="_blank"
                                             rel="noopener noreferrer"
                                             className="hover:opacity-80 transition-opacity duration-300 mt-1"
+                                            onClick={(e) => handleSourceClick(source, e)}
                                         >
                                             {source.source_type === 1 ? (
                                                 <FaRegFilePdf className="h-5 w-5 text-red-500"/>
@@ -132,9 +144,9 @@ export function DocumentSidebar(
             )}
 
             <PDFPreview
-                isOpen={!!pdfPreviewUrl}
-                onClose={() => setPdfPreviewUrl(null)}
-                pdfUrl={pdfPreviewUrl || ''}
+                isOpen={!!selectedPdf}
+                onClose={handlePdfClose}
+                pdfFile={selectedPdf || ''}
             />
         </div>
     )
