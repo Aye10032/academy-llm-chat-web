@@ -69,3 +69,21 @@ export const projectStore = create<ProjectState>((set) => ({
     setPrChatUID: (uid: string) => set({prChatUID: uid}),
     setSelectedManuscriptUID: (uid: string) => set({selectedManuscriptUID: uid})
 }))
+
+interface LlmConfig {
+    model: string
+    contextLength: number[]
+    temperature: number[]
+    setModel: (model: string) => void
+    setContextLength: (length: number[]) => void
+    setTemperature: (temperature: number[]) => void
+}
+
+export const llmConfig = create<LlmConfig>((set) => ({
+    model: 'gpt-4o-mini',
+    contextLength: [2],
+    temperature: [0.4],
+    setModel: (name: string) => set({model: name}),
+    setContextLength: (length) => set({contextLength: length}),
+    setTemperature: (temp) => set({temperature: temp})
+}))
