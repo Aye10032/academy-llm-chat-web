@@ -28,7 +28,7 @@ import remarkGfm from 'remark-gfm'
 import rehypeKatex from 'rehype-katex'
 import remarkMath from 'remark-math'
 import React, {useState, useRef, useEffect, useCallback} from "react";
-import {kbStore} from "@/utils/self-state.tsx";
+import {kbStore, llmConfig} from "@/utils/self-state.tsx";
 import {useApiQuery, useSseQuery} from "@/hooks/useApi.ts";
 import {KnowledgeBase, Message, Document, UserProfile} from "@/utils/self_type.tsx";
 import {ChevronDownIcon, Mic} from "lucide-react";
@@ -46,6 +46,10 @@ export function ChatPage({user}: ChatPageProps) {
     const setSelectedKbUID = kbStore((state) => state.setSelectedKbUID)
     const setSelectedKnowledgeBase = kbStore((state) => state.setSelectedKnowledgeBase)
     const setCanCreateChat = kbStore((state) => state.setCanCreateChat)
+
+    const model = llmConfig((state)=>state.model)
+    const contextLength = llmConfig((state)=>state.contextLength)
+    const temperature = llmConfig((state) => state.temperature)
 
     const [messages, setMessages] = useState<Message[]>([])
     const [input, setInput] = useState('')
@@ -170,6 +174,9 @@ export function ChatPage({user}: ChatPageProps) {
 
             const formData = new FormData()
             formData.append('message', input)
+            formData.append('model', model)
+            formData.append('context_length', contextLength[0].toString())
+            formData.append('temperature', temperature[0].toString())
 
             // 发送聊天请求
             const response = await chatMutation.mutateAsync(formData);

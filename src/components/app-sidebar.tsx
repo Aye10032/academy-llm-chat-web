@@ -43,6 +43,14 @@ export function AppSidebar(
     const temperature = llmConfig((state) => state.temperature)
     const setTemperature = llmConfig((state) => state.setTemperature)
 
+    const llmList = [
+        'gpt-4o-mini',
+        'gpt-4o',
+        'gpt-o3-mini',
+        'deepseek-v3',
+        'deepseek-r1'
+    ]
+
     return (
         <Sidebar
             collapsible="icon"
@@ -144,11 +152,11 @@ export function AppSidebar(
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectGroup>
-                                    <SelectItem value="gpt-4o-mini">gpt-4o-mini</SelectItem>
-                                    <SelectItem value="gpt-4o">gpt-4o</SelectItem>
-                                    <SelectItem value="gpt-o3-mini">gpt-o3-mini</SelectItem>
-                                    <SelectItem value="deepseek-v3">deepseek-v3</SelectItem>
-                                    <SelectItem value="deepseek-r1">deepseek-r1</SelectItem>
+                                    {llmList.map((model) => (
+                                        <SelectItem key={model} value={model}>
+                                            {model}
+                                        </SelectItem>
+                                    ))}
                                 </SelectGroup>
                             </SelectContent>
                         </Select>

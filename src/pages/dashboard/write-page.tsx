@@ -36,7 +36,7 @@ import remarkGfm from 'remark-gfm'
 import rehypeKatex from 'rehype-katex'
 import remarkMath from 'remark-math'
 import rehypeRaw from 'rehype-raw'
-import {projectStore} from "@/utils/self-state.tsx"
+import {llmConfig, projectStore} from "@/utils/self-state.tsx"
 import {useApiMutation, useApiQuery, useSseQuery} from "@/hooks/useApi.ts"
 import {Manuscript, Message, Modify} from "@/utils/self_type.tsx"
 import {useNavigate} from "react-router-dom"
@@ -52,7 +52,10 @@ export function WritePage() {
     const selectedManuscriptUID = projectStore((state) => state.selectedManuscriptUID)
     const navigate = useNavigate()
 
-    // const [currentFile, setCurrentFile] = useState<string>("")
+    const model = llmConfig((state) => state.model)
+    const contextLength = llmConfig((state) => state.contextLength)
+    const temperature = llmConfig((state) => state.temperature)
+
     const [input, setInput] = useState('')
     const [files, setFiles] = useState<File[]>([])
     const [editorContent, setEditorContent] = useState<string>("")
@@ -193,6 +196,9 @@ export function WritePage() {
             formData.append('graph_ckpt', '111')
             formData.append('message', input)
             formData.append('current_text', editorContent)
+            formData.append('model', model)
+            formData.append('context_length', contextLength[0].toString())
+            formData.append('temperature', temperature[0].toString())
 
             // 文件处理 - 只在有文件时才添加
             if (files.length > 0) {
@@ -446,7 +452,8 @@ export function WritePage() {
                                                                     <CardContent className="p-4 space-y-2">
                                                                         <div className="space-y-1">
                                                                             <div className="text-sm text-muted-foreground">原文：</div>
-                                                                            <div className="bg-background rounded p-2 text-sm">{item.original}</div>
+                                                                            <div
+                                                                                className="bg-background rounded p-2 text-sm">{item.original}</div>
                                                                         </div>
                                                                         <div className="space-y-1">
                                                                             <div className="text-sm text-muted-foreground">修改建议：</div>
@@ -456,7 +463,8 @@ export function WritePage() {
                                                                         </div>
                                                                         <div className="space-y-1">
                                                                             <div className="text-sm text-muted-foreground">说明：</div>
-                                                                            <div className="bg-background rounded p-2 text-xs">{item.explanation}</div>
+                                                                            <div
+                                                                                className="bg-background rounded p-2 text-xs">{item.explanation}</div>
                                                                         </div>
                                                                         <div className="flex gap-2 mt-2">
                                                                             <Button
