@@ -74,7 +74,6 @@ export interface KnowledgeBase {
 // 写作相关
 export interface WriteProject {
     uid: string
-    graph_checkpoint: string
     user_email: string
     description: string
     last_manuscript: string

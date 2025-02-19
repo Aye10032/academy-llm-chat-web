@@ -195,12 +195,15 @@ export function WritePage() {
             setMessages(prev => [...prev, userMessage])
 
             const formData = new FormData()
-            formData.append('graph_ckpt', '111')
             formData.append('message', input)
             formData.append('current_text', editorContent)
             formData.append('model', model)
             formData.append('context_length', contextLength[0].toString())
             formData.append('temperature', temperature[0].toString())
+            formData.append('use_web', useWeb.toString())
+            formData.append('available_kbs', JSON.stringify(selectedKbList))
+
+            console.log(formData)
 
             // 文件处理 - 只在有文件时才添加
             if (files.length > 0) {

@@ -36,7 +36,6 @@ export const kbStore = create<KbState>((set) => ({
 interface ProjectState {
     selectedPrUID: string
     selectedPrTitle: string
-    selectedPrCheckpoint: string
     prChatUID: string
     selectedManuscriptUID: string
     setSelectedPrUID: (uid: string) => void
@@ -48,14 +47,12 @@ interface ProjectState {
 export const projectStore = create<ProjectState>((set) => ({
     selectedPrUID: '',
     selectedPrTitle: '',
-    selectedPrCheckpoint: '',
     prChatUID: '',
     selectedManuscriptUID: '',
     setSelectedPrUID: (uid: string) => {
         if (!uid) {
             set({selectedPrUID: ''})
             set({selectedPrTitle: ''})
-            set({selectedPrCheckpoint: ''})
             set({selectedManuscriptUID: ''})
         }
         set({selectedPrUID: uid})
@@ -63,7 +60,6 @@ export const projectStore = create<ProjectState>((set) => ({
     setSelectedProject: (project: WriteProject) => {
         set({selectedPrUID: project.uid})
         set({selectedPrTitle: project.description})
-        set({selectedPrCheckpoint: project.graph_checkpoint})
         set({selectedManuscriptUID: project.last_manuscript})
     },
     setPrChatUID: (uid: string) => set({prChatUID: uid}),
