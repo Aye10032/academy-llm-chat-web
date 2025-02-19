@@ -1,9 +1,12 @@
 import React, {useState, useRef, useCallback} from "react"
-import {Paperclip, Send} from "lucide-react"
+import {Globe, Paperclip, Send} from "lucide-react"
 import {Button} from "@/components/ui/button"
 import {Textarea} from "@/components/ui/textarea"
 import {FileUploadIndicator} from "./file-upload-indicator"
 import {projectStore} from "@/utils/self-state.tsx";
+import {Switch} from "@/components/ui/switch.tsx";
+import {MultiSelect} from "@/components/write/knowledge-select-form.tsx";
+import {Tooltip, TooltipContent, TooltipProvider, TooltipTrigger} from "@/components/ui/tooltip.tsx";
 
 interface ChatInputProps {
     handleSubmit: (e: React.FormEvent) => Promise<void>;
@@ -11,10 +14,25 @@ interface ChatInputProps {
     setInput: (input: string) => void;
     files: File[];
     setFiles: (files: File[]) => void;
+    useWeb: boolean
+    setUseWeb: (flag: boolean) => void
+    selectedKbList: string[]
+    setSelectedKbList: (kbList: string[]) => void
 }
 
-export function ChatInput({handleSubmit, input, setInput, files, setFiles}: ChatInputProps) {
-    const prChatUID = projectStore((state)=>state.prChatUID)
+export function ChatInput(
+    {
+        handleSubmit,
+        input,
+        setInput,
+        files,
+        setFiles,
+        useWeb,
+        setUseWeb,
+        selectedKbList,
+        setSelectedKbList,
+    }: ChatInputProps) {
+    const prChatUID = projectStore((state) => state.prChatUID)
     const [isDragging, setIsDragging] = useState(false)
     const fileInputRef = useRef<HTMLInputElement>(null)
     const dragCounterRef = useRef(0)
@@ -111,10 +129,38 @@ export function ChatInput({handleSubmit, input, setInput, files, setFiles}: Chat
                         onChange={(e) => setInput(e.target.value)}
                         onKeyDown={handleKeyDown}
                         placeholder="输入消息或拖拽文件到此处..."
-                        className="min-h-[80px] pr-24 resize-none border-gray-400"
+                        className="min-h-[80px] pr-16 pb-6 resize-none border-gray-400"
                         disabled={!prChatUID}
                     />
-                    <div className="absolute bottom-3 right-3 flex gap-2">
+                    <div className="absolute bottom-1 left-2 flex items-center">
+                        <Globe className="h-3.5 w-3.5 text-gray-800"/>
+                        <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger className='flex items-center'>
+                                    <Switch checked={useWeb} onCheckedChange={setUseWeb} className='scale-60'/>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                    <p>联网查询</p>
+                                </TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
+
+                        <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger className='flex items-center'>
+                                    <MultiSelect
+                                        onChange={setSelectedKbList}
+                                        selected={selectedKbList}
+                                    />
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                    <p>知识库调用选择，可以同时选择多个。<br/>注意：若不选择，则默认会使用<b>全部</b>知识库进行回答</p>
+                                </TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
+
+                    </div>
+                    <div className="absolute bottom-3 right-3 flex gap-1.2">
                         <Button
                             type="button"
                             size="icon"
@@ -132,7 +178,8 @@ export function ChatInput({handleSubmit, input, setInput, files, setFiles}: Chat
                         </Button>
                     </div>
                     {isDragging && (
-                        <div className="absolute inset-0 border-2 border-dashed border-primary rounded-lg flex items-center justify-center bg-background/80">
+                        <div
+                            className="absolute inset-0 border-2 border-dashed border-primary rounded-lg flex items-center justify-center bg-background/80">
                             <p className="text-primary">释放以上传文件</p>
                         </div>
                     )}

@@ -57,6 +57,8 @@ export function WritePage() {
     const temperature = llmConfig((state) => state.temperature)
 
     const [input, setInput] = useState('')
+    const [useWeb, setUseWeb] = useState<boolean>(false)
+    const [selectedKbList,setSelectedKbList] = useState<string[]>([])
     const [files, setFiles] = useState<File[]>([])
     const [editorContent, setEditorContent] = useState<string>("")
     const [editorChanged, setEditorChanged] = useState<boolean>(false)
@@ -557,6 +559,10 @@ export function WritePage() {
                         setInput={setInput}
                         files={files}
                         setFiles={setFiles}
+                        useWeb={useWeb}
+                        setUseWeb={setUseWeb}
+                        selectedKbList={selectedKbList}
+                        setSelectedKbList={setSelectedKbList}
                     />
                 </div>
 
