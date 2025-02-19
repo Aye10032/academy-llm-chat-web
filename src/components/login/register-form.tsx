@@ -54,7 +54,7 @@ export default function RegisterForm() {
     }
 
     const registryMutation = useApiMutation<string, FormData>(
-        `/user/register`,
+        `/user`,
         'POST',
         {
             onError: (error) => {
