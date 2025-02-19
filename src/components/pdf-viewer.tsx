@@ -15,7 +15,7 @@ export function PDFPreview({isOpen, onClose, pdfFile}: PDFPreviewProps) {
                 <DialogContent className="flex flex-col min-w-[45%] w-full h-[90vh]">
                     <DialogHeader className="flex-none h-12">
                         <DialogTitle>PDF 预览</DialogTitle>
-                        <DialogDescription>{pdfFile}</DialogDescription>
+                        <DialogDescription>{pdfFile.split('/')[pdfFile.split('/').length - 1]}</DialogDescription>
                     </DialogHeader>
                     <div className="flex-1 w-full h-[calc(80vh-3rem)]">
                         <iframe
