@@ -29,7 +29,7 @@ export function MultiSelect({selected, onChange}: MultiSelectProps) {
             <PopoverTrigger asChild>
                 <Button
                     variant="outline"
-                    role="combobox"
+                    // role="combobox"
                     className="h-7 px-3 text-xs scale-75 rounded-full"
                     disabled={knowledgeBasesLoading || !knowledgeBases}
                 >
