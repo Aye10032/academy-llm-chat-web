@@ -76,7 +76,7 @@ interface LlmConfig {
 }
 
 export const llmConfig = create<LlmConfig>((set) => ({
-    model: 'gpt-4o-mini',
+    model: 'deepseek-v3',
     contextLength: [2],
     temperature: [0.4],
     setModel: (name: string) => set({model: name}),
