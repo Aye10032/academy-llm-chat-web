@@ -2,6 +2,7 @@
 
 import {Loader2} from "lucide-react"
 import {Card, CardContent, CardHeader} from "@/components/ui/card.tsx";
+import {useEffect, useRef} from "react";
 
 interface StatusDisplayProps {
     status: string | null
@@ -26,6 +27,23 @@ interface StatusCardProps {
 }
 
 export function StatusCard({items, isProcessing}: StatusCardProps) {
+    const statueRef = useRef<HTMLDivElement>(null)
+
+    // 自动滚动到底部
+    const scrollToBottom = () => {
+        if (statueRef.current) {
+            const scrollContainer = statueRef.current;
+            scrollContainer.scrollTo({
+                top: scrollContainer.scrollHeight,
+                behavior: 'smooth'
+            });
+        }
+    };
+
+    useEffect(() => {
+        scrollToBottom();
+    }, [statueRef, items]);
+
     return (
         <div className="flex justify-center">
             <Card className="w-[300px] border border-gray-200 shadow-[0_2px_4px_rgba(0,0,0,0.1)] bg-white">
@@ -33,8 +51,17 @@ export function StatusCard({items, isProcessing}: StatusCardProps) {
                     {isProcessing && <Loader2 className="h-3.5 w-3.5 animate-spin text-gray-600"/>}
                     <h2 className="text-sm font-medium leading-none text-gray-700">{isProcessing ? "思考中" : "处理完毕"}</h2>
                 </CardHeader>
-                <CardContent className="text-sm pt-1 pb-1.5">
-                    <div className="max-h-[200px] overflow-y-auto pr-2">
+                <CardContent className="text-sm pt-1 pb-1.5 pr-1">
+                    <div
+                        ref={statueRef}
+                        className="max-h-[180px] flex-1 overflow-y-auto
+                        [&::-webkit-scrollbar]:w-2
+                        [&::-webkit-scrollbar-track]:bg-transparent
+                        [&::-webkit-scrollbar-thumb]:bg-gray-200
+                        [&::-webkit-scrollbar-thumb]:rounded-full
+                        hover:[&::-webkit-scrollbar-thumb]:bg-gray-300
+                        transition-all duration-300"
+                    >
                         <div className="space-y-0 relative">
                             <div className="absolute left-[3px] top-2 bottom-2 w-[1px] bg-gray-200"/>
 
