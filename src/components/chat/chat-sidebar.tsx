@@ -170,11 +170,11 @@ export function ChatSidebar() {
                                     onMouseLeave={() => setHoveredChat(null)}
                                     className={chat.uid === kbChatUID ? 'bg-accent' : ''}
                                 >
-                                    <SidebarMenuButton asChild className="h-auto py-3 px-2 text-sm font-medium w-full text-left">
-                                        <div className="flex items-center justify-between">
+                                    <SidebarMenuButton asChild className="h-auto py-3 px-2 text-sm font-medium w-full text-left relative">
+                                        <div className="flex items-center justify-between w-full">
                                             <Link
                                                 to={`/dashboard/chat/${chat.uid}`}
-                                                className="flex flex-col items-start gap-1 flex-grow min-w-0"
+                                                className="flex flex-col items-start gap-1 flex-grow min-w-0 relative"
                                                 onClick={() => handleChatClick(chat)}
                                             >
                                                 <span className="truncate w-full pr-4">{chat.description}</span>
@@ -183,29 +183,31 @@ export function ChatSidebar() {
                                                 </span>
                                             </Link>
                                             {(hoveredChat === chat.uid || openMenuId === chat.uid) && (
-                                                <DropdownMenu open={openMenuId === chat.uid}>
-                                                    <DropdownMenuTrigger asChild>
-                                                        <Button
-                                                            variant="ghost"
-                                                            className="h-8 w-8 p-0"
-                                                            onClick={(e) => handleMoreClick(e, chat.uid)}
+                                                <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                                                    <DropdownMenu open={openMenuId === chat.uid}>
+                                                        <DropdownMenuTrigger asChild>
+                                                            <Button
+                                                                variant="ghost"
+                                                                className="h-8 w-8 p-0"
+                                                                onClick={(e) => handleMoreClick(e, chat.uid)}
+                                                            >
+                                                                <EllipsisVertical className="h-4 w-4"/>
+                                                                <span className="sr-only">打开菜单</span>
+                                                            </Button>
+                                                        </DropdownMenuTrigger>
+                                                        <DropdownMenuContent
+                                                            align="end"
+                                                            onInteractOutside={() => setOpenMenuId(null)}
                                                         >
-                                                            <EllipsisVertical className="h-4 w-4"/>
-                                                            <span className="sr-only">打开菜单</span>
-                                                        </Button>
-                                                    </DropdownMenuTrigger>
-                                                    <DropdownMenuContent
-                                                        align="end"
-                                                        onInteractOutside={() => setOpenMenuId(null)}
-                                                    >
-                                                        <DropdownMenuItem key={`${chat.uid}-rename`}>重命名</DropdownMenuItem>
-                                                        <DropdownMenuItem key={`${chat.uid}-delete`}
-                                                                          onClick={() => handleDeleteClick(chat.uid)}
-                                                        >
-                                                            删除
-                                                        </DropdownMenuItem>
-                                                    </DropdownMenuContent>
-                                                </DropdownMenu>
+                                                            <DropdownMenuItem key={`${chat.uid}-rename`}>重命名</DropdownMenuItem>
+                                                            <DropdownMenuItem key={`${chat.uid}-delete`}
+                                                                              onClick={() => handleDeleteClick(chat.uid)}
+                                                            >
+                                                                删除
+                                                            </DropdownMenuItem>
+                                                        </DropdownMenuContent>
+                                                    </DropdownMenu>
+                                                </div>
                                             )}
                                         </div>
                                     </SidebarMenuButton>
