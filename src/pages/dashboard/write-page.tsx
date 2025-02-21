@@ -58,7 +58,7 @@ export function WritePage() {
 
     const [input, setInput] = useState('')
     const [useWeb, setUseWeb] = useState<boolean>(false)
-    const [selectedKbList,setSelectedKbList] = useState<string[]>([])
+    const [selectedKbList, setSelectedKbList] = useState<string[]>([])
     const [files, setFiles] = useState<File[]>([])
     const [editorContent, setEditorContent] = useState<string>("")
     const [editorChanged, setEditorChanged] = useState<boolean>(false)
@@ -128,15 +128,16 @@ export function WritePage() {
     const chatRef = useRef<HTMLDivElement>(null)
 
 
-    const handleSave = () => {
+    const handleSave = async () => {
+        setEditorChanged(false)
+
         const formData = new FormData()
         formData.append('content', editorContent)
 
-        saveMutation.mutate(formData)
+        await saveMutation.mutateAsync(formData)
         toast.success("编辑保存完毕", {
             position: 'top-right'
         })
-        setEditorChanged(false)
     }
 
     const handleNewChat = async () => {
@@ -202,8 +203,6 @@ export function WritePage() {
             formData.append('temperature', temperature[0].toString())
             formData.append('use_web', useWeb.toString())
             formData.append('available_kbs', JSON.stringify(selectedKbList))
-
-            console.log(formData)
 
             // 文件处理 - 只在有文件时才添加
             if (files.length > 0) {
