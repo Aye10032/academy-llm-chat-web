@@ -136,8 +136,10 @@ export function ChatInput(
                         <Globe className="h-3.5 w-3.5 text-gray-800"/>
                         <TooltipProvider>
                             <Tooltip>
-                                <TooltipTrigger className='flex items-center'>
-                                    <Switch checked={useWeb} onCheckedChange={setUseWeb} className='scale-60'/>
+                                <TooltipTrigger asChild>
+                                    <div className='flex items-center'>
+                                        <Switch checked={useWeb} onCheckedChange={setUseWeb} className='scale-60'/>
+                                    </div>
                                 </TooltipTrigger>
                                 <TooltipContent>
                                     <p>联网查询</p>
@@ -147,11 +149,13 @@ export function ChatInput(
 
                         <TooltipProvider>
                             <Tooltip>
-                                <TooltipTrigger className='flex items-center'>
-                                    <MultiSelect
-                                        onChange={setSelectedKbList}
-                                        selected={selectedKbList}
-                                    />
+                                <TooltipTrigger asChild>
+                                    <div className='flex items-center'>
+                                        <MultiSelect
+                                            onChange={setSelectedKbList}
+                                            selected={selectedKbList}
+                                        />
+                                    </div>
                                 </TooltipTrigger>
                                 <TooltipContent>
                                     <p>知识库调用选择，可以同时选择多个。<br/>注意：若不选择，则默认会使用<b>全部</b>知识库进行回答</p>
