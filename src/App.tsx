@@ -87,6 +87,10 @@ export default function App() {
                 ]
             },
             {
+                path: "/setting",
+                element: <ProtectedRoute><MainPage defaultPage="setting"/></ProtectedRoute>
+            },
+            {
                 path: "/",
                 element: <Navigate to="/dashboard/chat" replace/>,
             },

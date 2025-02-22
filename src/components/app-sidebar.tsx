@@ -1,9 +1,12 @@
 "use client"
 
 import {
-    Command, HelpCircle,
+    Command,
+    HelpCircle,
     MessageCircleMoreIcon,
-    PenLineIcon
+    PenLineIcon,
+    InfoIcon,
+    Settings2Icon,
 } from "lucide-react"
 import {NavUser} from "@/components/nav-user"
 import {
@@ -25,8 +28,8 @@ import {llmConfig} from "@/utils/self-state.tsx";
 
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
     user: UserProfile
-    activePage: 'chat' | 'write'
-    setActivePage: (page: 'chat' | 'write') => void
+    activePage: 'chat' | 'write' | 'about' | 'setting'
+    setActivePage: (page: 'chat' | 'write' | 'about' | 'setting') => void
 }
 
 export function AppSidebar(
@@ -36,10 +39,10 @@ export function AppSidebar(
         setActivePage,
     }: AppSidebarProps) {
     const {setOpen} = useSidebar()
-    const model = llmConfig((state)=>state.model)
-    const setModel = llmConfig((state)=>state.setModel)
-    const contextLength = llmConfig((state)=>state.contextLength)
-    const setContextLength = llmConfig((state)=>state.setContextLength)
+    const model = llmConfig((state) => state.model)
+    const setModel = llmConfig((state) => state.setModel)
+    const contextLength = llmConfig((state) => state.contextLength)
+    const setContextLength = llmConfig((state) => state.setContextLength)
     const temperature = llmConfig((state) => state.temperature)
     const setTemperature = llmConfig((state) => state.setTemperature)
 
@@ -121,99 +124,140 @@ export function AppSidebar(
                     </SidebarGroup>
                 </SidebarContent>
                 <SidebarFooter>
-                    <NavUser user={user}/>
+                    <SidebarMenu className='space-y-2'>
+                        <SidebarMenuItem key="write">
+                            <SidebarMenuButton
+                                tooltip={{
+                                    children: "关于",
+                                    hidden: false,
+                                }}
+                                onClick={() => {
+                                    setActivePage('about')
+                                    setOpen(true)
+                                }}
+                                isActive={activePage === 'about'}
+                                className="px-2 md:px-2"
+                            >
+                                <InfoIcon/>
+                                <span>关于</span>
+                            </SidebarMenuButton>
+                        </SidebarMenuItem>
+                        {(user.role === 2) && (
+                            <SidebarMenuItem key="write">
+                                <SidebarMenuButton
+                                    tooltip={{
+                                        children: "系统设置",
+                                        hidden: false,
+                                    }}
+                                    onClick={() => {
+                                        setActivePage('setting')
+                                        setOpen(true)
+                                    }}
+                                    isActive={activePage === 'setting'}
+                                    className="px-2 md:px-2"
+                                >
+                                    <Settings2Icon/>
+                                    <span>系统设置</span>
+                                </SidebarMenuButton>
+                            </SidebarMenuItem>
+                        )}
+                        <NavUser user={user}/>
+                    </SidebarMenu>
                 </SidebarFooter>
             </Sidebar>
 
             {/* This is the second sidebar */}
             {/* We disable collapsible and let it fill remaining space */}
-            <Sidebar collapsible="none" className="hidden flex-1 md:flex">
-                <SidebarHeader className="border-b p-4">
-                    <div className="h-full w-full transition-opacity duration-300 ease-in-out group-data-[collapsible=icon]:opacity-0">
-                        <img
-                            src={llmLogo}
-                            alt="Academic LLM Chat Logo"
-                            className="h-full w-full object-contain px-2 py-3"
-                        />
-                    </div>
-                </SidebarHeader>
-                {activePage === 'chat' ? (
-                    <ChatSidebar/>
-                ) : (
-                    <WriteSidebar/>
-                )}
-                <SidebarSeparator/>
-                <SidebarFooter className='flex-col h-[28%] px-1 py-2 space-y-4'>
-                    <div className='w-full max-w-sm space-y-4 px-4'>
-                        <Label className='text-sm font-medium'>选择对话大模型</Label>
-                        <Select defaultValue={model} onValueChange={setModel}>
-                            <SelectTrigger className="w-full bg-white pl-3.5 text-left">
-                                <SelectValue placeholder="Select a fruit"/>
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectGroup>
-                                    {llmList.map((model) => (
-                                        <SelectItem key={model} value={model}>
-                                            {model}
-                                        </SelectItem>
-                                    ))}
-                                </SelectGroup>
-                            </SelectContent>
-                        </Select>
-                    </div>
-                    <div className="w-full max-w-sm space-y-4 px-4">
-                        <div className="flex items-center gap-2">
-                            <Label className="text-sm font-medium">上下文长度</Label>
-                            <TooltipProvider>
-                                <Tooltip>
-                                    <TooltipTrigger>
-                                        <HelpCircle className="h-4 w-4 text-muted-foreground"/>
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                        <p className="max-w-xs text-sm">
-                                            模型会截取多少个对话消息进行分析，越长的上下文能保留更多的信息，但是同时也意味着更多的token消耗和遗忘概率的增大
-                                        </p>
-                                    </TooltipContent>
-                                </Tooltip>
-                            </TooltipProvider>
-                            <span className="ml-auto text-sm text-muted-foreground">{contextLength[0]}</span>
+            {(activePage === 'chat' || activePage === 'write') && (
+                <Sidebar collapsible="none" className="hidden flex-1 md:flex">
+                    <SidebarHeader className="border-b p-4">
+                        <div
+                            className="h-full w-full transition-opacity duration-300 ease-in-out group-data-[collapsible=icon]:opacity-0">
+                            <img
+                                src={llmLogo}
+                                alt="Academic LLM Chat Logo"
+                                className="h-full w-full object-contain px-2 py-3"
+                            />
                         </div>
-                        <Slider
-                            value={contextLength}
-                            onValueChange={setContextLength}
-                            max={10}
-                            min={1}
-                            step={1}
-                            className="[&_[role=slider]]:h-4 [&_[role=slider]]:w-4"
-                        />
-                    </div>
-                    <div className="w-full max-w-sm space-y-4 px-4">
-                        <div className="flex items-center gap-2">
-                            <Label className="text-sm font-medium">模型温度</Label>
-                            <TooltipProvider>
-                                <Tooltip>
-                                    <TooltipTrigger>
-                                        <HelpCircle className="h-4 w-4 text-muted-foreground"/>
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                        <p className="max-w-xs text-sm">
-                                            温度控制输出的随机性。较高的值会使输出更加随机，较低的值会使其更加集中和确定。
-                                        </p>
-                                    </TooltipContent>
-                                </Tooltip>
-                            </TooltipProvider>
-                            <span className="ml-auto text-sm text-muted-foreground">{temperature[0].toFixed(2)}</span>
+                    </SidebarHeader>
+                    {activePage === 'chat' ? (
+                        <ChatSidebar/>
+                    ) : (
+                        <WriteSidebar/>
+                    )}
+                    <SidebarSeparator/>
+                    <SidebarFooter className='flex-col h-[28%] px-1 py-2 space-y-4'>
+                        <div className='w-full max-w-sm space-y-4 px-4'>
+                            <Label className='text-sm font-medium'>选择对话大模型</Label>
+                            <Select defaultValue={model} onValueChange={setModel}>
+                                <SelectTrigger className="w-full bg-white pl-3.5 text-left">
+                                    <SelectValue placeholder="Select a fruit"/>
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectGroup>
+                                        {llmList.map((model) => (
+                                            <SelectItem key={model} value={model}>
+                                                {model}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectGroup>
+                                </SelectContent>
+                            </Select>
                         </div>
-                        <Slider
-                            value={temperature}
-                            onValueChange={setTemperature}
-                            max={1}
-                            step={0.1}
-                            className="[&_[role=slider]]:h-4 [&_[role=slider]]:w-4"
-                        />
-                    </div>
-                </SidebarFooter>
-            </Sidebar>
+                        <div className="w-full max-w-sm space-y-4 px-4">
+                            <div className="flex items-center gap-2">
+                                <Label className="text-sm font-medium">上下文长度</Label>
+                                <TooltipProvider>
+                                    <Tooltip>
+                                        <TooltipTrigger>
+                                            <HelpCircle className="h-4 w-4 text-muted-foreground"/>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                            <p className="max-w-xs text-sm">
+                                                模型会截取多少个对话消息进行分析，越长的上下文能保留更多的信息，但是同时也意味着更多的token消耗和遗忘概率的增大
+                                            </p>
+                                        </TooltipContent>
+                                    </Tooltip>
+                                </TooltipProvider>
+                                <span className="ml-auto text-sm text-muted-foreground">{contextLength[0]}</span>
+                            </div>
+                            <Slider
+                                value={contextLength}
+                                onValueChange={setContextLength}
+                                max={10}
+                                min={1}
+                                step={1}
+                                className="[&_[role=slider]]:h-4 [&_[role=slider]]:w-4"
+                            />
+                        </div>
+                        <div className="w-full max-w-sm space-y-4 px-4">
+                            <div className="flex items-center gap-2">
+                                <Label className="text-sm font-medium">模型温度</Label>
+                                <TooltipProvider>
+                                    <Tooltip>
+                                        <TooltipTrigger>
+                                            <HelpCircle className="h-4 w-4 text-muted-foreground"/>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                            <p className="max-w-xs text-sm">
+                                                温度控制输出的随机性。较高的值会使输出更加随机，较低的值会使其更加集中和确定。
+                                            </p>
+                                        </TooltipContent>
+                                    </Tooltip>
+                                </TooltipProvider>
+                                <span className="ml-auto text-sm text-muted-foreground">{temperature[0].toFixed(2)}</span>
+                            </div>
+                            <Slider
+                                value={temperature}
+                                onValueChange={setTemperature}
+                                max={1}
+                                step={0.1}
+                                className="[&_[role=slider]]:h-4 [&_[role=slider]]:w-4"
+                            />
+                        </div>
+                    </SidebarFooter>
+                </Sidebar>
+            )}
         </Sidebar>
     )
 }

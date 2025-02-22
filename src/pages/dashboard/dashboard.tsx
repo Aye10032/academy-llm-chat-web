@@ -12,17 +12,18 @@ import React, {useState, useCallback} from "react";
 import {ChatPage} from "@/pages/dashboard/chat-page.tsx";
 import {WritePage} from "@/pages/dashboard/write-page.tsx";
 import {kbStore, projectStore} from "@/utils/self-state.tsx";
+import {SettingPage} from "@/pages/dashboard/setting-page.tsx";
 
 interface MainPageProps {
-    defaultPage: 'chat' | 'write';
+    defaultPage: 'chat' | 'write' | 'about' | 'setting';
 }
 
 export function MainPage({defaultPage}: MainPageProps) {
     const user = useAuth((state) => state.user)
     const kbChatUID = kbStore((state) => state.kbChatUID)
-    const prChatUID = projectStore((state)=>state.prChatUID)
+    const prChatUID = projectStore((state) => state.prChatUID)
     const navigate = useNavigate();
-    const [activePage, setActivePage] = useState<'chat' | 'write'>(defaultPage)
+    const [activePage, setActivePage] = useState<'chat' | 'write' | 'about' | 'setting'>(defaultPage)
 
 
     // ======================================
@@ -40,7 +41,7 @@ export function MainPage({defaultPage}: MainPageProps) {
 
     // ======================================
     // 子页面切换逻辑处理
-    const handlePageChange = useCallback((page: 'chat' | 'write') => {
+    const handlePageChange = useCallback((page: 'chat' | 'write' | 'about' | 'setting') => {
         if (activePage === page) return
 
         setActivePage(page)
@@ -51,14 +52,16 @@ export function MainPage({defaultPage}: MainPageProps) {
                 navigate(`/dashboard/chat/${kbChatUID}`)
             }
         } else if (page === 'write') {
-            if (!prChatUID){
+            if (!prChatUID) {
                 navigate('/dashboard/write')
-            }else {
+            } else {
                 navigate(`/dashboard/write/${prChatUID}`)
             }
 
+        } else if (page === 'setting') {
+            navigate('/setting')
         }
-    }, [activePage, navigate, kbChatUID,prChatUID])
+    }, [activePage, navigate, kbChatUID, prChatUID])
 
 
     if (isLoading) {
@@ -70,27 +73,50 @@ export function MainPage({defaultPage}: MainPageProps) {
     }
 
     return (
-        <SidebarProvider
-            style={
-                {
-                    "--sidebar-width": "350px",
-                } as React.CSSProperties
-            }
-        >
-            <AppSidebar
-                user={userInfo}
-                activePage={activePage}
-                setActivePage={handlePageChange}
-            />
-            <SidebarInset className="overflow-hidden">
-                {activePage === 'chat' ? (
-                    <ChatPage
-                        user={userInfo}
-                    />
-                ) : (
-                    <WritePage/>
-                )}
-            </SidebarInset>
-        </SidebarProvider>
+        (activePage === "about" || activePage === 'setting') ? (
+            <SidebarProvider
+                style={
+                    {
+                        "--sidebar-width": "48px",
+                    } as React.CSSProperties
+                }
+            >
+                <AppSidebar
+                    user={userInfo}
+                    activePage={activePage}
+                    setActivePage={handlePageChange}
+                />
+                <SidebarInset className="overflow-hidden">
+                    {activePage === 'setting' ? (
+                        <SettingPage/>
+                    ) : (
+                        <SettingPage/>
+                    )}
+                </SidebarInset>
+            </SidebarProvider>
+        ) : (
+            <SidebarProvider
+                style={
+                    {
+                        "--sidebar-width": "350px",
+                    } as React.CSSProperties
+                }
+            >
+                <AppSidebar
+                    user={userInfo}
+                    activePage={activePage}
+                    setActivePage={handlePageChange}
+                />
+                <SidebarInset className="overflow-hidden">
+                    {activePage === 'chat' ? (
+                        <ChatPage
+                            user={userInfo}
+                        />
+                    ) : (
+                        <WritePage/>
+                    )}
+                </SidebarInset>
+            </SidebarProvider>
+        )
     )
 }
