@@ -16,13 +16,6 @@ import {DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger
 import {Button} from "@/components/ui/button.tsx";
 import {useNavigate} from "react-router-dom";
 
-// const writeOptions = [
-//     {value: "article", label: "文章"},
-//     {value: "essay", label: "论文"},
-//     {value: "report", label: "报告"},
-//     {value: "story", label: "故事"},
-// ]
-
 export function WriteSidebar() {
     const selectedPrUID = projectStore((state) => state.selectedPrUID)
     const setSelectedProject = projectStore((state) => state.setSelectedProject)

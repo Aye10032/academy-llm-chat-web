@@ -104,6 +104,10 @@ export function WritePage() {
     )
 
     useEffect(() => {
+        setStatus([])
+    }, [selectedPrUID]);
+
+    useEffect(() => {
         if (!manuscript) {
             setEditorContent("")
         } else {
