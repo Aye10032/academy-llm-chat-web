@@ -3,10 +3,12 @@
 import {useCallback, useRef, useState} from 'react'
 import {ChevronLeft, ChevronRight, Globe} from 'lucide-react'
 import {FaRegFilePdf} from "react-icons/fa";
+import {SiPubmed} from "react-icons/si";
 import {Button} from "@/components/ui/button"
 import {ScrollArea} from "@/components/ui/scroll-area"
 import {Document} from "@/utils/self_type.tsx";
 import {PDFPreview} from "@/components/pdf-viewer.tsx";
+
 
 interface DocumentSidebarProps {
     documents: Document[]
@@ -121,11 +123,14 @@ export function DocumentSidebar(
                                             className="hover:opacity-80 transition-opacity duration-300 mt-1"
                                             onClick={(e) => handleSourceClick(source, e)}
                                         >
-                                            {source.source_type === 1 ? (
-                                                <FaRegFilePdf className="h-5 w-5 text-red-500"/>
-                                            ) : (
-                                                <Globe className="h-5 w-5 text-green-500"/>
-                                            )}
+                                            {
+                                                source.source_type === 1 ? (
+                                                    <FaRegFilePdf className="h-4 w-4 text-red-500"/>
+                                                ) : source.source_type === 2 ? (
+                                                    <Globe className="h-4 w-4 text-green-500"/>
+                                                ) : source.source_type === 3 ? (<SiPubmed className="h-4 w-4 text-blue-950"/>
+                                                ) : (<div/>)
+                                            }
                                         </a>
                                     ))}
                                 </div>

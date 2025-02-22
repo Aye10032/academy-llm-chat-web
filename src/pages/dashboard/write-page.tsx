@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/breadcrumb"
 import {Accordion, AccordionContent, AccordionItem, AccordionTrigger} from "@/components/ui/accordion"
 import {ChatInput} from "@/components/write/chat-input.tsx"
-import {MaterialsManager} from "@/components/write/materials-manager.tsx"
+import {SourcesManager} from "@/components/write/sources-manager.tsx"
 import {FloatingActions} from "@/components/write/floating-actions.tsx"
 import {SidebarTrigger} from "@/components/ui/sidebar.tsx"
 import {Separator} from "@/components/ui/separator.tsx"
@@ -394,7 +394,7 @@ export function WritePage() {
                         </BreadcrumbList>
                     </Breadcrumb>
                 </div>
-                <MaterialsManager/>
+                <SourcesManager/>
             </header>
 
             <div className="flex-1 grid overflow-hidden" style={{gridTemplateColumns: "1.5fr 3fr"}}>

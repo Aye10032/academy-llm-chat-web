@@ -38,7 +38,7 @@ export interface Modify {
 export interface Document {
     content: string
     metadata: {
-        title?: string
+        title: string
         author?: string
         year?: number
         source: Array<{
