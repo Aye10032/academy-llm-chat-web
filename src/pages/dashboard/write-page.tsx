@@ -43,6 +43,8 @@ import {useNavigate} from "react-router-dom"
 import {Avatar, AvatarFallback} from "@/components/ui/avatar.tsx"
 import {StatusCard} from "@/components/chat-status.tsx"
 import {toast} from "sonner";
+import {Textarea} from "@/components/ui/textarea.tsx";
+import {ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger} from "@/components/ui/context-menu.tsx";
 
 
 export function WritePage() {
@@ -597,26 +599,34 @@ export function WritePage() {
 
                         <div className="flex-1 overflow-hidden">
                             {(!isDraft) ? (
-                                <textarea
-                                    value={editorContent}
-                                    onChange={(e) => {
-                                        setEditorContent(e.target.value)
-                                        setEditorChanged(true)
-                                    }}
-                                    placeholder="在这里输入或粘贴你想要修改的文字..."
-                                    className="w-full h-full p-4 resize-none focus:outline-none font-light overflow-y-auto
+                                <ContextMenu>
+                                    <ContextMenuTrigger asChild>
+                                        <Textarea
+                                            value={editorContent}
+                                            onChange={(e) => {
+                                                setEditorContent(e.target.value)
+                                                setEditorChanged(true)
+                                            }}
+                                            placeholder="在这里输入或粘贴你想要修改的文字..."
+                                            className="w-full h-full p-4 resize-none focus:outline-none font-light overflow-y-auto
                                     [&::-webkit-scrollbar]:w-2
                                     [&::-webkit-scrollbar-track]:bg-transparent
                                     [&::-webkit-scrollbar-thumb]:bg-gray-200
                                     [&::-webkit-scrollbar-thumb]:rounded-full
                                     hover:[&::-webkit-scrollbar-thumb]:bg-gray-300
                                     transition-all duration-300"
-                                    style={{
-                                        lineHeight: "2",
-                                        tabSize: 4,
-                                    }}
-                                    disabled={!selectedManuscriptUID || isLoading || isGenerate}
-                                />
+                                            style={{
+                                                lineHeight: "2",
+                                                tabSize: 4,
+                                            }}
+                                            disabled={!selectedManuscriptUID || isLoading || isGenerate}
+                                        />
+                                    </ContextMenuTrigger>
+                                    <ContextMenuContent>
+                                        <ContextMenuItem>锁定文本</ContextMenuItem>
+                                        <ContextMenuItem>......</ContextMenuItem>
+                                    </ContextMenuContent>
+                                </ContextMenu>
                             ) : (
                                 <div className="h-full overflow-y-auto
                                     [&::-webkit-scrollbar]:w-2
