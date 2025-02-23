@@ -13,6 +13,7 @@ import {ChatPage} from "@/pages/dashboard/chat-page.tsx";
 import {WritePage} from "@/pages/dashboard/write-page.tsx";
 import {kbStore, projectStore} from "@/utils/self-state.tsx";
 import {SettingPage} from "@/pages/dashboard/setting-page.tsx";
+import {InfoPage} from "@/pages/dashboard/info-page.tsx";
 
 interface MainPageProps {
     defaultPage: 'chat' | 'write' | 'about' | 'setting';
@@ -60,6 +61,8 @@ export function MainPage({defaultPage}: MainPageProps) {
 
         } else if (page === 'setting') {
             navigate('/setting')
+        } else if (page === 'about') {
+            navigate('/about')
         }
     }, [activePage, navigate, kbChatUID, prChatUID])
 
@@ -90,7 +93,7 @@ export function MainPage({defaultPage}: MainPageProps) {
                     {activePage === 'setting' ? (
                         <SettingPage/>
                     ) : (
-                        <SettingPage/>
+                        <InfoPage/>
                     )}
                 </SidebarInset>
             </SidebarProvider>
